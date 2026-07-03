@@ -1,0 +1,305 @@
+.estado-gestiones-page {
+  width: 100%;
+}
+
+.page-breadcrumb {
+  margin-bottom: 30px;
+}
+
+.summary-cards {
+  display: flex;
+  justify-content: center;
+  gap: 54px;
+  margin-bottom: 54px;
+}
+
+.summary-card {
+  width: 220px;
+  min-height: 112px;
+  border: 1px solid #dedede;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.summary-card .card-icon {
+  font-size: 34px;
+  line-height: 1;
+  color: #202020;
+}
+
+.summary-card strong {
+  font-size: 24px;
+  font-weight: 700;
+  color: #202020;
+}
+
+.summary-card span {
+  font-size: 14px;
+  color: #202020;
+}
+
+.summary-card.activos {
+  background: #fff9e8;
+}
+
+.summary-card.sin-tramites {
+  background: #e9fcec;
+}
+
+.summary-card.urgentes {
+  background: #fde8e6;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1.1fr 0.85fr 0.75fr 1.6fr;
+  align-items: end;
+  gap: 48px;
+  margin-bottom: 54px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-field label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2f3337;
+}
+
+.filter-field select {
+  height: 34px;
+  border: 1px solid #d8dde6;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #374151;
+  outline: none;
+}
+
+.filter-field select:focus {
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.16);
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 46px;
+}
+
+.btn-clear,
+.btn-search {
+  height: 34px;
+  min-width: 132px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-clear {
+  background: #d9d9d9;
+  color: #a3a3a3;
+  border: 1px solid #c4c4c4;
+}
+
+.btn-clear:not(:disabled) {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-clear:disabled {
+  cursor: not-allowed;
+}
+
+.btn-search {
+  background: #11a75c;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 0 #08743d;
+}
+
+.btn-search:hover {
+  background: #0f9853;
+}
+
+.table-card {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #293241;
+}
+
+thead {
+  background: #edf1f9;
+}
+
+th {
+  text-align: left;
+  padding: 12px 10px;
+  font-weight: 700;
+  color: #293241;
+}
+
+td {
+  padding: 12px 10px;
+  color: #293241;
+}
+
+tbody tr:nth-child(even) {
+  background: #f7f9fc;
+}
+
+tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.estado-text {
+  font-weight: 500;
+}
+
+.estado-text.activa {
+  color: #047857;
+}
+
+.estado-text.sin-tramites {
+  color: #6b7280;
+}
+
+.estado-text.urgente {
+  color: #b91c1c;
+}
+
+.estado-text.con-observaciones {
+  color: #c2410c;
+}
+
+.detail-link {
+  color: #293241;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #6b7280;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 56px;
+}
+
+.pagination-row p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #767676;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pagination button {
+  border: none;
+  background: transparent;
+  color: #2f3337;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.pagination button.active {
+  background: #2f3337;
+  color: #ffffff;
+  min-width: 28px;
+  height: 28px;
+}
+
+.pagination button:disabled {
+  color: #c4c4c4;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: #2f3337;
+}
+
+@media (max-width: 1200px) {
+  .summary-cards {
+    gap: 24px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .filter-actions {
+    justify-content: flex-start;
+    gap: 16px;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 760px) {
+  .summary-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+  }
+
+  .btn-clear,
+  .btn-search {
+    width: 100%;
+  }
+
+  .pagination-row {
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+  }
+}

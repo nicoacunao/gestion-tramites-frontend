@@ -1,0 +1,140 @@
+<section class="estado-gestiones-page">
+  <div class="page-breadcrumb">
+    <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
+  </div>
+
+  <div class="summary-cards">
+    <article
+      class="summary-card"
+      *ngFor="let card of resumenCards"
+      [ngClass]="card.tipo"
+    >
+      <div class="card-icon">◷</div>
+      <strong>{{ card.cantidad }}</strong>
+      <span>{{ card.titulo }}</span>
+    </article>
+  </div>
+
+  <form class="filters" (ngSubmit)="buscar()">
+    <div class="filter-field">
+      <label for="estacionServicio">Estación de Servicio</label>
+      <select
+        id="estacionServicio"
+        name="estacionServicio"
+        [(ngModel)]="filtros.estacionServicio"
+      >
+        <option value=""></option>
+        <option *ngFor="let estacion of estacionesServicio" [value]="estacion">
+          {{ estacion }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-field">
+      <label for="estadoGeneral">Estado General</label>
+      <select
+        id="estadoGeneral"
+        name="estadoGeneral"
+        [(ngModel)]="filtros.estadoGeneral"
+      >
+        <option value=""></option>
+        <option *ngFor="let estado of estadosGenerales" [value]="estado">
+          {{ estado }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-field small">
+      <label for="comuna">Comuna</label>
+      <select
+        id="comuna"
+        name="comuna"
+        [(ngModel)]="filtros.comuna"
+      >
+        <option value=""></option>
+        <option *ngFor="let comuna of comunas" [value]="comuna">
+          {{ comuna }}
+        </option>
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn-clear"
+        [disabled]="!existenFiltrosAplicados()"
+        (click)="limpiarFiltros()"
+      >
+        × Limpiar Filtros
+      </button>
+
+      <button type="submit" class="btn-search">
+        Buscar
+      </button>
+    </div>
+  </form>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Estación de servicio</th>
+          <th>Concesionario</th>
+          <th>Total trámites</th>
+          <th>Trámites activos</th>
+          <th>Última actualización</th>
+          <th>Estado general</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let estacion of estacionesFiltradas">
+          <td>{{ estacion.estacionServicio }}</td>
+          <td>{{ estacion.concesionario }}</td>
+          <td>{{ estacion.totalTramites }}</td>
+          <td>{{ estacion.tramitesActivos }}</td>
+          <td>{{ estacion.ultimaActualizacion }}</td>
+          <td>
+            <span
+              class="estado-text"
+              [ngClass]="obtenerClaseEstado(estacion.estadoGeneral)"
+            >
+              {{ estacion.estadoGeneral }}
+            </span>
+          </td>
+          <td>
+            <a
+              class="detail-link"
+              [routerLink]="['/tramites']"
+              [queryParams]="{ estacion: estacion.estacionServicio }"
+            >
+              Ver trámites
+            </a>
+          </td>
+        </tr>
+
+        <tr *ngIf="estacionesFiltradas.length === 0">
+          <td colspan="7" class="empty-state">
+            No se encontraron estaciones con los filtros seleccionados.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-row">
+    <p>{{ estacionesFiltradas.length }} de 99 registros</p>
+
+    <div class="pagination">
+      <button disabled>‹ Previous</button>
+      <button class="active">1</button>
+      <button>2</button>
+      <button>3</button>
+      <span>...</span>
+      <button>67</button>
+      <button>68</button>
+      <button>Next →</button>
+    </div>
+  </div>
+</section>

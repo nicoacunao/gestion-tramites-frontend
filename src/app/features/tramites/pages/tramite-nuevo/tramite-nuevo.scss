@@ -1,0 +1,266 @@
+.nuevo-tramite-page {
+  width: 100%;
+}
+
+.page-breadcrumb {
+  margin-bottom: 34px;
+}
+
+.tramite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+.form-section {
+  background: #f3f3f3;
+  padding: 18px 18px 28px;
+}
+
+.form-section h2 {
+  margin: 0 0 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #242424;
+}
+
+.datos-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.6fr 0.5fr;
+  gap: 26px 56px;
+  align-items: end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-wide {
+  grid-column: span 1;
+}
+
+.field-double {
+  grid-column: span 2;
+}
+
+.field label,
+.obligatorio-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #2f3337;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #333333;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.field input,
+.field select {
+  height: 32px;
+  padding: 0 12px;
+}
+
+.field textarea {
+  min-height: 58px;
+  padding: 10px 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #b9b9b9;
+}
+
+.field input:disabled,
+.field select:disabled {
+  background: #dcdcdc;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #a7a7a7;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+}
+
+.antecedente-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.8fr 0.9fr 0.95fr 1.05fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.hitos-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 0.95fr 0.95fr 1.25fr 1.2fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.obligatorio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.switch-wrapper {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #242424;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #3c3c3c;
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  top: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(14px);
+}
+
+.textarea-field textarea {
+  min-height: 58px;
+}
+
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 26px;
+}
+
+.btn-add {
+  height: 25px;
+  min-width: 78px;
+  border: none;
+  border-radius: 6px;
+  background: #10a957;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #08743d;
+}
+
+.btn-add:hover {
+  background: #0d984e;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 54px;
+  padding: 36px 0 0;
+}
+
+.form-footer button {
+  height: 30px;
+  min-width: 112px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-create {
+  background: #e0e0e0;
+  color: #a0a0a0;
+  border: 1px solid #c9c9c9;
+}
+
+.btn-create:disabled {
+  cursor: not-allowed;
+}
+
+.btn-draft {
+  background: #fff1b8;
+  color: #b99b2f;
+  border: 1px solid #e4cb65;
+}
+
+.btn-cancel {
+  background: #ffd1cd;
+  color: #c96d65;
+  border: 1px solid #f2aaa3;
+}
+
+@media (max-width: 1200px) {
+  .datos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .field-double {
+    grid-column: span 1;
+  }
+
+  .antecedente-row,
+  .hitos-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-footer {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .datos-grid,
+  .antecedente-row,
+  .hitos-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-footer button {
+    width: 100%;
+  }
+}

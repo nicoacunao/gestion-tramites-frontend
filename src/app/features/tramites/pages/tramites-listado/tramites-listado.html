@@ -1,0 +1,106 @@
+<section class="tramites-page">
+    <div class="page-breadcrumb">
+        <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
+    </div>
+
+    <form class="filters" (ngSubmit)="buscar()">
+        <div class="filter-field">
+            <label for="estacionServicio">Estación de Servicio</label>
+            <select id="estacionServicio" name="estacionServicio" [(ngModel)]="filtros.estacionServicio">
+                <option value="">Value</option>
+                <option *ngFor="let estacion of estacionesServicio" [value]="estacion">
+                    {{ estacion }}
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="fechaApertura">Fecha de apertura</label>
+            <input id="fechaApertura" name="fechaApertura" type="date" [(ngModel)]="filtros.fechaApertura" />
+        </div>
+
+        <div class="filter-field">
+            <label for="fechaTermino">Fecha de término</label>
+            <input id="fechaTermino" name="fechaTermino" type="date" [(ngModel)]="filtros.fechaTermino" />
+        </div>
+
+        <div class="filter-field">
+            <label for="estado">Estado</label>
+            <select id="estado" name="estado" [(ngModel)]="filtros.estado">
+                <option value="">Value</option>
+                <option *ngFor="let estado of estados" [value]="estado">
+                    {{ estado }}
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn-search">
+                Buscar
+            </button>
+
+            <button type="button" class="btn-clear" (click)="limpiarFiltros()">
+                Limpiar
+            </button>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Tipo de trámite</th>
+                    <th>Estación de servicio</th>
+                    <th>Estado</th>
+                    <th>Concesionario</th>
+                    <th>Fecha de apertura</th>
+                    <th>Fecha estimada de<br />Término</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let tramite of tramitesFiltrados">
+                    <td>{{ tramite.id }}</td>
+                    <td>{{ tramite.tipoTramite }}</td>
+                    <td>{{ tramite.estacionServicio }}</td>
+                    <td>
+                        <span class="estado-badge" [ngClass]="obtenerClaseEstado(tramite.estado)">
+                            {{ tramite.estado }}
+                        </span>
+                    </td>
+                    <td>{{ tramite.concesionario }}</td>
+                    <td>{{ tramite.fechaApertura }}</td>
+                    <td>{{ tramite.fechaEstimadaTermino }}</td>
+                    <td>
+                        <a class="detail-link" [routerLink]="['/tramites', tramite.id]">
+                            Ver detalle
+                        </a>
+                    </td>
+                </tr>
+
+                <tr *ngIf="tramitesFiltrados.length === 0">
+                    <td colspan="8" class="empty-state">
+                        No se encontraron trámites con los filtros seleccionados.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-row">
+        <p>{{ tramitesFiltrados.length }} de 234 registros</p>
+
+        <div class="pagination">
+            <button disabled>‹ Previous</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <span>...</span>
+            <button>67</button>
+            <button>68</button>
+            <button>Next →</button>
+        </div>
+    </div>
+</section>

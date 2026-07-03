@@ -1,0 +1,232 @@
+.tramites-page {
+  width: 100%;
+}
+
+.page-breadcrumb {
+  margin-bottom: 36px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1.3fr 0.9fr 0.9fr 1fr auto;
+  align-items: end;
+  gap: 64px;
+  margin-bottom: 48px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2f3337;
+  }
+
+  select,
+  input {
+    height: 38px;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #374151;
+    outline: none;
+  }
+
+  select:focus,
+  input:focus {
+    border-color: #9ca3af;
+    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.18);
+  }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-search,
+.btn-clear {
+  height: 38px;
+  min-width: 118px;
+  border-radius: 7px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-search {
+  background: #11a75c;
+  color: #ffffff;
+  box-shadow: 0 2px 0 #08743d;
+}
+
+.btn-search:hover {
+  background: #0f9853;
+}
+
+.btn-clear {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.table-card {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #293241;
+}
+
+thead {
+  background: #edf1f9;
+}
+
+th {
+  text-align: left;
+  padding: 12px 10px;
+  font-weight: 700;
+  color: #293241;
+  line-height: 1.1;
+}
+
+td {
+  padding: 12px 10px;
+  color: #293241;
+}
+
+tbody tr:nth-child(even) {
+  background: #f7f9fc;
+}
+
+tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.detail-link {
+  color: #293241;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 86px;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.estado-badge.ingresado {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.estado-badge.en-revisión {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.estado-badge.observado {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.estado-badge.aprobado {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.estado-badge.finalizado {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: #6b7280;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 56px;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #767676;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  button {
+    border: none;
+    background: transparent;
+    color: #2f3337;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+
+  button.active {
+    background: #2f3337;
+    color: #ffffff;
+    min-width: 28px;
+    height: 28px;
+  }
+
+  button:disabled {
+    color: #c4c4c4;
+    cursor: not-allowed;
+  }
+
+  span {
+    color: #2f3337;
+  }
+}
+
+@media (max-width: 1100px) {
+  .filters {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .filter-actions {
+    align-self: end;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 980px;
+  }
+}

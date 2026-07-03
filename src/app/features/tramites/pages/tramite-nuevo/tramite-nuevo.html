@@ -1,0 +1,341 @@
+<section class="nuevo-tramite-page">
+  <div class="page-breadcrumb">
+    <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
+  </div>
+
+  <form class="tramite-form">
+    <section class="form-section">
+      <h2>Datos Generales</h2>
+
+      <div class="datos-grid">
+        <div class="field field-wide">
+          <label>Estación de servicio</label>
+          <select
+            name="estacionServicio"
+            [(ngModel)]="form.estacionServicio"
+            (change)="onEstacionChange()"
+          >
+            <option value="">Seleccione estación de servicio</option>
+            <option *ngFor="let estacion of estacionesServicio" [value]="estacion">
+              {{ estacion }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Prioridad</label>
+          <select name="prioridad" [(ngModel)]="form.prioridad">
+            <option value="">Seleccione prioridad</option>
+            <option *ngFor="let prioridad of prioridades" [value]="prioridad">
+              {{ prioridad }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Estado</label>
+          <select name="estado" [(ngModel)]="form.estado">
+            <option value="">Seleccione estado inicial</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ estado }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field field-wide">
+          <label>Concesionario</label>
+          <input
+            type="text"
+            name="concesionario"
+            [(ngModel)]="form.concesionario"
+            placeholder="Seleccione estación de servicio para mostrar información"
+            disabled
+          />
+        </div>
+
+        <div class="field field-double">
+          <label>Responsable interno</label>
+          <select name="responsableInterno" [(ngModel)]="form.responsableInterno">
+            <option value="">Seleccione responsable interno</option>
+            <option *ngFor="let responsable of responsables" [value]="responsable">
+              {{ responsable }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Tipo de Trámite</label>
+          <select name="tipoTramite" [(ngModel)]="form.tipoTramite">
+            <option value="">Seleccione tipo de trámite</option>
+            <option *ngFor="let tipo of tiposTramite" [value]="tipo">
+              {{ tipo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Trámite específico</label>
+          <select
+            name="tramiteEspecifico"
+            [(ngModel)]="form.tramiteEspecifico"
+            [disabled]="!form.tipoTramite"
+          >
+            <option value="">Seleccione primero tipo de trámite</option>
+            <option *ngFor="let tramite of tramitesEspecificos" [value]="tramite">
+              {{ tramite }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field field-double">
+          <label>Solicitante Copec</label>
+          <select name="solicitanteCopec" [(ngModel)]="form.solicitanteCopec">
+            <option value="">Seleccione solicitante Copec</option>
+            <option *ngFor="let solicitante of solicitantesCopec" [value]="solicitante">
+              {{ solicitante }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Fecha de apertura</label>
+          <input type="date" name="fechaApertura" [(ngModel)]="form.fechaApertura" />
+        </div>
+
+        <div class="field">
+          <label>Fecha estimada de término</label>
+          <input type="date" name="fechaEstimadaTermino" [(ngModel)]="form.fechaEstimadaTermino" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Antecedentes requeridos</h2>
+
+      <div class="antecedente-row">
+        <div class="field">
+          <label>Antecedente</label>
+          <select name="antecedenteReq" [(ngModel)]="antecedenteRequerido.antecedente">
+            <option value="">Seleccione Antecedente</option>
+            <option *ngFor="let antecedente of antecedentes" [value]="antecedente">
+              {{ antecedente }}
+            </option>
+          </select>
+        </div>
+
+        <div class="obligatorio-field">
+          <label>&nbsp;</label>
+          <div class="switch-wrapper">
+            <span>Obligatorio</span>
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="obligatorioReq"
+                [(ngModel)]="antecedenteRequerido.obligatorio"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Responsable</label>
+          <select name="responsableReq" [(ngModel)]="antecedenteRequerido.responsable">
+            <option value="">Seleccione responsable</option>
+            <option *ngFor="let responsable of responsables" [value]="responsable">
+              {{ responsable }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Estado</label>
+          <select name="estadoReq" [(ngModel)]="antecedenteRequerido.estado">
+            <option value="">Seleccione estado</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ estado }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Archivo</label>
+          <select name="archivoReq" [(ngModel)]="antecedenteRequerido.archivo">
+            <option value="">Seleccione archivo</option>
+            <option *ngFor="let archivo of archivos" [value]="archivo">
+              {{ archivo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field textarea-field">
+          <label>Observaciones</label>
+          <textarea
+            name="observacionesReq"
+            [(ngModel)]="antecedenteRequerido.observaciones"
+            placeholder="Ingrese sus observaciones"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="section-actions">
+        <button type="button" class="btn-add">+ Agregar</button>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Antecedentes extraordinarios</h2>
+
+      <div class="antecedente-row">
+        <div class="field">
+          <label>Antecedente</label>
+          <input
+            type="text"
+            name="antecedenteExtra"
+            [(ngModel)]="antecedenteExtraordinario.antecedente"
+            placeholder="Ingrese antecedente"
+          />
+        </div>
+
+        <div class="obligatorio-field">
+          <label>&nbsp;</label>
+          <div class="switch-wrapper">
+            <span>Obligatorio</span>
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="obligatorioExtra"
+                [(ngModel)]="antecedenteExtraordinario.obligatorio"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Responsable</label>
+          <select name="responsableExtra" [(ngModel)]="antecedenteExtraordinario.responsable">
+            <option value="">Seleccione responsable</option>
+            <option *ngFor="let responsable of responsables" [value]="responsable">
+              {{ responsable }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Estado</label>
+          <select name="estadoExtra" [(ngModel)]="antecedenteExtraordinario.estado">
+            <option value="">Seleccione estado</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ estado }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Archivo</label>
+          <select name="archivoExtra" [(ngModel)]="antecedenteExtraordinario.archivo">
+            <option value="">Seleccione archivo</option>
+            <option *ngFor="let archivo of archivos" [value]="archivo">
+              {{ archivo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field textarea-field">
+          <label>Observaciones</label>
+          <textarea
+            name="observacionesExtra"
+            [(ngModel)]="antecedenteExtraordinario.observaciones"
+            placeholder="Ingrese sus observaciones"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="section-actions">
+        <button type="button" class="btn-add">+ Agregar</button>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>Hitos de gestión</h2>
+
+      <div class="hitos-row">
+        <div class="field">
+          <label>Hito</label>
+          <input
+            type="text"
+            name="hito"
+            [(ngModel)]="hitoGestion.hito"
+            placeholder="Ingrese Hito"
+          />
+        </div>
+
+        <div class="field">
+          <label>Estado</label>
+          <select name="estadoHito" [(ngModel)]="hitoGestion.estado">
+            <option value="">Seleccione estado</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ estado }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Fecha Estimada</label>
+          <input
+            type="date"
+            name="fechaEstimadaHito"
+            [(ngModel)]="hitoGestion.fechaEstimada"
+          />
+        </div>
+
+        <div class="field">
+          <label>Fecha Real</label>
+          <input
+            type="date"
+            name="fechaRealHito"
+            [(ngModel)]="hitoGestion.fechaReal"
+          />
+        </div>
+
+        <div class="field">
+          <label>Responsable</label>
+          <select name="responsableHito" [(ngModel)]="hitoGestion.responsable">
+            <option value="">Seleccione responsable</option>
+            <option *ngFor="let responsable of responsables" [value]="responsable">
+              {{ responsable }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field textarea-field">
+          <label>Observación</label>
+          <textarea
+            name="observacionHito"
+            [(ngModel)]="hitoGestion.observacion"
+            placeholder="Ingrese observaciones"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="section-actions">
+        <button type="button" class="btn-add">+ Agregar</button>
+      </div>
+    </section>
+
+    <div class="form-footer">
+      <button type="button" class="btn-create" (click)="crearTramite()" disabled>
+        Crear Trámite
+      </button>
+
+      <button type="button" class="btn-draft" (click)="guardarBorrador()">
+        Guardar Borrador
+      </button>
+
+      <button type="button" class="btn-cancel" (click)="cancelar()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</section>
