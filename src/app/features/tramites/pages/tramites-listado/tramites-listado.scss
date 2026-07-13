@@ -1,5 +1,6 @@
 .tramites-page {
   width: 100%;
+  container-type: inline-size;
 }
 
 .page-breadcrumb {
@@ -7,17 +8,24 @@
 }
 
 .filters {
-  display: grid;
-  grid-template-columns: 1.3fr 0.9fr 0.9fr 1fr auto;
-  align-items: end;
-  gap: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   margin-bottom: 48px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.25fr) repeat(2, minmax(180px, 1fr));
+  gap: 24px;
+  align-items: end;
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 
   label {
     font-size: 14px;
@@ -27,6 +35,9 @@
 
   select,
   input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     height: 38px;
     border: 1px solid #d9dee7;
     border-radius: 8px;
@@ -44,8 +55,29 @@
   }
 }
 
+@container (max-width: 720px) {
+  .filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-actions {
+    justify-content: flex-end;
+  }
+}
+
+@container (max-width: 560px) {
+  .filter-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filter-actions {
+    flex-wrap: wrap;
+  }
+}
+
 .filter-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
 }
 
@@ -213,15 +245,6 @@ tbody tr:nth-child(odd) {
 }
 
 @media (max-width: 1100px) {
-  .filters {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-
-  .filter-actions {
-    align-self: end;
-  }
-
   .table-card {
     overflow-x: auto;
   }

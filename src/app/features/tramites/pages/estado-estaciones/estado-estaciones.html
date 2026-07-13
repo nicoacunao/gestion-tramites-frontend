@@ -3,138 +3,166 @@
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
-  <div class="summary-cards">
-    <article
-      class="summary-card"
-      *ngFor="let card of resumenCards"
-      [ngClass]="card.tipo"
-    >
-      <div class="card-icon">◷</div>
-      <strong>{{ card.cantidad }}</strong>
-      <span>{{ card.titulo }}</span>
-    </article>
+  <!-- Tarjetas Resumen -->
+  <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+    <div class="col" *ngFor="let card of resumenCards">
+      <div
+        class="card h-100 border border-start border-4 shadow-sm"
+        [ngClass]="card.class"
+      >
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div
+            class="d-inline-flex align-items-center justify-content-center flex-shrink-0 rounded-circle bg-white bg-opacity-75 p-3 fs-4 fw-bold lh-1"
+            [ngClass]="card.textClass"
+            aria-hidden="true"
+          >
+            {{ card.icono }}
+          </div>
+
+          <div>
+            <h3 class="card-title mb-1 fw-bold" [ngClass]="card.textClass">
+              {{ card.cantidad }}
+            </h3>
+            <p class="card-text mb-0 small text-body-secondary">
+              {{ card.titulo }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <form class="filters" (ngSubmit)="buscar()">
-    <div class="filter-field">
-      <label for="estacionServicio">Estación de Servicio</label>
-      <select
-        id="estacionServicio"
-        name="estacionServicio"
-        [(ngModel)]="filtros.estacionServicio"
-      >
-        <option value=""></option>
-        <option *ngFor="let estacion of estacionesServicio" [value]="estacion">
-          {{ estacion }}
-        </option>
-      </select>
+  <!-- Formulario de búsqueda -->
+  <form class="border rounded-3 bg-body p-3 mb-3" (ngSubmit)="buscar()">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label for="estacionServicio" class="form-label"
+          >Estación de Servicio</label
+        >
+        <select
+          id="estacionServicio"
+          class="form-select"
+          name="estacionServicio"
+          [(ngModel)]="filtros.estacionServicio"
+        >
+          <option value="">Todas las estaciones</option>
+          <option
+            *ngFor="let estacion of estacionesServicio"
+            [value]="estacion"
+          >
+            {{ estacion }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label for="estadoGeneral" class="form-label">Estado general</label>
+        <select
+          id="estadoGeneral"
+          class="form-select"
+          name="estadoGeneral"
+          [(ngModel)]="filtros.estadoGeneral"
+        >
+          <option value="">Todos los estados</option>
+          <option *ngFor="let estado of estadosGenerales" [value]="estado">
+            {{ estado }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label for="comuna" class="form-label">Comuna</label>
+        <select
+          id="comuna"
+          class="form-select"
+          name="comuna"
+          [(ngModel)]="filtros.comuna"
+        >
+          <option value="">Todas las comunas</option>
+          <option *ngFor="let comuna of comunas" [value]="comuna">
+            {{ comuna }}
+          </option>
+        </select>
+      </div>
     </div>
 
-    <div class="filter-field">
-      <label for="estadoGeneral">Estado General</label>
-      <select
-        id="estadoGeneral"
-        name="estadoGeneral"
-        [(ngModel)]="filtros.estadoGeneral"
-      >
-        <option value=""></option>
-        <option *ngFor="let estado of estadosGenerales" [value]="estado">
-          {{ estado }}
-        </option>
-      </select>
-    </div>
-
-    <div class="filter-field small">
-      <label for="comuna">Comuna</label>
-      <select
-        id="comuna"
-        name="comuna"
-        [(ngModel)]="filtros.comuna"
-      >
-        <option value=""></option>
-        <option *ngFor="let comuna of comunas" [value]="comuna">
-          {{ comuna }}
-        </option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
+    <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
       <button
         type="button"
-        class="btn-clear"
+        class="btn btn-secondary px-4"
         [disabled]="!existenFiltrosAplicados()"
         (click)="limpiarFiltros()"
       >
-        × Limpiar Filtros
+        Limpiar
       </button>
-
-      <button type="submit" class="btn-search">
-        Buscar
-      </button>
+      <button type="submit" class="btn btn-success px-4">Buscar</button>
     </div>
   </form>
 
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>Estación de servicio</th>
-          <th>Concesionario</th>
-          <th>Total trámites</th>
-          <th>Trámites activos</th>
-          <th>Última actualización</th>
-          <th>Estado general</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
+  <!-- Tabla de registros -->
+  <table class="table table-striped table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Estación de servicio</th>
+        <th>Comuna</th>
+        <th>Concesionario</th>
+        <th>Total trámites</th>
+        <th>Trámites activos</th>
+        <th>Última actualización</th>
+        <th>Estado general</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
 
-      <tbody>
-        <tr *ngFor="let estacion of estacionesFiltradas">
-          <td>{{ estacion.estacionServicio }}</td>
-          <td>{{ estacion.concesionario }}</td>
-          <td>{{ estacion.totalTramites }}</td>
-          <td>{{ estacion.tramitesActivos }}</td>
-          <td>{{ estacion.ultimaActualizacion }}</td>
-          <td>
-            <span
-              class="estado-text"
-              [ngClass]="obtenerClaseEstado(estacion.estadoGeneral)"
-            >
-              {{ estacion.estadoGeneral }}
-            </span>
-          </td>
-          <td>
-            <a
-              class="detail-link"
-              [routerLink]="['/tramites']"
-              [queryParams]="{ estacion: estacion.estacionServicio }"
-            >
-              Ver trámites
-            </a>
-          </td>
-        </tr>
+    <tbody>
+      <tr *ngFor="let estacion of estacionesFiltradas">
+        <td>{{ estacion.estacionServicio }}</td>
+        <td>{{ estacion.comuna }}</td>
+        <td>{{ estacion.concesionario }}</td>
+        <td>{{ estacion.totalTramites }}</td>
+        <td>{{ estacion.tramitesActivos }}</td>
+        <td>{{ estacion.ultimaActualizacion }}</td>
+        <td>
+          <span
+            class="estado-text"
+            [ngClass]="obtenerClaseEstado(estacion.estadoGeneral)"
+          >
+            {{ estacion.estadoGeneral }}
+          </span>
+        </td>
+        <td>
+          <a
+            class="detail-link"
+            [routerLink]="['/tramites']"
+            [queryParams]="{ estacion: estacion.estacionServicio }"
+          >
+            Ver trámites
+          </a>
+        </td>
+      </tr>
 
-        <tr *ngIf="estacionesFiltradas.length === 0">
-          <td colspan="7" class="empty-state">
-            No se encontraron estaciones con los filtros seleccionados.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+      <tr *ngIf="estacionesFiltradas.length === 0">
+        <td colspan="8" class="empty-state">
+          No se encontraron estaciones con los filtros seleccionados.
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
+  <!-- Paginación -->
   <div class="pagination-row">
     <p>{{ estacionesFiltradas.length }} de 99 registros</p>
 
-    <div class="pagination">
-      <button disabled>‹ Previous</button>
-      <button class="active">1</button>
-      <button>2</button>
-      <button>3</button>
-      <span>...</span>
-      <button>67</button>
-      <button>68</button>
-      <button>Next →</button>
-    </div>
+    <nav aria-label="...">
+      <ul class="pagination">
+        <li class="page-item"><a href="#" class="page-link">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="#">1</a></li>
+        <li class="page-item active">
+          <a class="page-link" href="#" aria-current="page">2</a>
+        </li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+      </ul>
+    </nav>
   </div>
 </section>

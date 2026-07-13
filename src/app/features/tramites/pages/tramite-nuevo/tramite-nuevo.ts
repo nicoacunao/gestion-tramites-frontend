@@ -1,28 +1,24 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Breadcrumbs } from '../../../../shared/components/breadcrumbs/breadcrumbs';
+import { CommonModule } from "@angular/common";
+import { Component } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 
 @Component({
-  selector: 'app-tramite-nuevo',
+  selector: "app-tramite-nuevo",
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    Breadcrumbs
-  ],
-  templateUrl: './tramite-nuevo.html',
-  styleUrl: './tramite-nuevo.scss'
+  imports: [CommonModule, FormsModule, Breadcrumbs],
+  templateUrl: "./tramite-nuevo.html",
+  styleUrl: "./tramite-nuevo.scss",
 })
 export class TramiteNuevo {
   breadcrumbs = [
     {
-      label: 'Módulo de Gestión de Trámites',
-      route: '/tramites'
+      label: "Módulo de Gestión de Trámites",
+      route: "/tramites",
     },
     {
-      label: 'Nuevo Trámite'
-    }
+      label: "Nuevo Trámite",
+    },
   ];
 
   estacionesServicio = [];
@@ -44,62 +40,75 @@ export class TramiteNuevo {
   archivos = [];
 
   form = {
-    estacionServicio: '',
-    concesionario: '',
-    prioridad: '',
-    estado: '',
-    responsableInterno: '',
-    tipoTramite: '',
-    tramiteEspecifico: '',
-    solicitanteCopec: '',
-    fechaApertura: '',
-    fechaEstimadaTermino: ''
+    estacionServicio: "",
+    concesionario: "",
+    prioridad: "",
+    estado: "",
+    responsableInterno: "",
+    tipoTramite: "",
+    tramiteEspecifico: "",
+    solicitanteCopec: "",
+    fechaApertura: "",
+    fechaEstimadaTermino: "",
   };
 
-  antecedenteRequerido = {
-    antecedente: '',
-    obligatorio: true,
-    responsable: '',
-    estado: '',
-    archivo: '',
-    observaciones: ''
-  };
+  antecedentesRequeridos = [this.crearAntecedenteVacio()];
 
-  antecedenteExtraordinario = {
-    antecedente: '',
-    obligatorio: true,
-    responsable: '',
-    estado: '',
-    archivo: '',
-    observaciones: ''
-  };
+  antecedentesExtraordinarios = [this.crearAntecedenteVacio()];
 
-  hitoGestion = {
-    hito: '',
-    estado: '',
-    fechaEstimada: '',
-    fechaReal: '',
-    responsable: '',
-    observacion: ''
-  };
+  hitosGestion = [this.crearHitoVacio()];
 
   onEstacionChange(): void {
     if (this.form.estacionServicio) {
-      this.form.concesionario = 'Información del concesionario asociada a la estación seleccionada';
+      this.form.concesionario =
+        "Información del concesionario asociada a la estación seleccionada";
     } else {
-      this.form.concesionario = '';
+      this.form.concesionario = "";
     }
   }
 
+  agregarAntecedenteRequerido(): void {
+    this.antecedentesRequeridos.push(this.crearAntecedenteVacio());
+  }
+
+  agregarAntecedenteExtraordinario(): void {
+    this.antecedentesExtraordinarios.push(this.crearAntecedenteVacio());
+  }
+
+  agregarHitoGestion(): void {
+    this.hitosGestion.push(this.crearHitoVacio());
+  }
+
+  private crearAntecedenteVacio() {
+    return {
+      antecedente: "",
+      obligatorio: true,
+      responsable: "",
+      estado: "",
+      observaciones: "",
+    };
+  }
+
+  private crearHitoVacio() {
+    return {
+      hito: "",
+      estado: "",
+      fechaEstimada: "",
+      fechaReal: "",
+      responsable: "",
+      observacion: "",
+    };
+  }
+
   crearTramite(): void {
-    console.log('Crear trámite', this.form);
+    console.log("Crear trámite", this.form);
   }
 
   guardarBorrador(): void {
-    console.log('Guardar borrador', this.form);
+    console.log("Guardar borrador", this.form);
   }
 
   cancelar(): void {
-    console.log('Cancelar');
+    console.log("Cancelar");
   }
 }
