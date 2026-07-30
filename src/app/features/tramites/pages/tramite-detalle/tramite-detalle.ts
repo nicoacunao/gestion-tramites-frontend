@@ -1,32 +1,41 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
-import { ActivatedRoute, RouterLink } from "@angular/router";
+import { AfterViewInit, Component } from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { MessageService } from "primeng/api";
+import { ButtonDirective } from "primeng/button";
+import { PanelModule } from "primeng/panel";
+import { TagModule } from "primeng/tag";
+import { ToastModule } from "primeng/toast";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
+import {
+  resolverSeveridadEstado,
+  TagSeverity,
+} from "../../models/estado-tramite";
+import { Tramite } from "../../models/tramite";
+import { TramitesMock } from "../../services/tramites-mock";
 
 @Component({
   selector: "app-tramite-detalle",
   standalone: true,
-  imports: [CommonModule, RouterLink, Breadcrumbs],
+  imports: [
+    Breadcrumbs,
+    ButtonDirective,
+    CommonModule,
+    PanelModule,
+    RouterLink,
+    TagModule,
+    ToastModule,
+  ],
+  providers: [MessageService],
   templateUrl: "./tramite-detalle.html",
   styleUrl: "./tramite-detalle.scss",
 })
-export class TramiteDetalle {
+export class TramiteDetalle implements AfterViewInit {
   readonly tramiteId: string;
+  readonly tramite: Tramite | undefined;
+  private readonly mostrarToastActualizacion: boolean;
 
   breadcrumbs: Array<{ label: string; route?: string }>;
-
-  readonly tramite = {
-    estacionServicio: "Copec Concón",
-    concesionario: "Comercial Los Pinos SpA",
-    prioridad: "Alta",
-    estado: "En revisión",
-    responsableInterno: "María González",
-    tipoTramite: "Nuevo trámite",
-    tramiteEspecifico: "Regularización de instalaciones",
-    solicitanteCopec: "Carlos Ramírez",
-    fechaApertura: "02-07-2026",
-    fechaEstimadaTermino: "12-07-2026",
-  };
 
   readonly antecedentesRequeridos = [
     {
@@ -77,8 +86,17 @@ export class TramiteDetalle {
     },
   ];
 
-  constructor(route: ActivatedRoute) {
+  constructor(
+    route: ActivatedRoute,
+    router: Router,
+    private readonly messageService: MessageService,
+    tramitesMock: TramitesMock,
+  ) {
     this.tramiteId = route.snapshot.paramMap.get("id") ?? "1001";
+    this.tramite = tramitesMock.obtenerPorId(Number(this.tramiteId));
+    this.mostrarToastActualizacion =
+      router.getCurrentNavigation()?.extras.state?.["tramiteActualizado"] ===
+      true;
     this.breadcrumbs = [
       {
         label: "Módulo de Gestión de Trámites",
@@ -94,15 +112,22 @@ export class TramiteDetalle {
     ];
   }
 
-  obtenerClaseEstado(estado: string): string {
-    const clases: Record<string, string> = {
-      "En revisión": "text-bg-warning",
-      Recibido: "text-bg-success",
-      Pendiente: "text-bg-secondary",
-      Finalizado: "text-bg-success",
-      "En curso": "text-bg-primary",
-    };
+  ngAfterViewInit(): void {
+    if (!this.mostrarToastActualizacion) {
+      return;
+    }
 
-    return clases[estado] ?? "text-bg-secondary";
+    queueMicrotask(() => {
+      this.messageService.add({
+        severity: "success",
+        summary: "Trámite actualizado",
+        detail: "Los cambios se guardaron correctamente.",
+        life: 5000,
+      });
+    });
+  }
+
+  obtenerSeveridadEstado(estado: string): TagSeverity {
+    return resolverSeveridadEstado(estado);
   }
 }

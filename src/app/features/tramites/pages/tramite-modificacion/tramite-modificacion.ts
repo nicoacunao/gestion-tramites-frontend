@@ -2,12 +2,48 @@ import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ButtonDirective } from "primeng/button";
+import { DatePickerModule } from "primeng/datepicker";
+import { FileSelectEvent, FileUploadModule } from "primeng/fileupload";
+import { PlusIcon } from "primeng/icons/plus";
+import { InputGroupModule } from "primeng/inputgroup";
+import { InputGroupAddonModule } from "primeng/inputgroupaddon";
+import { InputTextModule } from "primeng/inputtext";
+import { MessageModule } from "primeng/message";
+import { PanelModule } from "primeng/panel";
+import { SelectModule } from "primeng/select";
+import { TagModule } from "primeng/tag";
+import { TextareaModule } from "primeng/textarea";
+import { ToggleSwitchModule } from "primeng/toggleswitch";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
+import {
+  resolverSeveridadEstado,
+  TagSeverity,
+} from "../../models/estado-tramite";
+import { TramitesMock } from "../../services/tramites-mock";
 
 @Component({
   selector: "app-tramite-modificacion",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Breadcrumbs],
+  imports: [
+    Breadcrumbs,
+    ButtonDirective,
+    CommonModule,
+    DatePickerModule,
+    FileUploadModule,
+    FormsModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputTextModule,
+    MessageModule,
+    PanelModule,
+    PlusIcon,
+    RouterLink,
+    SelectModule,
+    TagModule,
+    TextareaModule,
+    ToggleSwitchModule,
+  ],
   templateUrl: "./tramite-modificacion.html",
   styleUrl: "./tramite-modificacion.scss",
 })
@@ -29,7 +65,7 @@ export class TramiteModificacion {
     prioridad: "Alta",
     estado: "En revisión",
     responsableInterno: "María González",
-    tipoTramite: "Nuevo trámite",
+    tipoTramite: "Patente comercial",
     tramiteEspecifico: "Regularización de instalaciones",
     solicitanteCopec: "Carlos Ramírez",
     fechaApertura: "02-07-2026",
@@ -43,6 +79,8 @@ export class TramiteModificacion {
       responsable: "Concesionario",
       estado: "Recibido",
       observaciones: "Documento revisado y vigente.",
+      archivo: null as File | null,
+      archivoNombre: "",
     },
     {
       antecedente: "Plano de instalaciones",
@@ -50,6 +88,8 @@ export class TramiteModificacion {
       responsable: "Oficina técnica",
       estado: "Pendiente",
       observaciones: "Pendiente de entrega por parte del solicitante.",
+      archivo: null as File | null,
+      archivoNombre: "",
     },
   ];
 
@@ -60,6 +100,8 @@ export class TramiteModificacion {
       responsable: "Oficina técnica",
       estado: "En revisión",
       observaciones: "Se solicitaron aclaraciones menores.",
+      archivo: null as File | null,
+      archivoNombre: "",
     },
   ];
 
@@ -67,15 +109,15 @@ export class TramiteModificacion {
     {
       hito: "Ingreso de solicitud",
       estado: "Finalizado",
-      fechaEstimada: "2026-07-02",
-      fechaReal: "2026-07-02",
+      fechaEstimada: "02/07/2026",
+      fechaReal: "02/07/2026",
       responsable: "Carlos Ramírez",
       observacion: "Solicitud ingresada correctamente.",
     },
     {
       hito: "Revisión técnica",
       estado: "En revisión",
-      fechaEstimada: "2026-07-08",
+      fechaEstimada: "08/07/2026",
       fechaReal: "",
       responsable: "María González",
       observacion: "Revisión documental y técnica en proceso.",
@@ -85,8 +127,26 @@ export class TramiteModificacion {
   constructor(
     route: ActivatedRoute,
     private readonly router: Router,
+    tramitesMock: TramitesMock,
   ) {
     this.tramiteId = route.snapshot.paramMap.get("id") ?? "1001";
+    const tramiteRegistrado = tramitesMock.obtenerPorId(Number(this.tramiteId));
+
+    if (tramiteRegistrado) {
+      Object.assign(this.tramite, {
+        estacionServicio: tramiteRegistrado.estacionServicio,
+        concesionario: tramiteRegistrado.razonSocial,
+        prioridad: tramiteRegistrado.prioridad,
+        estado: tramiteRegistrado.estado,
+        responsableInterno: tramiteRegistrado.responsableInterno,
+        tipoTramite: tramiteRegistrado.tipoTramite,
+        tramiteEspecifico: tramiteRegistrado.tramiteEspecifico,
+        solicitanteCopec: tramiteRegistrado.solicitanteCopec,
+        fechaApertura: tramiteRegistrado.fechaApertura,
+        fechaEstimadaTermino: tramiteRegistrado.fechaEstimadaTermino,
+      });
+    }
+
     this.breadcrumbs = [
       { label: "Módulo de Gestión de Trámites", route: "/tramites" },
       {
@@ -117,7 +177,23 @@ export class TramiteModificacion {
   }
 
   grabar(): void {
-    void this.router.navigate(["/tramites", this.tramiteId]);
+    void this.router.navigate(["/tramites", this.tramiteId], {
+      state: { tramiteActualizado: true },
+    });
+  }
+
+  obtenerSeveridadEstado(estado: string): TagSeverity {
+    return resolverSeveridadEstado(estado);
+  }
+
+  onFileSelect(
+    event: FileSelectEvent,
+    item: { archivo: File | null; archivoNombre: string },
+  ): void {
+    const archivo = event.currentFiles.at(-1) ?? event.files.at(-1) ?? null;
+
+    item.archivo = archivo;
+    item.archivoNombre = archivo?.name ?? "";
   }
 
   private crearAntecedenteVacio() {
@@ -127,6 +203,8 @@ export class TramiteModificacion {
       responsable: "",
       estado: "",
       observaciones: "",
+      archivo: null as File | null,
+      archivoNombre: "",
     };
   }
 }

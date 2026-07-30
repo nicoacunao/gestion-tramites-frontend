@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "fuente": {
+    "archivo": "Mariz operativa.xlsx",
+    "hoja": "60001",
+    "descripcion": "Catálogos temporales construidos desde la matriz operativa y las opciones informadas por Claudio."
+  },
+  "estacionesServicio": [
+    {
+      "codigo": "60001",
+      "nombre": "EDS 60001 - Huechuraba",
+      "direccion": "Huechuraba",
+      "comuna": "Huechuraba",
+      "concesionario": "Comercial y Servicios Soar Limitada",
+      "rut": "77.618.579-5"
+    }
+  ],
+  "prioridades": [
+    "Alta",
+    "Media",
+    "Baja"
+  ],
+  "estados": [
+    "Borrador",
+    "Pendiente",
+    "En curso",
+    "Rechazado",
+    "Reingresado",
+    "Completado"
+  ],
+  "responsables": [
+    "José L. Rosas",
+    "Claudio Doñas",
+    "Claudio Henríquez",
+    "Otros"
+  ],
+  "solicitantesCopec": [
+    "José L. Rosas",
+    "Claudio Doñas",
+    "Claudio Henríquez",
+    "Otros"
+  ],
+  "tiposTramite": [
+    {
+      "id": "patente-comercial",
+      "nombre": "Patente comercial",
+      "tramitesEspecificos": [
+        {
+          "id": "informe-obras-patente-comercial",
+          "nombre": "Informe de obras para patente comercial",
+          "antecedentes": [
+            "Formulario de ingreso",
+            "Certificado de recepción definitiva"
+          ]
+        },
+        {
+          "id": "solicitud-patente-eds",
+          "nombre": "Solicitud de patente EDS",
+          "antecedentes": [
+            "SII - Cambio de dirección comercial o inicio de actividades",
+            "SII - Formulario 22 o certificado de distribución de capital",
+            "SII - Ampliación de giro: lavado de vehículos y encomiendas",
+            "LG - Poder notarial",
+            "LG - Certificado de no deuda de municipalidad de origen",
+            "LG - Constitución de sociedad, publicación en Diario Oficial y protocolización",
+            "LG - Contrato de concesión",
+            "LG - Copia de carnet del representante legal",
+            "LG - Copia de RUT de la empresa",
+            "LG - Traspaso de patente",
+            "SEC - Declaración TC4",
+            "SEC - Certificados de hermeticidad TC8",
+            "SEC - Declaración eléctrica TE1",
+            "SS - Informe sanitario EDS",
+            "SS - Calificación de actividad"
+          ]
+        },
+        {
+          "id": "documentacion-extraordinaria",
+          "nombre": "Documentación extraordinaria",
+          "antecedentes": [
+            "Informe de Bomberos",
+            "Certificado de número",
+            "Croquis de la instalación",
+            "Informe de factibilidad de construcción (IFC)"
+          ]
+        },
+        {
+          "id": "solicitud-patente-pronto",
+          "nombre": "Solicitud de patente PRONTO",
+          "antecedentes": [
+            "SII - Formulario 22 o certificado de distribución de capital",
+            "SII - Ampliación de giro: alimentos y cigarrillos",
+            "LG - Poder notarial",
+            "LG - Constitución de sociedad, publicación en Diario Oficial y protocolización",
+            "LG - Contrato de concesión",
+            "LG - Copia de carnet del representante legal",
+            "LG - Copia de RUT de la empresa",
+            "LG - Antecedente extraordinario",
+            "LG - Traspaso de patente",
+            "SS - Resolución sanitaria de alimentos",
+            "Trámite extraordinario"
+          ]
+        },
+        {
+          "id": "traspaso-patente-definitiva",
+          "nombre": "Traspaso de patente provisoria a definitiva",
+          "antecedentes": [
+            "DOM - Recepción definitiva"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resolucion-sanitaria-alimentos",
+      "nombre": "Resolución sanitaria de alimentos",
+      "tramitesEspecificos": [
+        {
+          "id": "local-elaboracion-consumo-paso",
+          "nombre": "Local de elaboración de alimentos con consumo al paso",
+          "antecedentes": []
+        },
+        {
+          "id": "local-expendio-consumo-paso",
+          "nombre": "Local de expendio de alimentos con consumo al paso",
+          "antecedentes": []
+        },
+        {
+          "id": "local-expendio-alimentos",
+          "nombre": "Local de expendio de alimentos",
+          "antecedentes": [
+            "Autorización municipal de acuerdo con el plan regulador",
+            "Comprobante de pago de agua potable de red pública o resolución de la obra de agua potable particular",
+            "Comprobante de pago de agua potable de red pública o resolución de la obra de alcantarillado particular",
+            "Croquis o memoria técnica de los sistemas de eliminación de calor, olor o vapor y sistema de frío, según corresponda",
+            "Descripción general de los procesos de elaboración",
+            "Plano o croquis de planta e instalaciones sanitarias a escala",
+            "Sistema de control de calidad sanitaria",
+            "Sistema de eliminación de desechos",
+            "Listado de materias primas",
+            "Listado de tipos de alimentos que elaborará",
+            "Certificado de inicio de actividades del SII"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "informe-sanitario-establecimientos",
+      "nombre": "Informe sanitario de establecimientos industriales y/o comerciales",
+      "tramitesEspecificos": [
+        {
+          "id": "informe-sanitario-establecimiento",
+          "nombre": "Informe sanitario de establecimiento",
+          "antecedentes": [
+            "Plano general o croquis de la instalación",
+            "Características de la construcción",
+            "Procesos y actividades realizadas",
+            "Abastecimiento de servicios básicos: agua potable y aguas servidas",
+            "Informe de uso de suelo o certificado de zonificación",
+            "Antecedentes complementarios"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "regularizacion-obras",
+      "nombre": "Regularización de obras",
+      "tramitesEspecificos": [
+        {
+          "id": "permiso-obra-menor-dom",
+          "nombre": "Permiso de obra menor DOM",
+          "antecedentes": [
+            "Formulario artículo 5.1.4",
+            "Certificado de informes previos (CIP)",
+            "Planos de construcción"
+          ]
+        },
+        {
+          "id": "recepcion-permiso-obra-menor",
+          "nombre": "Recepción de permiso de obra menor",
+          "antecedentes": [
+            "Formulario artículo 5.1.4",
+            "Certificado de informes previos (CIP)",
+            "Informe de construcción de profesional competente",
+            "Libro de obra",
+            "Certificados de pavimentos",
+            "Aprobaciones Serviu / MOP",
+            "Planos de construcción As Built"
+          ]
+        }
+      ]
+    }
+  ]
+}

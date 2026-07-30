@@ -1,396 +1,600 @@
-<section class="w-100">
+<section class="modification-page">
   <div class="mb-4">
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
-  <div
-    class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"
-  >
+  <div class="modification-header">
     <div>
       <h2 class="h4 mb-1">Modificar trámite #{{ tramiteId }}</h2>
       <p class="text-body-secondary mb-0">
         Actualiza los antecedentes y los hitos de gestión.
       </p>
     </div>
-    <span class="badge rounded-pill text-bg-warning">{{ tramite.estado }}</span>
+    <p-tag
+      [severity]="obtenerSeveridadEstado(tramite.estado)"
+      [rounded]="true"
+    >
+      {{ tramite.estado }}
+    </p-tag>
   </div>
 
-  <form (ngSubmit)="grabar()" class="d-flex flex-column gap-4">
-    <section class="card border-0 shadow-sm">
-      <div class="card-header bg-body py-3">
-        <h3 class="h5 mb-0">Datos generales</h3>
-      </div>
-      <div class="card-body p-3 p-md-4">
-        <div class="alert alert-light border d-flex align-items-center mb-4">
-          <span
-            >Los datos generales son informativos y no pueden modificarse.</span
-          >
-        </div>
+  <form (ngSubmit)="grabar()" class="modification-form">
+    <p-panel header="Datos generales" styleClass="modification-panel">
+      <p-message
+        severity="info"
+        text="Los datos generales son informativos y no pueden modificarse."
+        styleClass="w-100 general-info-message"
+      />
 
-        <div class="row g-3">
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary"
-              >Estación de servicio</label
-            >
+      <div class="row g-4 mt-1">
+        <div class="col-12 col-lg-6">
+          <div class="form-field">
+            <label for="modEstacion">Estación de servicio</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modEstacion"
               [value]="tramite.estacionServicio"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label text-body-secondary">Prioridad</label>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="form-field">
+            <label for="modPrioridad">Prioridad</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modPrioridad"
               [value]="tramite.prioridad"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label text-body-secondary">Estado</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.estado"
-            />
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+          <div class="form-field">
+            <label>Estado</label>
+            <div class="field-tag">
+              <p-tag
+                [severity]="obtenerSeveridadEstado(tramite.estado)"
+                [rounded]="true"
+              >
+                {{ tramite.estado }}
+              </p-tag>
+            </div>
           </div>
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary">Concesionario</label>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="form-field">
+            <label for="modConcesionario">Concesionario</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modConcesionario"
               [value]="tramite.concesionario"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary"
-              >Responsable interno</label
-            >
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="form-field">
+            <label for="modResponsableInterno">Responsable interno</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modResponsableInterno"
               [value]="tramite.responsableInterno"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Tipo de trámite</label
-            >
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-field">
+            <label for="modTipoTramite">Tipo de trámite</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modTipoTramite"
               [value]="tramite.tipoTramite"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Trámite específico</label
-            >
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-field">
+            <label for="modTramiteEspecifico">Trámite específico</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modTramiteEspecifico"
               [value]="tramite.tramiteEspecifico"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Solicitante Copec</label
-            >
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="form-field">
+            <label for="modSolicitante">Solicitante Copec</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modSolicitante"
               [value]="tramite.solicitanteCopec"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary"
-              >Fecha de apertura</label
-            >
+        </div>
+
+        <div class="col-12 col-md-3">
+          <div class="form-field">
+            <label for="modFechaApertura">Fecha de apertura</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modFechaApertura"
               [value]="tramite.fechaApertura"
+              class="w-100"
+              readonly
             />
           </div>
-          <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary"
-              >Fecha estimada de término</label
-            >
+        </div>
+
+        <div class="col-12 col-md-3">
+          <div class="form-field">
+            <label for="modFechaTermino">Fecha estimada de término</label>
             <input
-              class="form-control-plaintext fw-medium"
-              readonly
+              pInputText
+              id="modFechaTermino"
               [value]="tramite.fechaEstimadaTermino"
+              class="w-100"
+              readonly
             />
           </div>
         </div>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm p-3 p-md-4">
-      <h3 class="h5 mb-4">Antecedentes requeridos</h3>
-
+    <p-panel
+      header="Antecedentes requeridos"
+      styleClass="modification-panel"
+    >
       <div
-        class="border rounded-3 p-3 mb-4"
+        class="editable-item"
         *ngFor="let item of antecedentesRequeridos; let i = index"
       >
-        <div class="row g-3 align-items-end">
+        <div class="row g-4 align-items-end">
           <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label">Antecedente</label>
-            <input
-              class="form-control"
-              [name]="'antecedenteReq' + i"
-              [(ngModel)]="item.antecedente"
-            />
-          </div>
-          <div class="col-12 col-md-6 col-lg-2">
-            <div class="form-check form-switch pt-md-4">
+            <div class="form-field">
+              <label [for]="'antecedenteReq' + i">Antecedente</label>
               <input
-                class="form-check-input"
-                type="checkbox"
-                [id]="'obligatorioReq' + i"
+                pInputText
+                [id]="'antecedenteReq' + i"
+                [name]="'antecedenteReq' + i"
+                [(ngModel)]="item.antecedente"
+                class="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-2">
+            <div class="switch-field">
+              <p-toggleswitch
+                [inputId]="'obligatorioReq' + i"
                 [name]="'obligatorioReq' + i"
                 [(ngModel)]="item.obligatorio"
               />
-              <label class="form-check-label" [for]="'obligatorioReq' + i"
-                >Obligatorio</label
-              >
+              <label [for]="'obligatorioReq' + i">Obligatorio</label>
             </div>
           </div>
+
           <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label">Responsable</label>
-            <select
-              class="form-select"
-              [name]="'responsableReq' + i"
-              [(ngModel)]="item.responsable"
-            >
-              <option value="">Seleccione responsable</option>
-              <option
-                *ngFor="let responsable of responsables"
-                [value]="responsable"
-              >
-                {{ responsable }}
-              </option>
-            </select>
+            <div class="form-field">
+              <label [for]="'responsableReq' + i">Responsable</label>
+              <p-select
+                [inputId]="'responsableReq' + i"
+                [name]="'responsableReq' + i"
+                [(ngModel)]="item.responsable"
+                [options]="responsables"
+                placeholder="Seleccione responsable"
+                [filter]="true"
+                filterPlaceholder="Buscar responsable"
+                styleClass="w-100"
+              />
+            </div>
           </div>
+
           <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label">Estado</label>
-            <select
-              class="form-select"
-              [name]="'estadoReq' + i"
-              [(ngModel)]="item.estado"
-            >
-              <option value="">Seleccione estado</option>
-              <option *ngFor="let estado of estados" [value]="estado">
-                {{ estado }}
-              </option>
-            </select>
+            <div class="form-field">
+              <label [for]="'estadoReq' + i">Estado</label>
+              <p-select
+                [inputId]="'estadoReq' + i"
+                [name]="'estadoReq' + i"
+                [(ngModel)]="item.estado"
+                [options]="estados"
+                placeholder="Seleccione estado"
+                styleClass="w-100"
+              />
+            </div>
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">Reemplazar archivo</label>
-            <input class="form-control" type="file" [name]="'archivoReq' + i" />
+
+          <div class="col-12 col-lg-6">
+            <div class="form-field">
+              <label>Reemplazar archivo</label>
+              <p-inputgroup styleClass="file-input-group">
+                <p-inputgroup-addon>
+                  <svg
+                    class="file-addon-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l10-10a4 4 0 0 1 5.7 5.7l-10 10a2 2 0 0 1-2.8-2.8l9.3-9.3"
+                    />
+                  </svg>
+                </p-inputgroup-addon>
+                <input
+                  pInputText
+                  [value]="item.archivoNombre"
+                  placeholder="Ningún archivo seleccionado"
+                  aria-label="Archivo seleccionado"
+                  readonly
+                />
+                <p-inputgroup-addon>
+                  <p-fileupload
+                    mode="basic"
+                    [name]="'archivoReq' + i"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    chooseLabel="Examinar"
+                    [multiple]="false"
+                    [auto]="false"
+                    [customUpload]="true"
+                    [maxFileSize]="10000000"
+                    [chooseButtonProps]="{
+                      severity: 'secondary',
+                      variant: 'text',
+                    }"
+                    invalidFileSizeMessageSummary="Archivo demasiado grande"
+                    invalidFileSizeMessageDetail="El tamaño máximo permitido es 10 MB."
+                    (onSelect)="onFileSelect($event, item)"
+                  >
+                    <ng-template #chooseicon>
+                      <svg
+                        class="file-upload-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14" />
+                      </svg>
+                    </ng-template>
+                    <ng-template #filelabel></ng-template>
+                  </p-fileupload>
+                </p-inputgroup-addon>
+              </p-inputgroup>
+            </div>
           </div>
-          <div class="col-12 col-lg-8">
-            <label class="form-label">Observaciones</label>
-            <textarea
-              class="form-control"
-              [name]="'observacionesReq' + i"
-              [(ngModel)]="item.observaciones"
-            ></textarea>
+
+          <div class="col-12 col-lg-6">
+            <div class="form-field">
+              <label [for]="'observacionesReq' + i">Observaciones</label>
+              <textarea
+                pTextarea
+                [id]="'observacionesReq' + i"
+                [name]="'observacionesReq' + i"
+                [(ngModel)]="item.observaciones"
+                [autoResize]="true"
+                rows="3"
+                class="w-100"
+              ></textarea>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="d-flex justify-content-end">
+      <div class="section-actions">
         <button
+          pButton
           type="button"
-          class="btn btn-outline-success btn-sm"
+          severity="success"
+          [outlined]="true"
+          size="small"
           (click)="agregarAntecedenteRequerido()"
         >
-          + Agregar
+          <svg data-p-icon="plus"></svg>
+          <span>Agregar</span>
         </button>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm p-3 p-md-4">
-      <h3 class="h5 mb-4">Antecedentes extraordinarios</h3>
-
+    <p-panel
+      header="Antecedentes extraordinarios"
+      styleClass="modification-panel"
+    >
       <div
-        class="border rounded-3 p-3 mb-4"
+        class="editable-item"
         *ngFor="let item of antecedentesExtraordinarios; let i = index"
       >
-        <div class="row g-3 align-items-end">
+        <div class="row g-4 align-items-end">
           <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label">Antecedente</label>
-            <input
-              class="form-control"
-              [name]="'antecedenteExtra' + i"
-              [(ngModel)]="item.antecedente"
-            />
-          </div>
-          <div class="col-12 col-md-6 col-lg-2">
-            <div class="form-check form-switch pt-md-4">
+            <div class="form-field">
+              <label [for]="'antecedenteExtra' + i">Antecedente</label>
               <input
-                class="form-check-input"
-                type="checkbox"
-                [id]="'obligatorioExtra' + i"
+                pInputText
+                [id]="'antecedenteExtra' + i"
+                [name]="'antecedenteExtra' + i"
+                [(ngModel)]="item.antecedente"
+                class="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-2">
+            <div class="switch-field">
+              <p-toggleswitch
+                [inputId]="'obligatorioExtra' + i"
                 [name]="'obligatorioExtra' + i"
                 [(ngModel)]="item.obligatorio"
               />
-              <label class="form-check-label" [for]="'obligatorioExtra' + i"
-                >Obligatorio</label
-              >
+              <label [for]="'obligatorioExtra' + i">Obligatorio</label>
             </div>
           </div>
+
           <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label">Responsable</label>
-            <select
-              class="form-select"
-              [name]="'responsableExtra' + i"
-              [(ngModel)]="item.responsable"
-            >
-              <option value="">Seleccione responsable</option>
-              <option
-                *ngFor="let responsable of responsables"
-                [value]="responsable"
-              >
-                {{ responsable }}
-              </option>
-            </select>
+            <div class="form-field">
+              <label [for]="'responsableExtra' + i">Responsable</label>
+              <p-select
+                [inputId]="'responsableExtra' + i"
+                [name]="'responsableExtra' + i"
+                [(ngModel)]="item.responsable"
+                [options]="responsables"
+                placeholder="Seleccione responsable"
+                [filter]="true"
+                filterPlaceholder="Buscar responsable"
+                styleClass="w-100"
+              />
+            </div>
           </div>
+
           <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label">Estado</label>
-            <select
-              class="form-select"
-              [name]="'estadoExtra' + i"
-              [(ngModel)]="item.estado"
-            >
-              <option value="">Seleccione estado</option>
-              <option *ngFor="let estado of estados" [value]="estado">
-                {{ estado }}
-              </option>
-            </select>
+            <div class="form-field">
+              <label [for]="'estadoExtra' + i">Estado</label>
+              <p-select
+                [inputId]="'estadoExtra' + i"
+                [name]="'estadoExtra' + i"
+                [(ngModel)]="item.estado"
+                [options]="estados"
+                placeholder="Seleccione estado"
+                styleClass="w-100"
+              />
+            </div>
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">Reemplazar archivo</label>
-            <input
-              class="form-control"
-              type="file"
-              [name]="'archivoExtra' + i"
-            />
+
+          <div class="col-12 col-lg-6">
+            <div class="form-field">
+              <label>Reemplazar archivo</label>
+              <p-inputgroup styleClass="file-input-group">
+                <p-inputgroup-addon>
+                  <svg
+                    class="file-addon-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l10-10a4 4 0 0 1 5.7 5.7l-10 10a2 2 0 0 1-2.8-2.8l9.3-9.3"
+                    />
+                  </svg>
+                </p-inputgroup-addon>
+                <input
+                  pInputText
+                  [value]="item.archivoNombre"
+                  placeholder="Ningún archivo seleccionado"
+                  aria-label="Archivo seleccionado"
+                  readonly
+                />
+                <p-inputgroup-addon>
+                  <p-fileupload
+                    mode="basic"
+                    [name]="'archivoExtra' + i"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    chooseLabel="Examinar"
+                    [multiple]="false"
+                    [auto]="false"
+                    [customUpload]="true"
+                    [maxFileSize]="10000000"
+                    [chooseButtonProps]="{
+                      severity: 'secondary',
+                      variant: 'text',
+                    }"
+                    invalidFileSizeMessageSummary="Archivo demasiado grande"
+                    invalidFileSizeMessageDetail="El tamaño máximo permitido es 10 MB."
+                    (onSelect)="onFileSelect($event, item)"
+                  >
+                    <ng-template #chooseicon>
+                      <svg
+                        class="file-upload-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14" />
+                      </svg>
+                    </ng-template>
+                    <ng-template #filelabel></ng-template>
+                  </p-fileupload>
+                </p-inputgroup-addon>
+              </p-inputgroup>
+            </div>
           </div>
-          <div class="col-12 col-lg-8">
-            <label class="form-label">Observaciones</label>
-            <textarea
-              class="form-control"
-              [name]="'observacionesExtra' + i"
-              [(ngModel)]="item.observaciones"
-            ></textarea>
+
+          <div class="col-12 col-lg-6">
+            <div class="form-field">
+              <label [for]="'observacionesExtra' + i">Observaciones</label>
+              <textarea
+                pTextarea
+                [id]="'observacionesExtra' + i"
+                [name]="'observacionesExtra' + i"
+                [(ngModel)]="item.observaciones"
+                [autoResize]="true"
+                rows="3"
+                class="w-100"
+              ></textarea>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="d-flex justify-content-end">
+      <div class="section-actions">
         <button
+          pButton
           type="button"
-          class="btn btn-outline-success btn-sm"
+          severity="success"
+          [outlined]="true"
+          size="small"
           (click)="agregarAntecedenteExtraordinario()"
         >
-          + Agregar
+          <svg data-p-icon="plus"></svg>
+          <span>Agregar</span>
         </button>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm p-3 p-md-4">
-      <h3 class="h5 mb-4">Hitos de gestión</h3>
-
+    <p-panel header="Hitos de gestión" styleClass="modification-panel">
       <div
-        class="row g-3 align-items-end border rounded-3 p-3 mx-0 mb-4"
+        class="editable-item"
         *ngFor="let item of hitosGestion; let i = index"
       >
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Hito</label>
-          <input
-            class="form-control"
-            [name]="'hito' + i"
-            [(ngModel)]="item.hito"
-          />
-        </div>
-        <div class="col-12 col-md-6 col-lg-2">
-          <label class="form-label">Estado</label>
-          <select
-            class="form-select"
-            [name]="'estadoHito' + i"
-            [(ngModel)]="item.estado"
-          >
-            <option value="">Seleccione estado</option>
-            <option *ngFor="let estado of estados" [value]="estado">
-              {{ estado }}
-            </option>
-          </select>
-        </div>
-        <div class="col-12 col-md-6 col-lg-3">
-          <label class="form-label">Fecha estimada</label>
-          <input
-            class="form-control"
-            type="date"
-            [name]="'fechaEstimada' + i"
-            [(ngModel)]="item.fechaEstimada"
-          />
-        </div>
-        <div class="col-12 col-md-6 col-lg-3">
-          <label class="form-label">Fecha real</label>
-          <input
-            class="form-control"
-            type="date"
-            [name]="'fechaReal' + i"
-            [(ngModel)]="item.fechaReal"
-          />
-        </div>
-        <div class="col-12 col-lg-4">
-          <label class="form-label">Responsable</label>
-          <select
-            class="form-select"
-            [name]="'responsableHito' + i"
-            [(ngModel)]="item.responsable"
-          >
-            <option value="">Seleccione responsable</option>
-            <option
-              *ngFor="let responsable of responsables"
-              [value]="responsable"
-            >
-              {{ responsable }}
-            </option>
-          </select>
-        </div>
-        <div class="col-12 col-lg-8">
-          <label class="form-label">Observación</label>
-          <textarea
-            class="form-control"
-            [name]="'observacionHito' + i"
-            [(ngModel)]="item.observacion"
-          ></textarea>
+        <div class="row g-4 align-items-end">
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="form-field">
+              <label [for]="'hito' + i">Hito</label>
+              <input
+                pInputText
+                [id]="'hito' + i"
+                [name]="'hito' + i"
+                [(ngModel)]="item.hito"
+                class="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-2">
+            <div class="form-field">
+              <label [for]="'estadoHito' + i">Estado</label>
+              <p-select
+                [inputId]="'estadoHito' + i"
+                [name]="'estadoHito' + i"
+                [(ngModel)]="item.estado"
+                [options]="estados"
+                placeholder="Seleccione estado"
+                styleClass="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-3">
+            <div class="form-field">
+              <label [for]="'fechaEstimada' + i">Fecha estimada</label>
+              <p-datepicker
+                [inputId]="'fechaEstimada' + i"
+                [name]="'fechaEstimada' + i"
+                [(ngModel)]="item.fechaEstimada"
+                dataType="string"
+                dateFormat="dd/mm/yy"
+                placeholder="dd/mm/yyyy"
+                [showIcon]="true"
+                iconDisplay="input"
+                [showButtonBar]="true"
+                [firstDayOfWeek]="1"
+                styleClass="w-100"
+                inputStyleClass="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-3">
+            <div class="form-field">
+              <label [for]="'fechaReal' + i">Fecha real</label>
+              <p-datepicker
+                [inputId]="'fechaReal' + i"
+                [name]="'fechaReal' + i"
+                [(ngModel)]="item.fechaReal"
+                dataType="string"
+                dateFormat="dd/mm/yy"
+                placeholder="dd/mm/yyyy"
+                [showIcon]="true"
+                iconDisplay="input"
+                [showButtonBar]="true"
+                [firstDayOfWeek]="1"
+                styleClass="w-100"
+                inputStyleClass="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <div class="form-field">
+              <label [for]="'responsableHito' + i">Responsable</label>
+              <p-select
+                [inputId]="'responsableHito' + i"
+                [name]="'responsableHito' + i"
+                [(ngModel)]="item.responsable"
+                [options]="responsables"
+                placeholder="Seleccione responsable"
+                [filter]="true"
+                filterPlaceholder="Buscar responsable"
+                styleClass="w-100"
+              />
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="form-field">
+              <label [for]="'observacionHito' + i">Observación</label>
+              <textarea
+                pTextarea
+                [id]="'observacionHito' + i"
+                [name]="'observacionHito' + i"
+                [(ngModel)]="item.observacion"
+                [autoResize]="true"
+                rows="3"
+                class="w-100"
+              ></textarea>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="d-flex justify-content-end">
+      <div class="section-actions">
         <button
+          pButton
           type="button"
-          class="btn btn-outline-success btn-sm"
+          severity="success"
+          [outlined]="true"
+          size="small"
           (click)="agregarHito()"
         >
-          + Agregar
+          <svg data-p-icon="plus"></svg>
+          <span>Agregar</span>
         </button>
       </div>
-    </section>
+    </p-panel>
 
-    <div class="d-flex flex-wrap justify-content-end gap-2 pb-4">
+    <div class="form-actions">
       <a
+        pButton
         [routerLink]="['/tramites', tramiteId]"
-        class="btn btn-outline-secondary"
+        severity="secondary"
+        [outlined]="true"
       >
         Cancelar
       </a>
-      <button type="submit" class="btn btn-success">Grabar cambios</button>
+      <button pButton type="submit" severity="success">
+        Grabar cambios
+      </button>
     </div>
   </form>
 </section>

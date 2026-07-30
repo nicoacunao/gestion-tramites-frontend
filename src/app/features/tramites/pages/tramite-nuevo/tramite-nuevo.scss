@@ -1,1 +1,163 @@
-// La presentación de este formulario utiliza componentes y utilidades de Bootstrap.
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  > label {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  gap: 10px;
+
+  label {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+}
+
+.select-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  small {
+    color: #6b7280;
+  }
+}
+
+.field-help {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+textarea[pTextarea] {
+  min-height: 84px;
+}
+
+:host ::ng-deep {
+  .p-select,
+  .p-datepicker,
+  .p-autocomplete {
+    width: 100%;
+  }
+
+  .p-fileupload-basic {
+    justify-content: flex-start;
+  }
+
+  .file-input-group {
+    width: 100%;
+    height: 42px;
+    align-items: stretch;
+
+    > .p-inputtext {
+      width: 1%;
+      height: 42px;
+      min-width: 0;
+    }
+
+    > .p-inputgroupaddon {
+      flex: 0 0 auto;
+      height: 42px;
+
+      &:has(.p-fileupload) {
+        padding: 0;
+      }
+    }
+
+    .p-fileupload,
+    .p-fileupload-basic,
+    .p-fileupload-basic-content,
+    p-button,
+    .p-fileupload-choose-button {
+      width: auto;
+      height: 100%;
+    }
+
+    .p-fileupload-choose-button {
+      border-radius: 0;
+      white-space: nowrap;
+    }
+  }
+}
+
+.file-addon-icon,
+.file-upload-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.creation-success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+.creation-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+
+  svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.creation-success-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  strong {
+    color: #166534;
+    font-size: 20px;
+  }
+
+  p {
+    margin: 0;
+    color: #4b5563;
+  }
+}
+
+.creation-redirect {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+:host ::ng-deep {
+  .creation-success-dialog .p-dialog-content {
+    padding-top: 8px;
+  }
+
+  .creation-progress {
+    height: 6px;
+  }
+}

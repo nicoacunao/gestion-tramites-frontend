@@ -1,19 +1,66 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, DestroyRef, OnInit, inject } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
-import { ActivatedRoute, RouterLink } from "@angular/router";
+import { RouterLink } from "@angular/router";
+import { FloatLabelModule } from "primeng/floatlabel";
+import {
+  AutoCompleteCompleteEvent,
+  AutoCompleteModule,
+} from "primeng/autocomplete";
+import { DatePickerModule } from "primeng/datepicker";
+import { ButtonDirective } from "primeng/button";
+import { TableModule, TablePageEvent } from "primeng/table";
+import { TagModule } from "primeng/tag";
+import {
+  resolverSeveridadEstado,
+  TagSeverity,
+} from "../../models/estado-tramite";
 import { Tramite } from "../../models/tramite";
+import { TramitesMock } from "../../services/tramites-mock";
+import { TramitesNavegacion } from "../../services/tramites-navegacion";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
+
+interface EstadoTramite {
+  title: string;
+  severity: TagSeverity;
+}
+
+interface FiltrosTramites {
+  idEstacion: string;
+  fechaApertura: Date[] | null;
+  fechaTermino: Date[] | null;
+  estado: string;
+}
 
 @Component({
   selector: "app-tramites-listado",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Breadcrumbs],
+  imports: [
+    AutoCompleteModule,
+    Breadcrumbs,
+    CommonModule,
+    DatePickerModule,
+    FormsModule,
+    RouterLink,
+    FloatLabelModule,
+    ButtonDirective,
+    TableModule,
+    TagModule,
+  ],
   templateUrl: "./tramites-listado.html",
   styleUrl: "./tramites-listado.scss",
 })
 export class TramitesListado implements OnInit {
-  constructor(private readonly route: ActivatedRoute) {}
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    tramitesMock: TramitesMock,
+    private readonly tramitesNavegacion: TramitesNavegacion,
+  ) {
+    this.tramites = tramitesMock.obtenerTodos();
+    this.tramitesFiltrados = [...this.tramites];
+  }
 
   breadcrumbs = [
     {
@@ -24,113 +71,70 @@ export class TramitesListado implements OnInit {
       label: "Consulta de Trámites",
     },
   ];
-  filtros = {
-    estacionServicio: "",
-    fechaAperturaDesde: "",
-    fechaAperturaHasta: "",
-    fechaTerminoDesde: "",
-    fechaTerminoHasta: "",
+  filtros: FiltrosTramites = {
+    idEstacion: "",
+    fechaApertura: null,
+    fechaTermino: null,
     estado: "",
   };
 
-  estacionesServicio = [
-    "Copec Concón",
-    "Copec Reñaca",
-    "Copec Viña Centro",
-    "Copec Valparaíso",
-    "Copec Quilpué",
-    "Copec Villa Alemana",
-    "Copec Curauma",
-    "Copec Placilla",
-  ];
+  idsEstacion = ["60001", "60002", "60003", "60004", "60005"];
 
-  estados = [
-    {
-      title: "Ingresado",
-      textColor: "text-bg-primary",
-    },
-    {
-      title: "En revisión",
-      textColor: "text-bg-warning",
-    },
-    {
-      title: "Observado",
-      textColor: "text-bg-info",
-    },
-    {
-      title: "Aprobado",
-      textColor: "text-bg-success",
-    },
-    {
-      title: "Finalizado",
-      textColor: "text-bg-dark",
-    },
-  ];
+  estados: EstadoTramite[] = [
+    "Ingresado",
+    "En revisión",
+    "Observado",
+    "Aprobado",
+    "Finalizado",
+  ].map((title) => ({
+    title,
+    severity: resolverSeveridadEstado(title),
+  }));
 
-  tramites: Tramite[] = [
-    {
-      id: 1001,
-      tipoTramite: "Nuevo trámite",
-      estacionServicio: "Copec Concón",
-      estado: "Ingresado",
-      concesionario: "Comercial Los Pinos SpA",
-      fechaApertura: "02-07-2026",
-      fechaEstimadaTermino: "12-07-2026",
-    },
-    {
-      id: 1002,
-      tipoTramite: "Modificación",
-      estacionServicio: "Copec Reñaca",
-      estado: "En revisión",
-      concesionario: "Servicios Reñaca Ltda.",
-      fechaApertura: "01-07-2026",
-      fechaEstimadaTermino: "10-07-2026",
-    },
-    {
-      id: 1003,
-      tipoTramite: "Nuevo trámite",
-      estacionServicio: "Copec Viña Centro",
-      estado: "Observado",
-      concesionario: "Inversiones Costa Azul",
-      fechaApertura: "28-06-2026",
-      fechaEstimadaTermino: "08-07-2026",
-    },
-    {
-      id: 1004,
-      tipoTramite: "Modificación",
-      estacionServicio: "Copec Valparaíso",
-      estado: "Aprobado",
-      concesionario: "Transportes Puerto Ltda.",
-      fechaApertura: "25-06-2026",
-      fechaEstimadaTermino: "05-07-2026",
-    },
-    {
-      id: 1005,
-      tipoTramite: "Nuevo trámite",
-      estacionServicio: "Copec Quilpué",
-      estado: "Finalizado",
-      concesionario: "Sociedad El Belloto",
-      fechaApertura: "20-06-2026",
-      fechaEstimadaTermino: "30-06-2026",
-    },
-  ];
+  idsEstacionSugeridos = [...this.idsEstacion];
+  estadosSugeridos = this.estados.map((estado) => estado.title);
 
-  tramitesFiltrados: Tramite[] = [...this.tramites];
+  tramites: Tramite[];
+  tramitesFiltrados: Tramite[];
+  first = 0;
+  rows = 5;
 
   ngOnInit(): void {
-    const estacion = this.route.snapshot.queryParamMap.get("estacion");
+    const idEstacion = this.tramitesNavegacion.consumirFiltroEstacion();
 
-    if (estacion) {
-      this.filtros.estacionServicio = estacion;
-      this.buscar();
+    if (idEstacion) {
+      this.filtros.idEstacion = idEstacion;
+      this.aplicarFiltros();
     }
+
+    this.tramitesNavegacion.listadoCompleto$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.restablecerFiltros());
+  }
+
+  filtrarIdsEstacion(event: AutoCompleteCompleteEvent): void {
+    this.idsEstacionSugeridos = this.filtrarOpciones(
+      this.idsEstacion,
+      event.query,
+    );
+  }
+
+  filtrarEstados(event: AutoCompleteCompleteEvent): void {
+    this.estadosSugeridos = this.filtrarOpciones(
+      this.estados.map((estado) => estado.title),
+      event.query,
+    );
   }
 
   buscar(): void {
+    this.aplicarFiltros();
+  }
+
+  private aplicarFiltros(): void {
     this.tramitesFiltrados = this.tramites.filter((tramite) => {
-      const coincideEstacion =
-        !this.filtros.estacionServicio ||
-        tramite.estacionServicio === this.filtros.estacionServicio;
+      const coincideIdEstacion =
+        !this.filtros.idEstacion ||
+        tramite.idEstacion === this.filtros.idEstacion;
 
       const coincideEstado =
         !this.filtros.estado || tramite.estado === this.filtros.estado;
@@ -138,52 +142,118 @@ export class TramitesListado implements OnInit {
       const fechaApertura = this.convertirFecha(tramite.fechaApertura);
       const fechaTermino = this.convertirFecha(tramite.fechaEstimadaTermino);
 
-      const coincideAperturaDesde =
-        !this.filtros.fechaAperturaDesde ||
-        fechaApertura >= this.filtros.fechaAperturaDesde;
-      const coincideAperturaHasta =
-        !this.filtros.fechaAperturaHasta ||
-        fechaApertura <= this.filtros.fechaAperturaHasta;
-      const coincideTerminoDesde =
-        !this.filtros.fechaTerminoDesde ||
-        fechaTermino >= this.filtros.fechaTerminoDesde;
-      const coincideTerminoHasta =
-        !this.filtros.fechaTerminoHasta ||
-        fechaTermino <= this.filtros.fechaTerminoHasta;
+      const coincideApertura = this.estaDentroDelRango(
+        fechaApertura,
+        this.filtros.fechaApertura,
+      );
+      const coincideTermino = this.estaDentroDelRango(
+        fechaTermino,
+        this.filtros.fechaTermino,
+      );
 
       return (
-        coincideEstacion &&
+        coincideIdEstacion &&
         coincideEstado &&
-        coincideAperturaDesde &&
-        coincideAperturaHasta &&
-        coincideTerminoDesde &&
-        coincideTerminoHasta
+        coincideApertura &&
+        coincideTermino
       );
     });
+    this.first = 0;
   }
 
   limpiarFiltros(): void {
-    this.filtros = {
-      estacionServicio: "",
-      fechaAperturaDesde: "",
-      fechaAperturaHasta: "",
-      fechaTerminoDesde: "",
-      fechaTerminoHasta: "",
-      estado: "",
-    };
-
-    this.tramitesFiltrados = [...this.tramites];
+    this.restablecerFiltros();
   }
 
-  obtenerClaseEstado(estadoActual: string): string {
-    return (
-      this.estados.find((item) => item.title === estadoActual)?.textColor ??
-      "text-bg-secondary"
+  pageChange(event: TablePageEvent): void {
+    this.first = event.first;
+    this.rows = event.rows;
+  }
+
+  next(): void {
+    const lastPageFirst =
+      Math.max(Math.ceil(this.tramitesFiltrados.length / this.rows) - 1, 0) *
+      this.rows;
+
+    this.first = Math.min(
+      this.first + this.rows,
+      lastPageFirst,
     );
   }
 
-  private convertirFecha(fecha: string): string {
+  prev(): void {
+    this.first = Math.max(this.first - this.rows, 0);
+  }
+
+  reset(): void {
+    this.first = 0;
+  }
+
+  isLastPage(): boolean {
+    return this.first + this.rows >= this.tramitesFiltrados.length;
+  }
+
+  isFirstPage(): boolean {
+    return this.first === 0;
+  }
+
+  obtenerClaseEstado(estadoActual: string): TagSeverity {
+    return resolverSeveridadEstado(estadoActual);
+  }
+
+  private convertirFecha(fecha: string): Date {
     const [dia, mes, anio] = fecha.split("-");
-    return `${anio}-${mes}-${dia}`;
+    return new Date(Number(anio), Number(mes) - 1, Number(dia));
+  }
+
+  private estaDentroDelRango(fecha: Date, rango: Date[] | null): boolean {
+    const [desde, hasta] = rango ?? [];
+
+    if (!desde) {
+      return true;
+    }
+
+    const fechaNormalizada = this.normalizarFecha(fecha);
+    const desdeNormalizado = this.normalizarFecha(desde);
+    const hastaNormalizado = hasta ? this.normalizarFecha(hasta) : null;
+
+    return (
+      fechaNormalizada >= desdeNormalizado &&
+      (!hastaNormalizado || fechaNormalizada <= hastaNormalizado)
+    );
+  }
+
+  private normalizarFecha(fecha: Date): number {
+    return new Date(
+      fecha.getFullYear(),
+      fecha.getMonth(),
+      fecha.getDate(),
+    ).getTime();
+  }
+
+  private filtrarOpciones(opciones: string[], consulta: string): string[] {
+    const consultaNormalizada = this.normalizarTexto(consulta);
+
+    return opciones.filter((opcion) =>
+      this.normalizarTexto(opcion).includes(consultaNormalizada),
+    );
+  }
+
+  private restablecerFiltros(): void {
+    this.filtros = {
+      idEstacion: "",
+      fechaApertura: null,
+      fechaTermino: null,
+      estado: "",
+    };
+    this.tramitesFiltrados = [...this.tramites];
+    this.first = 0;
+  }
+
+  private normalizarTexto(texto: string): string {
+    return texto
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLocaleLowerCase("es-CL");
   }
 }

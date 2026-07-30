@@ -4,190 +4,156 @@
   </div>
 
   <!-- Formulario de búsqueda -->
-  <form class="border rounded-3 bg-body p-3 mb-3" (ngSubmit)="buscar()">
-    <div class="row g-3 align-items-end mb-3">
-      <div class="col-12 col-md-4">
-        <label for="estacionServicio" class="form-label"
-          >Estación de Servicio</label
-        >
-        <select
-          id="estacionServicio"
-          class="form-select"
-          name="estacionServicio"
-          [(ngModel)]="filtros.estacionServicio"
-        >
-          <option value="">Todas las estaciones</option>
-          <option
-            *ngFor="let estacion of estacionesServicio"
-            [value]="estacion"
-          >
-            {{ estacion }}
-          </option>
-        </select>
+  <form
+    class="filters-form border rounded-3 bg-body p-3 mb-3"
+    (ngSubmit)="buscar()"
+  >
+    <div class="filters-grid">
+      <div class="prime-filter-field filter-station">
+        <p-floatlabel>
+          <p-autocomplete inputId="idEstacion" name="idEstacion" [(ngModel)]="filtros.idEstacion"
+            [suggestions]="idsEstacionSugeridos" (completeMethod)="filtrarIdsEstacion($event)" [dropdown]="true"
+            dropdownMode="blank" [forceSelection]="true" [showClear]="true" [autoHighlight]="true" [minLength]="0"
+            placeholder="Todos los ID de estación" emptyMessage="No se encontraron ID de estación" styleClass="w-100"
+            inputStyleClass="w-100" />
+          <label for="idEstacion">ID estación de servicio</label>
+        </p-floatlabel>
       </div>
 
-      <div class="col-12 col-md-8">
-        <div
-          class="position-relative border border-dark-subtle rounded-3 bg-light-subtle p-3 pt-4"
-        >
-          <span
-            class="badge text-bg-secondary position-absolute top-0 start-0 translate-middle-y ms-3"
-          >
+      <div class="prime-filter-field filter-opening-date">
+        <p-floatlabel>
+          <p-datepicker inputId="fechaApertura" name="fechaApertura" [(ngModel)]="filtros.fechaApertura"
+            selectionMode="range" dateFormat="dd/mm/yy" rangeSeparator=" - " placeholder="dd/mm/yyyy - dd/mm/yyyy"
+            [showIcon]="true" iconDisplay="input" [showClear]="true" [showButtonBar]="true" [firstDayOfWeek]="1"
+            styleClass="w-100" inputStyleClass="w-100" />
+          <label for="fechaApertura">
             Fecha de apertura
-          </span>
-          <div class="row g-3">
-            <div class="col-12 col-sm-6">
-              <label for="fechaAperturaDesde" class="form-label">Desde</label>
-              <input
-                type="date"
-                class="form-control"
-                id="fechaAperturaDesde"
-                name="fechaAperturaDesde"
-                [(ngModel)]="filtros.fechaAperturaDesde"
-                [max]="filtros.fechaAperturaHasta || null"
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <label for="fechaAperturaHasta" class="form-label">Hasta</label>
-              <input
-                type="date"
-                class="form-control"
-                id="fechaAperturaHasta"
-                name="fechaAperturaHasta"
-                [(ngModel)]="filtros.fechaAperturaHasta"
-                [min]="filtros.fechaAperturaDesde || null"
-              />
-            </div>
-          </div>
-        </div>
+          </label>
+        </p-floatlabel>
+      </div>
+
+      <div class="prime-filter-field filter-status">
+        <p-floatlabel>
+          <p-autocomplete inputId="estado" name="estado" [(ngModel)]="filtros.estado" [suggestions]="estadosSugeridos"
+            (completeMethod)="filtrarEstados($event)" [dropdown]="true" dropdownMode="blank" [forceSelection]="true"
+            [showClear]="true" [autoHighlight]="true" [minLength]="0" placeholder="Todos los estados"
+            emptyMessage="No se encontraron estados" styleClass="w-100" inputStyleClass="w-100" />
+          <label for="estado">Estado</label>
+        </p-floatlabel>
+      </div>
+
+      <div class="prime-filter-field filter-end-date">
+        <p-floatlabel>
+          <p-datepicker inputId="fechaTermino" name="fechaTermino" [(ngModel)]="filtros.fechaTermino"
+            selectionMode="range" dateFormat="dd/mm/yy" rangeSeparator=" - " placeholder="dd/mm/yyyy - dd/mm/yyyy"
+            [showIcon]="true" iconDisplay="input" [showClear]="true" [showButtonBar]="true" [firstDayOfWeek]="1"
+            styleClass="w-100" inputStyleClass="w-100" />
+          <label for="fechaTermino">
+            Fecha estimada de término
+          </label>
+        </p-floatlabel>
       </div>
     </div>
 
-    <div class="row g-3 align-items-end">
-      <div class="col-12 col-md-4">
-        <label for="estado" class="form-label">Estado</label>
-        <select
-          class="form-select"
-          id="estado"
-          name="estado"
-          [(ngModel)]="filtros.estado"
-        >
-          <option value="">Todos los estados</option>
-          <option *ngFor="let estado of estados" [value]="estado">
-            {{ estado }}
-          </option>
-        </select>
-      </div>
-
-      <div class="col-12 col-md-8">
-        <div
-          class="position-relative border border-dark-subtle rounded-3 bg-light-subtle p-3 pt-4"
-        >
-          <span
-            class="badge text-bg-secondary position-absolute top-0 start-0 translate-middle-y ms-3"
-          >
-            Fecha de término
-          </span>
-          <div class="row g-3">
-            <div class="col-12 col-sm-6">
-              <label for="fechaTerminoDesde" class="form-label">Desde</label>
-              <input
-                type="date"
-                class="form-control"
-                id="fechaTerminoDesde"
-                name="fechaTerminoDesde"
-                [(ngModel)]="filtros.fechaTerminoDesde"
-                [max]="filtros.fechaTerminoHasta || null"
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <label for="fechaTerminoHasta" class="form-label">Hasta</label>
-              <input
-                type="date"
-                class="form-control"
-                id="fechaTerminoHasta"
-                name="fechaTerminoHasta"
-                [(ngModel)]="filtros.fechaTerminoHasta"
-                [min]="filtros.fechaTerminoDesde || null"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
-      <button
-        type="button"
-        class="btn btn-secondary px-4"
-        (click)="limpiarFiltros()"
-      >
+    <div class="filter-actions">
+      <button pButton type="button" severity="secondary" (click)="limpiarFiltros()">
         Limpiar
       </button>
-      <button type="submit" class="btn btn-success px-4">Buscar</button>
+      <button pButton severity="success" type="submit">Buscar</button>
     </div>
   </form>
 
   <!-- Tabla de registros -->
 
-  <table class="table table-striped table-bordered table-hover">
-    <thead class="table-light">
-      <tr>
-        <th>Id</th>
-        <th>Tipo de trámite</th>
-        <th>Estación de servicio</th>
-        <th>Estado</th>
-        <th>Concesionario</th>
-        <th>Fecha de apertura</th>
-        <th>Fecha estimada de<br />término</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
+  <!-- <div class="d-flex flex-wrap gap-2 mb-3">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      (click)="prev()"
+      [disabled]="isFirstPage()"
+    >
+      Anterior
+    </button>
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      (click)="reset()"
+      [disabled]="isFirstPage()"
+    >
+      Inicio
+    </button>
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      (click)="next()"
+      [disabled]="isLastPage()"
+    >
+      Siguiente
+    </button>
+  </div> -->
 
-    <tbody>
-      <tr *ngFor="let tramite of tramitesFiltrados">
-        <td>{{ tramite.id }}</td>
-        <td>{{ tramite.tipoTramite }}</td>
-        <td>{{ tramite.estacionServicio }}</td>
-        <td>
-          <span
-            class="badge rounded-pill"
-            [ngClass]="obtenerClaseEstado(tramite.estado)"
-          >
-            {{ tramite.estado }}
-          </span>
-        </td>
-        <td>{{ tramite.concesionario }}</td>
-        <td>{{ tramite.fechaApertura }}</td>
-        <td>{{ tramite.fechaEstimadaTermino }}</td>
-        <td>
-          <a class="detail-link" [routerLink]="['/tramites', tramite.id]">
-            Ver detalle
-          </a>
-        </td>
-      </tr>
+  <div class="table-scroll">
+    <p-table
+      [value]="tramitesFiltrados"
+      styleClass="tramites-table"
+      stripedRows
+      showGridlines
+      [paginator]="true"
+      [rows]="rows"
+      [first]="first"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} trámites"
+      [rowsPerPageOptions]="[5, 10, 25]"
+      (onPage)="pageChange($event)"
+    >
+      <ng-template #header>
+        <tr>
+          <th class="col-tramite-id">ID trámite</th>
+          <th class="col-station-id">ID estación</th>
+          <th class="col-type">Tipo de trámite</th>
+          <th class="col-comuna">Comuna</th>
+          <th class="col-business-name">Razón social</th>
+          <th class="col-status">Estado</th>
+          <th class="col-date">Fecha de apertura</th>
+          <th class="col-date">Fecha estimada de término</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </ng-template>
 
-      <tr *ngIf="tramitesFiltrados.length === 0">
-        <td colspan="8" class="empty-state">
-          No se encontraron trámites con los filtros seleccionados.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <ng-template #body let-tramite>
+        <tr>
+          <td class="col-tramite-id">{{ tramite.id }}</td>
+          <td class="col-station-id">
+            <strong>{{ tramite.idEstacion }}</strong>
+          </td>
+          <td class="col-type">{{ tramite.tipoTramite }}</td>
+          <td class="col-comuna">{{ tramite.comuna }}</td>
+          <td class="col-business-name">{{ tramite.razonSocial }}</td>
+          <td class="col-status">
+            <p-tag [severity]="obtenerClaseEstado(tramite.estado)" [rounded]="true">
+              {{ tramite.estado }}
+            </p-tag>
+          </td>
+          <td class="col-date">{{ tramite.fechaApertura }}</td>
+          <td class="col-date">{{ tramite.fechaEstimadaTermino }}</td>
+          <td class="col-actions">
+            <a class="detail-link" [routerLink]="['/tramites', tramite.id]">
+              Ver detalle
+            </a>
+          </td>
+        </tr>
+      </ng-template>
 
-  <div class="pagination-row">
-    <p>{{ tramitesFiltrados.length }} de 234 registros</p>
-
-    <nav aria-label="...">
-      <ul class="pagination">
-        <li class="page-item"><a href="#" class="page-link">Previous</a></li>
-        <li class="page-item"><a class="page-link" href="#">1</a></li>
-        <li class="page-item active">
-          <a class="page-link" href="#" aria-current="page">2</a>
-        </li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item"><a class="page-link" href="#">Next</a></li>
-      </ul>
-    </nav>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="9" class="empty-state">
+            No se encontraron trámites con los filtros seleccionados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </section>

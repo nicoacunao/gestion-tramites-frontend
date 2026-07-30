@@ -7,6 +7,48 @@
   margin-bottom: 36px;
 }
 
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-areas:
+    "station opening-date"
+    "status end-date";
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 50px;
+  padding-top: 24px;
+}
+
+.prime-filter-field {
+  min-width: 0;
+
+  p-floatlabel {
+    display: block;
+    width: 100%;
+  }
+}
+
+.filter-station {
+  grid-area: station;
+}
+
+.filter-opening-date {
+  grid-area: opening-date;
+}
+
+.filter-status {
+  grid-area: status;
+}
+
+.filter-end-date {
+  grid-area: end-date;
+}
+
 .filters {
   display: flex;
   flex-direction: column;
@@ -56,6 +98,15 @@
 }
 
 @container (max-width: 720px) {
+  .filters-grid {
+    grid-template-areas:
+      "station"
+      "status"
+      "opening-date"
+      "end-date";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .filter-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -77,6 +128,7 @@
 
 .filter-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
 }
@@ -112,6 +164,50 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+:host ::ng-deep .tramites-table {
+  table {
+    min-width: 1100px;
+    table-layout: fixed;
+  }
+
+  .col-tramite-id {
+    width: 76px;
+  }
+
+  .col-station-id {
+    width: 88px;
+  }
+
+  .col-type {
+    width: 230px;
+  }
+
+  .col-comuna {
+    width: 115px;
+  }
+
+  .col-business-name {
+    width: 180px;
+  }
+
+  .col-date {
+    width: 140px;
+  }
+
+  .col-status {
+    width: 115px;
+  }
+
+  .col-actions {
+    width: 110px;
+  }
 }
 
 table {
@@ -196,52 +292,6 @@ tbody tr:nth-child(odd) {
   text-align: center;
   padding: 32px;
   color: #6b7280;
-}
-
-.pagination-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 56px;
-
-  p {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #767676;
-  }
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-
-  button {
-    border: none;
-    background: transparent;
-    color: #2f3337;
-    font-size: 14px;
-    cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 6px;
-  }
-
-  button.active {
-    background: #2f3337;
-    color: #ffffff;
-    min-width: 28px;
-    height: 28px;
-  }
-
-  button:disabled {
-    color: #c4c4c4;
-    cursor: not-allowed;
-  }
-
-  span {
-    color: #2f3337;
-  }
 }
 
 @media (max-width: 1100px) {

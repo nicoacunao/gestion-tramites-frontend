@@ -1,56 +1,100 @@
-<section class="w-100">
+<section class="detail-page">
+  <p-toast position="top-right" />
+
   <div class="mb-4">
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
-  <div
-    class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"
-  >
+  <ng-container *ngIf="tramite as tramite; else tramiteNoEncontrado">
+  <div class="detail-header">
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <h2 class="h4 mb-0">Trámite #{{ tramiteId }}</h2>
-        <span
-          class="badge rounded-pill"
-          [ngClass]="obtenerClaseEstado(tramite.estado)"
+        <p-tag
+          [severity]="obtenerSeveridadEstado(tramite.estado)"
+          [rounded]="true"
         >
           {{ tramite.estado }}
-        </span>
+        </p-tag>
       </div>
       <p class="text-body-secondary mb-0">
         Información general y seguimiento del trámite.
       </p>
     </div>
 
-    <div class="d-flex flex-wrap gap-2">
-      <a routerLink="/tramites" class="btn btn-outline-secondary">Volver</a>
+    <div class="detail-actions">
       <a
+        pButton
+        routerLink="/tramites"
+        severity="secondary"
+        [outlined]="true"
+      >
+        Volver
+      </a>
+      <a
+        pButton
         [routerLink]="['/tramites', tramiteId, 'modificar']"
-        class="btn btn-primary"
+        severity="primary"
       >
         Modificar trámite
       </a>
     </div>
   </div>
 
-  <div class="d-flex flex-column gap-4">
-    <section class="card border-0 shadow-sm">
-      <div class="card-header bg-body py-3">
-        <h3 class="h5 mb-0">Datos generales</h3>
-      </div>
+  <div class="detail-sections">
+    <p-panel header="Datos generales" styleClass="detail-panel">
+      <div class="details-content">
+        <div class="row g-4">
+          <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label text-body-secondary">
+              ID estación de servicio
+            </label>
+            <input
+              class="form-control-plaintext fw-medium"
+              readonly
+              [value]="tramite.idEstacion"
+            />
+          </div>
 
-      <div class="card-body p-3 p-md-4">
-        <div class="row g-3">
+          <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label text-body-secondary">Comuna</label>
+            <input
+              class="form-control-plaintext fw-medium"
+              readonly
+              [value]="tramite.comuna"
+            />
+          </div>
+
           <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary"
-              >Estación de servicio</label
-            >
+            <label class="form-label text-body-secondary">
+              Estación de servicio
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.estacionServicio"
             />
           </div>
-          <div class="col-12 col-md-6 col-lg-3">
+
+          <div class="col-12 col-lg-6">
+            <label class="form-label text-body-secondary">Razón social</label>
+            <input
+              class="form-control-plaintext fw-medium"
+              readonly
+              [value]="tramite.razonSocial"
+            />
+          </div>
+
+          <div class="col-12 col-lg-6">
+            <label class="form-label text-body-secondary">Dirección</label>
+            <input
+              class="form-control-plaintext fw-medium"
+              readonly
+              [value]="tramite.direccion"
+            />
+          </div>
+
+          <div class="col-12 col-md-6">
             <label class="form-label text-body-secondary">Prioridad</label>
             <input
               class="form-control-plaintext fw-medium"
@@ -58,76 +102,66 @@
               [value]="tramite.prioridad"
             />
           </div>
-          <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label text-body-secondary">Estado</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.estado"
-            />
-          </div>
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary">Concesionario</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.concesionario"
-            />
-          </div>
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary"
-              >Responsable interno</label
-            >
+
+          <div class="col-12 col-md-6">
+            <label class="form-label text-body-secondary">
+              Responsable interno
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.responsableInterno"
             />
           </div>
+
           <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Tipo de trámite</label
-            >
+            <label class="form-label text-body-secondary">
+              Tipo de trámite
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.tipoTramite"
             />
           </div>
+
           <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Trámite específico</label
-            >
+            <label class="form-label text-body-secondary">
+              Trámite específico
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.tramiteEspecifico"
             />
           </div>
+
           <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary"
-              >Solicitante Copec</label
-            >
+            <label class="form-label text-body-secondary">
+              Solicitante Copec
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.solicitanteCopec"
             />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary"
-              >Fecha de apertura</label
-            >
+            <label class="form-label text-body-secondary">
+              Fecha de apertura
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
               [value]="tramite.fechaApertura"
             />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary"
-              >Fecha estimada de término</label
-            >
+            <label class="form-label text-body-secondary">
+              Fecha estimada de término
+            </label>
             <input
               class="form-control-plaintext fw-medium"
               readonly
@@ -136,15 +170,15 @@
           </div>
         </div>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm">
-      <div class="card-header bg-body py-3">
-        <h3 class="h5 mb-0">Antecedentes requeridos</h3>
-      </div>
+    <p-panel
+      header="Antecedentes requeridos"
+      styleClass="detail-panel table-panel"
+    >
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+          <thead>
             <tr>
               <th>Antecedente</th>
               <th>Obligatorio</th>
@@ -160,12 +194,22 @@
               <td>{{ item.obligatorio ? "Sí" : "No" }}</td>
               <td>{{ item.responsable }}</td>
               <td>
-                <span class="badge" [ngClass]="obtenerClaseEstado(item.estado)"
-                  >{{ item.estado }}</span
+                <p-tag
+                  [severity]="obtenerSeveridadEstado(item.estado)"
+                  [rounded]="true"
                 >
+                  {{ item.estado }}
+                </p-tag>
               </td>
               <td>
-                <button type="button" class="btn btn-link btn-sm p-0">
+                <button
+                  pButton
+                  type="button"
+                  severity="secondary"
+                  [text]="true"
+                  size="small"
+                  class="file-button"
+                >
                   {{ item.archivo }}
                 </button>
               </td>
@@ -174,15 +218,15 @@
           </tbody>
         </table>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm">
-      <div class="card-header bg-body py-3">
-        <h3 class="h5 mb-0">Antecedentes extraordinarios</h3>
-      </div>
+    <p-panel
+      header="Antecedentes extraordinarios"
+      styleClass="detail-panel table-panel"
+    >
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+          <thead>
             <tr>
               <th>Antecedente</th>
               <th>Obligatorio</th>
@@ -198,12 +242,22 @@
               <td>{{ item.obligatorio ? "Sí" : "No" }}</td>
               <td>{{ item.responsable }}</td>
               <td>
-                <span class="badge" [ngClass]="obtenerClaseEstado(item.estado)"
-                  >{{ item.estado }}</span
+                <p-tag
+                  [severity]="obtenerSeveridadEstado(item.estado)"
+                  [rounded]="true"
                 >
+                  {{ item.estado }}
+                </p-tag>
               </td>
               <td>
-                <button type="button" class="btn btn-link btn-sm p-0">
+                <button
+                  pButton
+                  type="button"
+                  severity="secondary"
+                  [text]="true"
+                  size="small"
+                  class="file-button"
+                >
                   {{ item.archivo }}
                 </button>
               </td>
@@ -212,15 +266,12 @@
           </tbody>
         </table>
       </div>
-    </section>
+    </p-panel>
 
-    <section class="card border-0 shadow-sm">
-      <div class="card-header bg-body py-3">
-        <h3 class="h5 mb-0">Hitos de gestión</h3>
-      </div>
+    <p-panel header="Hitos de gestión" styleClass="detail-panel table-panel">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+          <thead>
             <tr>
               <th>Hito</th>
               <th>Estado</th>
@@ -234,9 +285,12 @@
             <tr *ngFor="let item of hitosGestion">
               <td>{{ item.hito }}</td>
               <td>
-                <span class="badge" [ngClass]="obtenerClaseEstado(item.estado)"
-                  >{{ item.estado }}</span
+                <p-tag
+                  [severity]="obtenerSeveridadEstado(item.estado)"
+                  [rounded]="true"
                 >
+                  {{ item.estado }}
+                </p-tag>
               </td>
               <td>{{ item.fechaEstimada }}</td>
               <td>{{ item.fechaReal }}</td>
@@ -246,6 +300,18 @@
           </tbody>
         </table>
       </div>
-    </section>
+    </p-panel>
   </div>
+  </ng-container>
+
+  <ng-template #tramiteNoEncontrado>
+    <p-panel header="Trámite no encontrado" styleClass="detail-panel">
+      <p class="text-body-secondary mb-3">
+        No existe un trámite registrado con el ID {{ tramiteId }}.
+      </p>
+      <a pButton routerLink="/tramites" severity="secondary">
+        Volver a la consulta
+      </a>
+    </p-panel>
+  </ng-template>
 </section>

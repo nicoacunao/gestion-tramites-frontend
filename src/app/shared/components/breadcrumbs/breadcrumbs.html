@@ -1,14 +1,7 @@
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item" *ngFor="let item of items; let last = last">
-      <a *ngIf="item.route && !last" [routerLink]="item.route" class="breadcrumb-item">
-        {{ item.label }}
-      </a>
-
-      <span *ngIf="!item.route || last" class="breadcrumb-current">
-        {{ item.label }}
-      </span>
-    </li>
-
-  </ol>
-</nav>
+<p-breadcrumb
+  [home]="home"
+  [model]="model"
+  styleClass="app-breadcrumbs"
+  homeAriaLabel="Volver al inicio de Gestión de Trámites"
+  aria-label="Ruta de navegación"
+/>

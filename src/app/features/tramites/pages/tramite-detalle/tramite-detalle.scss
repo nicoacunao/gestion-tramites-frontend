@@ -1,1 +1,92 @@
-// La pantalla utiliza componentes y utilidades de Bootstrap.
+.detail-page {
+  width: 100%;
+}
+
+.detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.details-content {
+  padding: 4px 0;
+}
+
+.file-button {
+  max-width: 220px;
+  padding: 0 !important;
+  text-align: left;
+}
+
+:host ::ng-deep {
+  .detail-panel {
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+
+    .p-panel-header {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .p-panel-content {
+      padding: 20px;
+    }
+  }
+
+  .table-panel {
+    .p-panel-content {
+      padding: 0;
+    }
+
+    table {
+      min-width: 880px;
+    }
+
+    th {
+      padding: 12px 14px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      color: #334155;
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .detail-actions {
+    width: 100%;
+
+    a {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+}
