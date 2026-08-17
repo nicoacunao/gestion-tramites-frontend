@@ -1,9 +1,47 @@
 <section class="estado-gestiones-page">
+  <p-toast position="top-right" />
+
   <div class="page-breadcrumb">
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
-  <!-- Tarjetas Resumen -->
+  <div class="page-heading">
+    <div>
+      <h1>Estado de las estaciones</h1>
+      <p>
+        Resumen operativo para detectar estaciones con gestiones pendientes o
+        urgentes.
+      </p>
+    </div>
+
+    <div class="heading-actions">
+      <button
+        pButton
+        class="info-trigger"
+        type="button"
+        severity="info"
+        [outlined]="true"
+        [rounded]="true"
+        aria-label="Cómo se calcula el estado general"
+        pTooltip="Cómo se calcula el estado general"
+        tooltipPosition="top"
+        (click)="mostrarCriterioEstado()"
+      >
+        <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+      </button>
+
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        (click)="limpiarFiltros()"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+  </div>
+
   <div class="summary-grid">
     <p-card
       *ngFor="let card of resumenCards"
@@ -11,17 +49,13 @@
     >
       <div class="summary-card-content">
         <span class="summary-card-icon" aria-hidden="true">
-          @switch (card.icono) {
-            @case ("active") {
-              <svg data-p-icon="info-circle"></svg>
-            }
-            @case ("empty") {
-              <svg data-p-icon="check"></svg>
-            }
-            @case ("urgent") {
-              <svg data-p-icon="exclamation-triangle"></svg>
-            }
-          }
+          @switch (card.icono) { @case ("active") {
+          <svg data-p-icon="info-circle"></svg>
+          } @case ("pending") {
+          <svg data-p-icon="exclamation-triangle"></svg>
+          } @case ("urgent") {
+          <svg data-p-icon="exclamation-triangle"></svg>
+          } }
         </span>
 
         <div class="summary-card-copy">
@@ -32,100 +66,13 @@
     </p-card>
   </div>
 
-  <!-- Formulario de búsqueda -->
-  <form
-    class="filters-form border rounded-3 bg-body p-3 mb-3"
-    (ngSubmit)="buscar()"
-  >
-    <div class="filters-grid">
-      <div class="prime-filter-field">
-        <p-floatlabel>
-          <p-autocomplete
-            inputId="idEstacion"
-            name="idEstacion"
-            [(ngModel)]="filtros.idEstacion"
-            [suggestions]="idsEstacionSugeridos"
-            (completeMethod)="filtrarIdsEstacion($event)"
-            [dropdown]="true"
-            dropdownMode="blank"
-            [forceSelection]="true"
-            [showClear]="true"
-            [autoHighlight]="true"
-            [minLength]="0"
-            placeholder="Todos los ID de estación"
-            emptyMessage="No se encontraron ID de estación"
-            styleClass="w-100"
-            inputStyleClass="w-100"
-          />
-          <label for="idEstacion">ID estación de servicio</label>
-        </p-floatlabel>
-      </div>
-
-      <div class="prime-filter-field">
-        <p-floatlabel>
-          <p-autocomplete
-            inputId="estadoGeneral"
-            name="estadoGeneral"
-            [(ngModel)]="filtros.estadoGeneral"
-            [suggestions]="estadosSugeridos"
-            (completeMethod)="filtrarEstados($event)"
-            [dropdown]="true"
-            dropdownMode="blank"
-            [forceSelection]="true"
-            [showClear]="true"
-            [autoHighlight]="true"
-            [minLength]="0"
-            placeholder="Todos los estados"
-            emptyMessage="No se encontraron estados"
-            styleClass="w-100"
-            inputStyleClass="w-100"
-          />
-          <label for="estadoGeneral">Estado general</label>
-        </p-floatlabel>
-      </div>
-
-      <div class="prime-filter-field">
-        <p-floatlabel>
-          <p-autocomplete
-            inputId="comuna"
-            name="comuna"
-            [(ngModel)]="filtros.comuna"
-            [suggestions]="comunasSugeridas"
-            (completeMethod)="filtrarComunas($event)"
-            [dropdown]="true"
-            dropdownMode="blank"
-            [forceSelection]="true"
-            [showClear]="true"
-            [autoHighlight]="true"
-            [minLength]="0"
-            placeholder="Todas las comunas"
-            emptyMessage="No se encontraron comunas"
-            styleClass="w-100"
-            inputStyleClass="w-100"
-          />
-          <label for="comuna">Comuna</label>
-        </p-floatlabel>
-      </div>
-    </div>
-
-    <div class="filter-actions">
-      <button
-        pButton
-        type="button"
-        severity="secondary"
-        [disabled]="!existenFiltrosAplicados()"
-        (click)="limpiarFiltros()"
-      >
-        Limpiar
-      </button>
-      <button pButton type="submit" severity="success">Buscar</button>
-    </div>
-  </form>
-
-  <!-- Tabla de registros -->
   <div class="table-scroll">
     <p-table
-      [value]="estacionesFiltradas"
+      #tabla
+      [value]="estaciones"
+      [filters]="filtrosTabla"
+      filterLocale="es-CL"
+      dataKey="idEstacion"
       styleClass="estado-estaciones-table"
       stripedRows
       showGridlines
@@ -134,55 +81,238 @@
       [first]="first"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} estaciones"
-      [rowsPerPageOptions]="[5, 10, 25]"
+      [rowsPerPageOptions]="[10, 25, 50]"
       (onPage)="pageChange($event)"
     >
       <ng-template #header>
         <tr>
-          <th>ID estación de servicio</th>
-          <th>Comuna</th>
-          <th>Concesionario</th>
-          <th>Total trámites</th>
-          <th>Trámites activos</th>
-          <th>Última actualización</th>
-          <th>Estado general</th>
-          <th>Acciones</th>
+          <th class="col-station-id" pSortableColumn="idEstacion">
+            <div class="column-heading">
+              <span>ID estación</span>
+              <p-sortIcon field="idEstacion" />
+              <p-columnFilter
+                field="idEstacion"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="idsEstacion"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todas"
+                    emptyMessage="Sin opciones"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar ID"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-count" pSortableColumn="tramitesActivos">
+            <div class="column-heading">
+              <span>Trámites activos</span>
+              <p-sortIcon field="tramitesActivos" />
+              <p-columnFilter
+                field="tramitesActivos"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="cantidadesTramitesActivos"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todas"
+                    emptyMessage="Sin opciones"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-count" pSortableColumn="tramitesPendientes">
+            <div class="column-heading">
+              <span>Trámites pendientes</span>
+              <p-sortIcon field="tramitesPendientes" />
+              <p-columnFilter
+                field="tramitesPendientes"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="cantidadesTramitesPendientes"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todas"
+                    emptyMessage="Sin opciones"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-status">
+            <div class="column-heading">
+              <span>Estado general</span>
+              <p-columnFilter
+                field="estadoGeneral"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="estadosGenerales"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todos"
+                    emptyMessage="Sin opciones"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-priority">
+            <div class="column-heading">
+              <span>Prioridad</span>
+              <p-columnFilter
+                field="prioridad"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="prioridades"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todas"
+                    emptyMessage="Sin opciones"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-indicator">
+            <div class="column-heading">
+              <span>Indicador</span>
+              <p-columnFilter
+                field="indicador"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect
+                    [ngModel]="value"
+                    [options]="indicadores"
+                    (onChange)="filter($event.value)"
+                    placeholder="Todos"
+                    emptyMessage="Sin opciones"
+                    [showClear]="true"
+                    appendTo="body"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
         </tr>
       </ng-template>
 
       <ng-template #body let-estacion>
         <tr>
-          <td>
-            <strong>{{ estacion.idEstacion }}</strong>
-          </td>
-          <td>{{ estacion.comuna }}</td>
-          <td>{{ estacion.concesionario }}</td>
-          <td>{{ estacion.totalTramites }}</td>
-          <td>{{ estacion.tramitesActivos }}</td>
-          <td>{{ estacion.ultimaActualizacion }}</td>
-          <td>
-            <p-tag
-              [severity]="obtenerSeveridadEstado(estacion.estadoGeneral)"
-              [rounded]="true"
-            >
-              {{ estacion.estadoGeneral }}
-            </p-tag>
-          </td>
-          <td>
+          <td class="col-station-id">
             <a
-              class="detail-link"
+              class="station-id-link"
               [routerLink]="['/tramites']"
               (click)="prepararConsultaTramites(estacion.idEstacion)"
+              pTooltip="Ver trámites de la estación"
+              tooltipPosition="top"
             >
-              Ver trámites
+              {{ estacion.idEstacion }}
             </a>
+          </td>
+          <td class="col-count">
+            <strong>{{ estacion.tramitesActivos }}</strong>
+          </td>
+          <td class="col-count">
+            <strong>{{ estacion.tramitesPendientes }}</strong>
+          </td>
+          <td class="col-status">
+            <div class="status-detail">
+              <p-tag
+                [severity]="obtenerSeveridadEstado(estacion.estadoGeneral)"
+                [rounded]="true"
+              >
+                {{ estacion.estadoGeneral }}
+              </p-tag>
+              @if (estacion.tramitesActivos > 0) {
+              <small>
+                {{ estacion.diasSinAvance }} {{ estacion.diasSinAvance === 1 ?
+                "día sin avance" : "días sin avances" }}
+              </small>
+              }
+            </div>
+          </td>
+          <td class="col-priority">
+            <p-tag
+              [severity]="obtenerSeveridadPrioridad(estacion.prioridad)"
+              [rounded]="true"
+            >
+              {{ estacion.prioridad }}
+            </p-tag>
+          </td>
+          <td class="col-indicator">
+            <span
+              class="semaforo"
+              [ngClass]="obtenerClaseIndicador(estacion.indicador)"
+            >
+              <span class="semaforo-dot" aria-hidden="true"></span>
+              {{ estacion.indicador }}
+            </span>
           </td>
         </tr>
       </ng-template>
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="8" class="empty-state">
+          <td colspan="6" class="empty-state">
             No se encontraron estaciones con los filtros seleccionados.
           </td>
         </tr>

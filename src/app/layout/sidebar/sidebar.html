@@ -1,59 +1,26 @@
-<aside class="sidebar" [class.sidebar--collapsed]="isCollapsed">
+@if (open) {
+  <div class="sidebar-backdrop" aria-hidden="true" (click)="closeSidebar()"></div>
+}
+
+<aside id="main-sidebar" class="sidebar sidebar--floating" [class.sidebar--open]="open" [attr.aria-hidden]="!open">
   <header class="sidebar-header">
-    <a
-      routerLink="/tramites"
-      class="sidebar-brand"
-      aria-label="Ir al portal de gestión"
-      (click)="irAlPortal()"
-    >
-      <span class="sidebar-brand-icon" aria-hidden="true">
-        <mat-icon>apps</mat-icon>
-      </span>
-
-      @if (!isCollapsed) {
-        <span class="sidebar-brand-copy">
-          <strong>Portal de Gestión</strong>
-          <small>///</small>
-        </span>
-      }
+    <a routerLink="/tramites" class="sidebar-brand" aria-label="Ir al portal de gestión" (click)="irAlPortal(); closeSidebar()">
+      <span class="sidebar-brand-icon" aria-hidden="true"><mat-icon>apps</mat-icon></span>
+      <span class="sidebar-brand-copy"><strong>Portal de Gestión</strong><small>///</small></span>
     </a>
-
-    <button
-      type="button"
-      class="sidebar-toggle"
-      [attr.aria-label]="isCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'"
-      [attr.title]="isCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'"
-      (click)="toggleSidebar()"
-    >
-      <mat-icon aria-hidden="true">
-        {{ isCollapsed ? "chevron_right" : "chevron_left" }}
-      </mat-icon>
+    <button type="button" class="sidebar-close" aria-label="Cerrar menú principal" title="Cerrar menú" (click)="closeSidebar()">
+      <mat-icon aria-hidden="true">close</mat-icon>
     </button>
   </header>
 
   <nav class="sidebar-nav" aria-label="Navegación principal">
     @for (section of navigationSections; track section.label) {
-      @if (!isCollapsed) {
-        <p class="sidebar-section-label">{{ section.label }}</p>
-      }
-
+      <p class="sidebar-section-label">{{ section.label }}</p>
       <ul class="sidebar-items">
         @for (item of section.items; track item.id) {
           <li class="sidebar-item">
-            <a
-              class="sidebar-link"
-              [class.sidebar-link--compact]="isCollapsed"
-              [class.active]="estaActivo(item)"
-              [routerLink]="item.route"
-              [attr.aria-current]="estaActivo(item) ? 'page' : null"
-              [attr.aria-label]="isCollapsed ? item.label : null"
-              [attr.title]="isCollapsed ? item.label : null"
-              (click)="alNavegar(item)"
-            >
-              <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
-              @if (!isCollapsed) {
-                <span>{{ item.label }}</span>
-              }
+            <a class="sidebar-link" [class.active]="estaActivo(item)" [routerLink]="item.route" [attr.aria-current]="estaActivo(item) ? 'page' : null" (click)="alNavegar(item)">
+              <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon><span>{{ item.label }}</span>
             </a>
           </li>
         }
@@ -63,11 +30,6 @@
 
   <footer class="sidebar-footer">
     <mat-icon aria-hidden="true">widgets</mat-icon>
-    @if (!isCollapsed) {
-      <span>
-        <strong>Portal modular</strong>
-        <small>Preparado para nuevos módulos</small>
-      </span>
-    }
+    <span><strong>Portal modular</strong><small>Preparado para nuevos módulos</small></span>
   </footer>
 </aside>

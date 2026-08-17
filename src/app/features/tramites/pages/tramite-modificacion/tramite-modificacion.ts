@@ -5,21 +5,26 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { ButtonDirective } from "primeng/button";
 import { DatePickerModule } from "primeng/datepicker";
 import { FileSelectEvent, FileUploadModule } from "primeng/fileupload";
+import { InfoCircleIcon } from "primeng/icons/infocircle";
 import { PlusIcon } from "primeng/icons/plus";
-import { InputGroupModule } from "primeng/inputgroup";
-import { InputGroupAddonModule } from "primeng/inputgroupaddon";
+import { UploadIcon } from "primeng/icons/upload";
 import { InputTextModule } from "primeng/inputtext";
-import { MessageModule } from "primeng/message";
 import { PanelModule } from "primeng/panel";
+import { PopoverModule } from "primeng/popover";
 import { SelectModule } from "primeng/select";
+import { TableModule } from "primeng/table";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToggleSwitchModule } from "primeng/toggleswitch";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
+  ESTADOS_ANTECEDENTE,
+  ESTADOS_HITO,
+  ESTADOS_TRAMITE,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../../models/estado-tramite";
+import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { TramitesMock } from "../../services/tramites-mock";
 
 @Component({
@@ -32,29 +37,37 @@ import { TramitesMock } from "../../services/tramites-mock";
     DatePickerModule,
     FileUploadModule,
     FormsModule,
-    InputGroupModule,
-    InputGroupAddonModule,
+    InfoCircleIcon,
     InputTextModule,
-    MessageModule,
     PanelModule,
+    PopoverModule,
     PlusIcon,
     RouterLink,
     SelectModule,
+    TableModule,
     TagModule,
     TextareaModule,
     ToggleSwitchModule,
+    UploadIcon,
   ],
   templateUrl: "./tramite-modificacion.html",
   styleUrl: "./tramite-modificacion.scss",
 })
 export class TramiteModificacion {
   readonly tramiteId: string;
-  readonly estados = ["Pendiente", "En revisión", "Recibido", "Finalizado"];
+  readonly estadosTramite = [...ESTADOS_TRAMITE];
+  readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
+  readonly estadosHito = [...ESTADOS_HITO];
+  readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
   readonly responsables = [
+    "José L. Rosas",
+    "Claudio Doñas",
+    "Claudio Henríquez",
     "María González",
     "Carlos Ramírez",
     "Oficina técnica",
     "Concesionario",
+    "Otros",
   ];
 
   breadcrumbs: Array<{ label: string; route?: string }>;
@@ -63,7 +76,7 @@ export class TramiteModificacion {
     estacionServicio: "Copec Concón",
     concesionario: "Comercial Los Pinos SpA",
     prioridad: "Alta",
-    estado: "En revisión",
+    estado: "En tramitación",
     responsableInterno: "María González",
     tipoTramite: "Patente comercial",
     tramiteEspecifico: "Regularización de instalaciones",
@@ -93,12 +106,12 @@ export class TramiteModificacion {
     },
   ];
 
-  antecedentesExtraordinarios = [
+  antecedentesComplementarios = [
     {
       antecedente: "Informe complementario de seguridad",
       obligatorio: false,
       responsable: "Oficina técnica",
-      estado: "En revisión",
+      estado: "Recibido",
       observaciones: "Se solicitaron aclaraciones menores.",
       archivo: null as File | null,
       archivoNombre: "",
@@ -108,7 +121,7 @@ export class TramiteModificacion {
   hitosGestion = [
     {
       hito: "Ingreso de solicitud",
-      estado: "Finalizado",
+      estado: "Completado",
       fechaEstimada: "02/07/2026",
       fechaReal: "02/07/2026",
       responsable: "Carlos Ramírez",
@@ -116,7 +129,7 @@ export class TramiteModificacion {
     },
     {
       hito: "Revisión técnica",
-      estado: "En revisión",
+      estado: "En curso",
       fechaEstimada: "08/07/2026",
       fechaReal: "",
       responsable: "María González",
@@ -127,10 +140,12 @@ export class TramiteModificacion {
   constructor(
     route: ActivatedRoute,
     private readonly router: Router,
-    tramitesMock: TramitesMock,
+    private readonly tramitesMock: TramitesMock,
   ) {
     this.tramiteId = route.snapshot.paramMap.get("id") ?? "1001";
-    const tramiteRegistrado = tramitesMock.obtenerPorId(Number(this.tramiteId));
+    const tramiteRegistrado = this.tramitesMock.obtenerPorId(
+      Number(this.tramiteId),
+    );
 
     if (tramiteRegistrado) {
       Object.assign(this.tramite, {
@@ -157,26 +172,23 @@ export class TramiteModificacion {
     ];
   }
 
-  agregarAntecedenteRequerido(): void {
-    this.antecedentesRequeridos.push(this.crearAntecedenteVacio());
-  }
-
-  agregarAntecedenteExtraordinario(): void {
-    this.antecedentesExtraordinarios.push(this.crearAntecedenteVacio());
-  }
-
-  agregarHito(): void {
-    this.hitosGestion.push({
-      hito: "",
-      estado: "",
-      fechaEstimada: "",
-      fechaReal: "",
-      responsable: "",
-      observacion: "",
-    });
+  agregarAntecedenteComplementario(): void {
+    this.antecedentesComplementarios.push(this.crearAntecedenteVacio());
   }
 
   grabar(): void {
+    const tramiteRegistrado = this.tramitesMock.obtenerPorId(
+      Number(this.tramiteId),
+    );
+
+    if (tramiteRegistrado) {
+      this.tramitesMock.guardar({
+        ...tramiteRegistrado,
+        estado: this.tramite.estado,
+        responsableInterno: this.tramite.responsableInterno,
+      });
+    }
+
     void this.router.navigate(["/tramites", this.tramiteId], {
       state: { tramiteActualizado: true },
     });
@@ -201,7 +213,7 @@ export class TramiteModificacion {
       antecedente: "",
       obligatorio: false,
       responsable: "",
-      estado: "",
+      estado: "Pendiente",
       observaciones: "",
       archivo: null as File | null,
       archivoNombre: "",

@@ -3,101 +3,76 @@
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
-  <!-- Formulario de búsqueda -->
-  <form
-    class="filters-form border rounded-3 bg-body p-3 mb-3"
-    (ngSubmit)="buscar()"
-  >
-    <div class="filters-grid">
-      <div class="prime-filter-field filter-station">
-        <p-floatlabel>
-          <p-autocomplete inputId="idEstacion" name="idEstacion" [(ngModel)]="filtros.idEstacion"
-            [suggestions]="idsEstacionSugeridos" (completeMethod)="filtrarIdsEstacion($event)" [dropdown]="true"
-            dropdownMode="blank" [forceSelection]="true" [showClear]="true" [autoHighlight]="true" [minLength]="0"
-            placeholder="Todos los ID de estación" emptyMessage="No se encontraron ID de estación" styleClass="w-100"
-            inputStyleClass="w-100" />
-          <label for="idEstacion">ID estación de servicio</label>
-        </p-floatlabel>
-      </div>
-
-      <div class="prime-filter-field filter-opening-date">
-        <p-floatlabel>
-          <p-datepicker inputId="fechaApertura" name="fechaApertura" [(ngModel)]="filtros.fechaApertura"
-            selectionMode="range" dateFormat="dd/mm/yy" rangeSeparator=" - " placeholder="dd/mm/yyyy - dd/mm/yyyy"
-            [showIcon]="true" iconDisplay="input" [showClear]="true" [showButtonBar]="true" [firstDayOfWeek]="1"
-            styleClass="w-100" inputStyleClass="w-100" />
-          <label for="fechaApertura">
-            Fecha de apertura
-          </label>
-        </p-floatlabel>
-      </div>
-
-      <div class="prime-filter-field filter-status">
-        <p-floatlabel>
-          <p-autocomplete inputId="estado" name="estado" [(ngModel)]="filtros.estado" [suggestions]="estadosSugeridos"
-            (completeMethod)="filtrarEstados($event)" [dropdown]="true" dropdownMode="blank" [forceSelection]="true"
-            [showClear]="true" [autoHighlight]="true" [minLength]="0" placeholder="Todos los estados"
-            emptyMessage="No se encontraron estados" styleClass="w-100" inputStyleClass="w-100" />
-          <label for="estado">Estado</label>
-        </p-floatlabel>
-      </div>
-
-      <div class="prime-filter-field filter-end-date">
-        <p-floatlabel>
-          <p-datepicker inputId="fechaTermino" name="fechaTermino" [(ngModel)]="filtros.fechaTermino"
-            selectionMode="range" dateFormat="dd/mm/yy" rangeSeparator=" - " placeholder="dd/mm/yyyy - dd/mm/yyyy"
-            [showIcon]="true" iconDisplay="input" [showClear]="true" [showButtonBar]="true" [firstDayOfWeek]="1"
-            styleClass="w-100" inputStyleClass="w-100" />
-          <label for="fechaTermino">
-            Fecha estimada de término
-          </label>
-        </p-floatlabel>
-      </div>
+  <div class="list-toolbar" role="search">
+    <div class="search-field">
+      <svg
+        aria-hidden="true"
+        class="search-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-4-4"></path>
+      </svg>
+      <input
+        pInputText
+        type="search"
+        [ngModel]="busquedaGeneral"
+        (input)="aplicarBusquedaGlobal($event)"
+        aria-label="Buscar trámites"
+        placeholder="Buscar por concesionario, razón social, ID de estación o ID de trámite"
+      />
     </div>
 
-    <div class="filter-actions">
-      <button pButton type="button" severity="secondary" (click)="limpiarFiltros()">
-        Limpiar
-      </button>
-      <button pButton severity="success" type="submit">Buscar</button>
-    </div>
-  </form>
+    <button
+      pButton
+      type="button"
+      class="filter-info-button"
+      severity="secondary"
+      [text]="true"
+      [rounded]="true"
+      aria-label="Información sobre cómo buscar y filtrar trámites"
+      aria-haspopup="dialog"
+      (click)="filterHelp.toggle($event)"
+    >
+      <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+    </button>
+    <p-popover #filterHelp appendTo="body" styleClass="filter-help-popover">
+      <div class="filter-help-content">
+        <strong>Cómo buscar y filtrar</strong>
+        <p>
+          Escribe en el buscador para encontrar trámites por ID de trámite, ID
+          de estación o razón social/concesionario.
+        </p>
+        <p>
+          Para acotar los resultados, presiona el ícono de filtro en el
+          encabezado de una columna y selecciona una o varias opciones. En
+          “Fecha de apertura”, puedes elegir un día específico.
+        </p>
+      </div>
+    </p-popover>
 
-  <!-- Tabla de registros -->
-
-  <!-- <div class="d-flex flex-wrap gap-2 mb-3">
     <button
       pButton
       type="button"
       severity="secondary"
-      (click)="prev()"
-      [disabled]="isFirstPage()"
+      [outlined]="true"
+      (click)="limpiarFiltros()"
     >
-      Anterior
+      Limpiar filtros
     </button>
-    <button
-      pButton
-      type="button"
-      severity="secondary"
-      (click)="reset()"
-      [disabled]="isFirstPage()"
-    >
-      Inicio
-    </button>
-    <button
-      pButton
-      type="button"
-      severity="secondary"
-      (click)="next()"
-      [disabled]="isLastPage()"
-    >
-      Siguiente
-    </button>
-  </div> -->
+  </div>
 
   <div class="table-scroll">
     <p-table
-      [value]="tramitesFiltrados"
+      #tabla
+      [value]="tramites"
+      [filters]="filtrosTabla"
+      [globalFilterFields]="['razonSocial', 'idEstacion', 'id']"
+      filterLocale="es-CL"
+      dataKey="id"
       styleClass="tramites-table"
       stripedRows
       showGridlines
@@ -106,26 +81,287 @@
       [first]="first"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} trámites"
-      [rowsPerPageOptions]="[5, 10, 25]"
+      [rowsPerPageOptions]="[10, 25, 50]"
       (onPage)="pageChange($event)"
     >
       <ng-template #header>
         <tr>
-          <th class="col-tramite-id">ID trámite</th>
-          <th class="col-station-id">ID estación</th>
-          <th class="col-type">Tipo de trámite</th>
-          <th class="col-comuna">Comuna</th>
-          <th class="col-business-name">Razón social</th>
-          <th class="col-status">Estado</th>
-          <th class="col-date">Fecha de apertura</th>
-          <th class="col-date">Fecha estimada de término</th>
-          <th class="col-actions">Acciones</th>
+          <th class="col-tramite-id">
+            <div class="column-heading">
+              <span>ID trámite</span>
+              <p-columnFilter
+                field="id"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="idsTramite"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar ID"
+                    ariaFilterLabel="Buscar ID de trámite"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-station-id" pSortableColumn="idEstacion">
+            <div class="column-heading">
+              <span>ID estación</span>
+              <p-sortIcon field="idEstacion" />
+              <p-columnFilter
+                field="idEstacion"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="idsEstacion"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar ID"
+                    ariaFilterLabel="Buscar ID de estación"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-type">
+            <div class="column-heading">
+              <span>Tipo de trámite</span>
+              <p-columnFilter
+                field="tipoTramite"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="tiposTramite"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar tipo"
+                    ariaFilterLabel="Buscar tipo de trámite"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-comuna">
+            <div class="column-heading">
+              <span>Comuna</span>
+              <p-columnFilter
+                field="comuna"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="comunas"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar comuna"
+                    ariaFilterLabel="Buscar comuna"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-business-name">
+            <div class="column-heading">
+              <span>Razón social / concesionario</span>
+              <p-columnFilter
+                field="razonSocial"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="razonesSociales"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar razón social"
+                    ariaFilterLabel="Buscar razón social o concesionario"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-status">
+            <div class="column-heading">
+              <span>Estado</span>
+              <p-columnFilter
+                field="estado"
+                matchMode="in"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+              >
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-listbox
+                    [ngModel]="value"
+                    [options]="estados"
+                    optionLabel="label"
+                    optionValue="value"
+                    filterBy="label"
+                    (onChange)="filter($event.value)"
+                    [multiple]="true"
+                    [checkbox]="true"
+                    [metaKeySelection]="false"
+                    [showToggleAll]="false"
+                    emptyMessage="Sin opciones"
+                    emptyFilterMessage="Sin resultados"
+                    [filter]="true"
+                    filterPlaceHolder="Buscar estado"
+                    ariaFilterLabel="Buscar estado"
+                    scrollHeight="220px"
+                    styleClass="column-filter-listbox"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
+
+          <th class="col-date">
+            <div class="column-heading">
+              <span>Fecha de apertura</span>
+              <p-columnFilter
+                field="fechaApertura"
+                matchMode="equals"
+                display="menu"
+                [showMatchModes]="false"
+                [showOperator]="false"
+                [showAddButton]="false"
+                [showApplyButton]="false"
+                [showClearButton]="false"
+              >
+                <ng-template #filter let-filter="filterCallback">
+                  <div class="date-filter">
+                    <label for="fechaAperturaFiltro">Fecha específica</label>
+                    <input
+                      pInputText
+                      id="fechaAperturaFiltro"
+                      type="date"
+                      [ngModel]="fechaFiltroIso"
+                      (ngModelChange)="aplicarFiltroFecha($event, filter)"
+                    />
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [outlined]="true"
+                      [disabled]="!fechaFiltroIso"
+                      (click)="limpiarFiltroFecha(filter)"
+                    >
+                      Limpiar fecha
+                    </button>
+                  </div>
+                </ng-template>
+              </p-columnFilter>
+            </div>
+          </th>
         </tr>
       </ng-template>
 
       <ng-template #body let-tramite>
         <tr>
-          <td class="col-tramite-id">{{ tramite.id }}</td>
+          <td class="col-tramite-id">
+            <a
+              class="tramite-id-link"
+              [routerLink]="['/tramites', tramite.id]"
+              pTooltip="Ver detalle del trámite"
+              tooltipPosition="top"
+            >
+              {{ tramite.id }}
+            </a>
+          </td>
           <td class="col-station-id">
             <strong>{{ tramite.idEstacion }}</strong>
           </td>
@@ -133,24 +369,22 @@
           <td class="col-comuna">{{ tramite.comuna }}</td>
           <td class="col-business-name">{{ tramite.razonSocial }}</td>
           <td class="col-status">
-            <p-tag [severity]="obtenerClaseEstado(tramite.estado)" [rounded]="true">
+            <p-tag
+              [severity]="obtenerClaseEstado(tramite.estado)"
+              [rounded]="true"
+            >
               {{ tramite.estado }}
             </p-tag>
           </td>
           <td class="col-date">{{ tramite.fechaApertura }}</td>
-          <td class="col-date">{{ tramite.fechaEstimadaTermino }}</td>
-          <td class="col-actions">
-            <a class="detail-link" [routerLink]="['/tramites', tramite.id]">
-              Ver detalle
-            </a>
-          </td>
         </tr>
       </ng-template>
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="9" class="empty-state">
-            No se encontraron trámites con los filtros seleccionados.
+          <td colspan="7" class="empty-state">
+            No se encontraron trámites con la búsqueda o los filtros
+            seleccionados.
           </td>
         </tr>
       </ng-template>

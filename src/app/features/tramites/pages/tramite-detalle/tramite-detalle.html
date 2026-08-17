@@ -1,307 +1,439 @@
 <section class="detail-page">
   <p-toast position="top-right" />
 
-  <div class="mb-4">
+  <div class="page-breadcrumb">
     <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
   </div>
 
   <ng-container *ngIf="tramite as tramite; else tramiteNoEncontrado">
-  <div class="detail-header">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <h2 class="h4 mb-0">Trámite #{{ tramiteId }}</h2>
-        <p-tag
-          [severity]="obtenerSeveridadEstado(tramite.estado)"
-          [rounded]="true"
-        >
-          {{ tramite.estado }}
-        </p-tag>
-      </div>
-      <p class="text-body-secondary mb-0">
-        Información general y seguimiento del trámite.
-      </p>
-    </div>
-
-    <div class="detail-actions">
-      <a
-        pButton
-        routerLink="/tramites"
-        severity="secondary"
-        [outlined]="true"
-      >
-        Volver
-      </a>
-      <a
-        pButton
-        [routerLink]="['/tramites', tramiteId, 'modificar']"
-        severity="primary"
-      >
-        Modificar trámite
-      </a>
-    </div>
-  </div>
-
-  <div class="detail-sections">
-    <p-panel header="Datos generales" styleClass="detail-panel">
-      <div class="details-content">
-        <div class="row g-4">
-          <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label text-body-secondary">
-              ID estación de servicio
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.idEstacion"
-            />
+    <header class="detail-overview">
+      <div class="overview-top">
+        <div>
+          <div class="title-row">
+            <h2>Trámite #{{ tramite.id }}</h2>
+            <p-tag
+              [severity]="obtenerSeveridadEstado(tramite.estado)"
+              [rounded]="true"
+            >
+              {{ tramite.estado }}
+            </p-tag>
           </div>
+          <p>Información general y seguimiento completo del trámite.</p>
+        </div>
 
-          <div class="col-12 col-md-6 col-lg-3">
-            <label class="form-label text-body-secondary">Comuna</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.comuna"
-            />
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary">
-              Estación de servicio
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.estacionServicio"
-            />
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary">Razón social</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.razonSocial"
-            />
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <label class="form-label text-body-secondary">Dirección</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.direccion"
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary">Prioridad</label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.prioridad"
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary">
-              Responsable interno
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.responsableInterno"
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary">
-              Tipo de trámite
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.tipoTramite"
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary">
-              Trámite específico
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.tramiteEspecifico"
-            />
-          </div>
-
-          <div class="col-12 col-md-6">
-            <label class="form-label text-body-secondary">
-              Solicitante Copec
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.solicitanteCopec"
-            />
-          </div>
-
-          <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary">
-              Fecha de apertura
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.fechaApertura"
-            />
-          </div>
-
-          <div class="col-12 col-md-3">
-            <label class="form-label text-body-secondary">
-              Fecha estimada de término
-            </label>
-            <input
-              class="form-control-plaintext fw-medium"
-              readonly
-              [value]="tramite.fechaEstimadaTermino"
-            />
-          </div>
+        <div class="detail-actions">
+          <a
+            pButton
+            routerLink="/tramites"
+            severity="secondary"
+            [outlined]="true"
+          >
+            Volver
+          </a>
+          <a
+            pButton
+            [routerLink]="['/tramites', tramiteId, 'modificar']"
+            severity="primary"
+          >
+            Modificar trámite
+          </a>
         </div>
       </div>
-    </p-panel>
 
-    <p-panel
-      header="Antecedentes requeridos"
-      styleClass="detail-panel table-panel"
-    >
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Antecedente</th>
-              <th>Obligatorio</th>
-              <th>Responsable</th>
-              <th>Estado</th>
-              <th>Archivo</th>
-              <th>Observaciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of antecedentesRequeridos">
-              <td>{{ item.antecedente }}</td>
-              <td>{{ item.obligatorio ? "Sí" : "No" }}</td>
-              <td>{{ item.responsable }}</td>
-              <td>
-                <p-tag
-                  [severity]="obtenerSeveridadEstado(item.estado)"
-                  [rounded]="true"
-                >
-                  {{ item.estado }}
-                </p-tag>
-              </td>
-              <td>
+      <dl class="overview-grid">
+        <div class="overview-item">
+          <dt>Estación de servicio</dt>
+          <dd>{{ tramite.idEstacion }} · {{ tramite.estacionServicio }}</dd>
+        </div>
+        <div class="overview-item">
+          <dt>Comuna</dt>
+          <dd>{{ tramite.comuna }}</dd>
+        </div>
+        <div class="overview-item overview-wide">
+          <dt>Razón social</dt>
+          <dd>{{ tramite.razonSocial }}</dd>
+        </div>
+        <div class="overview-item overview-wide">
+          <dt>Tipo de trámite</dt>
+          <dd>{{ tramite.tipoTramite }}</dd>
+        </div>
+        <div class="overview-item">
+          <dt>Fecha de apertura</dt>
+          <dd>{{ tramite.fechaApertura }}</dd>
+        </div>
+        <div class="overview-item">
+          <dt>Fecha estimada de término</dt>
+          <dd>{{ tramite.fechaEstimadaTermino }}</dd>
+        </div>
+        <div class="overview-item">
+          <dt>Prioridad</dt>
+          <dd>{{ tramite.prioridad }}</dd>
+        </div>
+        <div class="overview-item overview-wide">
+          <dt>Responsable</dt>
+          <dd>{{ tramite.responsableInterno }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <div class="detail-sections">
+      <p-panel
+        header="Datos generales"
+        styleClass="detail-panel"
+        [toggleable]="true"
+      >
+        <dl class="general-grid">
+          <div>
+            <dt>Dirección</dt>
+            <dd>{{ tramite.direccion }}</dd>
+          </div>
+          <div>
+            <dt>Trámite específico</dt>
+            <dd>{{ tramite.tramiteEspecifico }}</dd>
+          </div>
+          <div>
+            <dt>Solicitante Copec</dt>
+            <dd>{{ tramite.solicitanteCopec }}</dd>
+          </div>
+          <div>
+            <dt>Estado consolidado</dt>
+            <dd>
+              <p-tag
+                [severity]="obtenerSeveridadEstado(tramite.estado)"
+                [rounded]="true"
+              >
+                {{ tramite.estado }}
+              </p-tag>
+            </dd>
+          </div>
+        </dl>
+      </p-panel>
+
+      <p-panel styleClass="detail-panel" [toggleable]="true">
+        <ng-template #header>
+          <div class="bitacora-heading">
+            <span>Bitácora</span>
+            <button
+              pButton
+              type="button"
+              class="bitacora-info-button"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              aria-label="Información sobre la bitácora"
+              aria-haspopup="dialog"
+              (click)="filterHelp.toggle($event)"
+            >
+              <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+            </button>
+          </div>
+        </ng-template>
+
+        <p-popover #filterHelp appendTo="body" styleClass="filter-help-popover">
+          <div class="filter-help-content">
+            <div class="filter-help-icon">
+              <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+            </div>
+
+            <div class="filter-help-text">
+              <span class="filter-help-title">¿Qué es una bitácora?</span>
+
+              <p>
+                Corresponde al historial cronológico del trámite, mostrando
+                primero los registros más recientes.
+              </p>
+            </div>
+          </div>
+        </p-popover>
+
+        <p-timeline [value]="bitacora" class="activity-timeline">
+          <ng-template #opposite let-entrada>
+            <time class="activity-date">
+              <strong>{{ entrada.fecha }}</strong>
+              <span>{{ entrada.hora }}</span>
+            </time>
+          </ng-template>
+
+          <ng-template #marker>
+            <span class="activity-marker" aria-hidden="true"></span>
+          </ng-template>
+
+          <ng-template #content let-entrada>
+            <article class="activity-content">
+              <div class="activity-header">
+                <strong>{{ entrada.accion }}</strong>
                 <button
+                  *ngIf="!entrada.editando"
                   pButton
                   type="button"
                   severity="secondary"
                   [text]="true"
                   size="small"
-                  class="file-button"
+                  (click)="editarComentario(entrada)"
                 >
-                  {{ item.archivo }}
+                  Editar comentario
                 </button>
-              </td>
-              <td>{{ item.observaciones }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </p-panel>
+              </div>
 
-    <p-panel
-      header="Antecedentes extraordinarios"
-      styleClass="detail-panel table-panel"
-    >
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Antecedente</th>
-              <th>Obligatorio</th>
-              <th>Responsable</th>
-              <th>Estado</th>
-              <th>Archivo</th>
-              <th>Observaciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of antecedentesExtraordinarios">
-              <td>{{ item.antecedente }}</td>
-              <td>{{ item.obligatorio ? "Sí" : "No" }}</td>
-              <td>{{ item.responsable }}</td>
-              <td>
-                <p-tag
-                  [severity]="obtenerSeveridadEstado(item.estado)"
-                  [rounded]="true"
-                >
-                  {{ item.estado }}
-                </p-tag>
-              </td>
-              <td>
-                <button
-                  pButton
-                  type="button"
-                  severity="secondary"
-                  [text]="true"
-                  size="small"
-                  class="file-button"
-                >
-                  {{ item.archivo }}
-                </button>
-              </td>
-              <td>{{ item.observaciones }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </p-panel>
+              <p *ngIf="!entrada.editando" class="activity-comment">
+                {{ entrada.comentario }}
+              </p>
 
-    <p-panel header="Hitos de gestión" styleClass="detail-panel table-panel">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Hito</th>
-              <th>Estado</th>
-              <th>Fecha estimada</th>
-              <th>Fecha real</th>
-              <th>Responsable</th>
-              <th>Observación</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of hitosGestion">
-              <td>{{ item.hito }}</td>
-              <td>
-                <p-tag
-                  [severity]="obtenerSeveridadEstado(item.estado)"
-                  [rounded]="true"
-                >
-                  {{ item.estado }}
-                </p-tag>
-              </td>
-              <td>{{ item.fechaEstimada }}</td>
-              <td>{{ item.fechaReal }}</td>
-              <td>{{ item.responsable }}</td>
-              <td>{{ item.observacion }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </p-panel>
-  </div>
+              <div *ngIf="entrada.editando" class="comment-editor">
+                <textarea
+                  pTextarea
+                  [(ngModel)]="entrada.comentarioBorrador"
+                  [autoResize]="true"
+                  rows="3"
+                  aria-label="Comentario de la bitácora"
+                ></textarea>
+                <div class="comment-actions">
+                  <button
+                    pButton
+                    type="button"
+                    severity="secondary"
+                    [outlined]="true"
+                    size="small"
+                    (click)="cancelarEdicionComentario(entrada)"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    pButton
+                    type="button"
+                    severity="success"
+                    size="small"
+                    (click)="guardarComentario(entrada)"
+                  >
+                    Guardar comentario
+                  </button>
+                </div>
+              </div>
+            </article>
+          </ng-template>
+        </p-timeline>
+      </p-panel>
+
+      <p-panel
+        header="Antecedentes requeridos"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+      >
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Antecedente</th>
+                <th>Condición</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Fecha de carga</th>
+                <th>Archivo</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of antecedentesRequeridos">
+                <td>{{ item.antecedente }}</td>
+                <td>{{ item.obligatorio ? "Obligatorio" : "Opcional" }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaCarga }}</td>
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Antecedentes complementarios"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+      >
+        <p class="section-description panel-description">
+          Documentos solicitados específicamente para este trámite, asociados a
+          un tipo de documento normalizado.
+        </p>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Tipo de documento</th>
+                <th>Solicitado por</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Fecha de carga</th>
+                <th>Archivo</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of antecedentesComplementarios">
+                <td>{{ item.tipoDocumento }}</td>
+                <td>{{ item.solicitadoPor }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaCarga }}</td>
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Hitos de gestión"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+      >
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 milestones-table">
+            <thead>
+              <tr>
+                <th>Hito</th>
+                <th>Estado</th>
+                <th>Fecha estimada</th>
+                <th>Fecha real</th>
+                <th>Responsable</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of hitosGestion">
+                <td>{{ item.hito }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaEstimada }}</td>
+                <td>{{ item.fechaReal }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>{{ item.observacion }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Archivos adjuntos"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+      >
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Archivo</th>
+                <th>Categoría</th>
+                <th>Documento asociado</th>
+                <th>Fecha de carga</th>
+                <th>Cargado por</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of archivosAdjuntos">
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>{{ item.categoria }}</td>
+                <td>{{ item.documento }}</td>
+                <td>{{ item.fechaCarga }}</td>
+                <td>{{ item.cargadoPor }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+    </div>
   </ng-container>
 
   <ng-template #tramiteNoEncontrado>

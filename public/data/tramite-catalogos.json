@@ -15,18 +15,17 @@
       "rut": "77.618.579-5"
     }
   ],
-  "prioridades": [
-    "Alta",
-    "Media",
-    "Baja"
-  ],
+  "prioridades": ["Alta", "Media", "Baja"],
   "estados": [
     "Borrador",
     "Pendiente",
-    "En curso",
-    "Rechazado",
+    "Ingresado",
+    "En tramitación",
+    "Observado",
     "Reingresado",
-    "Completado"
+    "Rechazado",
+    "Terminado aprobado",
+    "Terminado desfavorable"
   ],
   "responsables": [
     "José L. Rosas",
@@ -44,6 +43,33 @@
     {
       "id": "patente-comercial",
       "nombre": "Patente comercial",
+      "segundoNivelLabel": "Subtrámite o gestión asociada",
+      "requiereSeleccionSegundoNivelParaPrincipal": false,
+      "hitosGestion": [
+        "Ingreso de la solicitud",
+        "Revisión de la ficha",
+        "Preparación del expediente",
+        "Ingreso ante la municipalidad",
+        "Revisión de la institución",
+        "Observaciones y subsanación",
+        "Reingreso",
+        "Finalización"
+      ],
+      "datosAdicionales": [
+        {
+          "id": "municipalidadCompetente",
+          "label": "Municipalidad competente",
+          "tipo": "text",
+          "requerido": true
+        },
+        {
+          "id": "tipoPatente",
+          "label": "Tipo de patente",
+          "tipo": "select",
+          "requerido": true,
+          "opciones": ["Provisoria", "Definitiva", "Transferencia"]
+        }
+      ],
       "tramitesEspecificos": [
         {
           "id": "informe-obras-patente-comercial",
@@ -104,29 +130,76 @@
         {
           "id": "traspaso-patente-definitiva",
           "nombre": "Traspaso de patente provisoria a definitiva",
-          "antecedentes": [
-            "DOM - Recepción definitiva"
-          ]
+          "antecedentes": ["DOM - Recepción definitiva"]
         }
       ]
     },
     {
       "id": "resolucion-sanitaria-alimentos",
       "nombre": "Resolución sanitaria de alimentos",
+      "segundoNivelLabel": "Tipo de instalación o actividad",
+      "requiereSeleccionSegundoNivelParaPrincipal": true,
+      "hitosGestion": [
+        "Ingreso de la solicitud",
+        "Definición del tipo de instalación",
+        "Revisión de antecedentes",
+        "Preparación del expediente sanitario",
+        "Ingreso ante la Seremi de Salud",
+        "Revisión de la institución",
+        "Observaciones y subsanación",
+        "Reingreso",
+        "Resolución y finalización"
+      ],
+      "datosAdicionales": [
+        {
+          "id": "seremiCompetente",
+          "label": "Seremi de Salud competente",
+          "tipo": "text",
+          "requerido": true
+        },
+        {
+          "id": "superficieInstalacion",
+          "label": "Superficie de la instalación (m²)",
+          "tipo": "text",
+          "requerido": false
+        }
+      ],
       "tramitesEspecificos": [
         {
+          "id": "local-elaboracion",
+          "nombre": "Elaboración",
+          "antecedentes": [
+            "Autorización municipal de acuerdo con el plan regulador",
+            "Descripción general de los procesos de elaboración",
+            "Plano o croquis de planta e instalaciones sanitarias a escala",
+            "Sistema de eliminación de desechos",
+            "Listado de materias primas"
+          ]
+        },
+        {
           "id": "local-elaboracion-consumo-paso",
-          "nombre": "Local de elaboración de alimentos con consumo al paso",
-          "antecedentes": []
+          "nombre": "Elaboración con consumo al paso",
+          "antecedentes": [
+            "Autorización municipal de acuerdo con el plan regulador",
+            "Descripción general de los procesos de elaboración",
+            "Plano o croquis de planta e instalaciones sanitarias a escala",
+            "Sistema de control de calidad sanitaria",
+            "Listado de tipos de alimentos que elaborará"
+          ]
         },
         {
           "id": "local-expendio-consumo-paso",
-          "nombre": "Local de expendio de alimentos con consumo al paso",
-          "antecedentes": []
+          "nombre": "Expendio con consumo al paso",
+          "antecedentes": [
+            "Autorización municipal de acuerdo con el plan regulador",
+            "Plano o croquis de planta e instalaciones sanitarias a escala",
+            "Sistema de eliminación de desechos",
+            "Certificado de inicio de actividades del SII"
+          ]
         },
         {
           "id": "local-expendio-alimentos",
-          "nombre": "Local de expendio de alimentos",
+          "nombre": "Expendio",
           "antecedentes": [
             "Autorización municipal de acuerdo con el plan regulador",
             "Comprobante de pago de agua potable de red pública o resolución de la obra de agua potable particular",
@@ -140,12 +213,42 @@
             "Listado de tipos de alimentos que elaborará",
             "Certificado de inicio de actividades del SII"
           ]
+        },
+        {
+          "id": "carros-alimentos",
+          "nombre": "Carros",
+          "antecedentes": [
+            "Autorización municipal para ubicación del carro",
+            "Descripción general de los procesos de elaboración",
+            "Sistema de abastecimiento de agua potable",
+            "Sistema de eliminación de desechos",
+            "Listado de tipos de alimentos que elaborará"
+          ]
         }
       ]
     },
     {
       "id": "informe-sanitario-establecimientos",
       "nombre": "Informe sanitario de establecimientos industriales y/o comerciales",
+      "segundoNivelLabel": "Gestión o subtrámite asociado",
+      "requiereSeleccionSegundoNivelParaPrincipal": false,
+      "hitosGestion": [
+        "Ingreso de la solicitud",
+        "Revisión de antecedentes técnicos",
+        "Preparación del expediente",
+        "Ingreso ante la Seremi de Salud",
+        "Revisión de la institución",
+        "Observaciones y subsanación",
+        "Finalización"
+      ],
+      "datosAdicionales": [
+        {
+          "id": "actividadEconomica",
+          "label": "Actividad económica del establecimiento",
+          "tipo": "text",
+          "requerido": true
+        }
+      ],
       "tramitesEspecificos": [
         {
           "id": "informe-sanitario-establecimiento",
@@ -164,6 +267,32 @@
     {
       "id": "regularizacion-obras",
       "nombre": "Regularización de obras",
+      "segundoNivelLabel": "Gestión ante la DOM",
+      "requiereSeleccionSegundoNivelParaPrincipal": false,
+      "hitosGestion": [
+        "Ingreso de la solicitud",
+        "Revisión técnica",
+        "Preparación del expediente",
+        "Ingreso ante la Dirección de Obras Municipales",
+        "Revisión de la institución",
+        "Observaciones y subsanación",
+        "Reingreso",
+        "Recepción y finalización"
+      ],
+      "datosAdicionales": [
+        {
+          "id": "domCompetente",
+          "label": "Dirección de Obras Municipales competente",
+          "tipo": "text",
+          "requerido": true
+        },
+        {
+          "id": "rolAvaluo",
+          "label": "Rol de avalúo",
+          "tipo": "text",
+          "requerido": false
+        }
+      ],
       "tramitesEspecificos": [
         {
           "id": "permiso-obra-menor-dom",

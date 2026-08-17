@@ -30,33 +30,94 @@
   }
 }
 
-.field-tag,
-.switch-field {
+.field-help {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.panel-heading-with-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-info-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: #64748b;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.panel-help-content {
+  max-width: 340px;
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #1f2937;
+    font-size: 14px;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.table-switch-field {
   display: flex;
   align-items: center;
   min-height: 42px;
-}
-
-.switch-field {
   gap: 10px;
 
-  label {
-    color: #374151;
+  span {
+    color: #475569;
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
   }
 }
 
-.editable-item {
-  padding: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
+.modification-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+}
 
-  & + & {
-    margin-top: 16px;
+.item-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  strong {
+    color: #1f2937;
+    font-size: 14px;
+    line-height: 1.4;
   }
+
+  span {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #eef2f6;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 600;
+  }
+}
+
+.hito-name {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .section-actions,
@@ -100,64 +161,113 @@ textarea[pTextarea] {
     }
   }
 
+  .modification-table {
+    width: 100%;
+
+    table {
+      width: 100%;
+      min-width: 990px;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 12px;
+    }
+
+    th {
+      background: #eff6ff;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    td {
+      vertical-align: top;
+    }
+
+    .item-column {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      width: 220px;
+      background: inherit;
+      box-shadow: 4px 0 8px rgb(15 23 42 / 5%);
+    }
+
+    th.item-column {
+      z-index: 2;
+      background: #eff6ff;
+    }
+
+    .obligatorio-column {
+      width: 130px;
+    }
+
+    .responsable-column {
+      width: 185px;
+    }
+
+    .estado-column {
+      width: 150px;
+    }
+
+    .archivo-column {
+      width: 190px;
+    }
+
+    .fecha-column {
+      width: 180px;
+    }
+
+    .observaciones-column {
+      width: 245px;
+    }
+
+    textarea[pTextarea] {
+      width: 100%;
+      min-height: 42px;
+      height: 42px;
+    }
+  }
+
+  .antecedentes-complementary-table table {
+    min-width: 1120px;
+  }
+
+  .hitos-table table {
+    min-width: 1160px;
+  }
+
   .p-select,
   .p-datepicker {
     width: 100%;
   }
 
-  .p-fileupload-basic {
-    justify-content: flex-start;
+  .compact-file-upload,
+  .compact-file-upload .p-fileupload-basic-content,
+  .compact-file-upload p-button,
+  .compact-file-button {
+    width: 100%;
+    min-width: 0;
   }
 
-  .file-input-group {
-    width: 100%;
+  .compact-file-button {
     height: 42px;
-    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+    padding-inline: 10px;
 
-    > .p-inputtext {
-      width: 1%;
-      height: 42px;
+    .p-button-label {
       min-width: 0;
-    }
-
-    > .p-inputgroupaddon {
-      flex: 0 0 auto;
-      height: 42px;
-
-      &:has(.p-fileupload) {
-        padding: 0;
-      }
-    }
-
-    .p-fileupload,
-    .p-fileupload-basic,
-    .p-fileupload-basic-content,
-    p-button,
-    .p-fileupload-choose-button {
-      width: auto;
-      height: 100%;
-    }
-
-    .p-fileupload-choose-button {
-      border-radius: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
   }
-
-  .general-info-message {
-    margin-bottom: 8px;
-  }
-}
-
-.file-addon-icon,
-.file-upload-icon {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
 }
 
 @media (max-width: 576px) {

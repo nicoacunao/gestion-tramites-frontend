@@ -13,4 +13,9 @@ export interface Tramite {
   responsableInterno: string;
   tramiteEspecifico: string;
   solicitanteCopec: string;
+  modalidadCreacion?: "principal" | "subtramite";
+  datosAdicionales?: Record<string, string>;
+  subtramitesAsociados?: string[];
+  antecedentesConfigurados?: string[];
+  hitosConfigurados?: string[];
 }

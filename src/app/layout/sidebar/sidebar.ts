@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, EventEmitter, HostListener, Input, Output } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { MatIconModule } from "@angular/material/icon";
 import { TramitesNavegacion } from "../../features/tramites/services/tramites-navegacion";
@@ -26,9 +26,10 @@ export class SidebarComponent {
   constructor(
     private readonly router: Router,
     private readonly tramitesNavegacion: TramitesNavegacion,
-  ) {}
+  ) { }
 
-  isCollapsed = false;
+  @Input() open = false;
+  @Output() closed = new EventEmitter<void>();
 
   readonly navigationSections: SidebarSection[] = [
     {
@@ -56,14 +57,12 @@ export class SidebarComponent {
     },
   ];
 
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
-
   alNavegar(item: SidebarItem): void {
     if (item.id === "tramites") {
       this.tramitesNavegacion.solicitarListadoCompleto();
     }
+
+    this.closeSidebar();
   }
 
   irAlPortal(): void {
@@ -81,5 +80,16 @@ export class SidebarComponent {
     }
 
     return rutaActual === item.route;
+  }
+
+  closeSidebar(): void {
+    this.closed.emit();
+  }
+
+  @HostListener("document:keydown.escape")
+  closeWithEscape(): void {
+    if (this.open) {
+      this.closeSidebar();
+    }
   }
 }

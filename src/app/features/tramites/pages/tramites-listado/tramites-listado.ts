@@ -1,17 +1,24 @@
 import { CommonModule } from "@angular/common";
-import { Component, DestroyRef, OnInit, inject } from "@angular/core";
+import {
+  Component,
+  DestroyRef,
+  OnInit,
+  ViewChild,
+  inject,
+} from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
-import { FloatLabelModule } from "primeng/floatlabel";
-import {
-  AutoCompleteCompleteEvent,
-  AutoCompleteModule,
-} from "primeng/autocomplete";
-import { DatePickerModule } from "primeng/datepicker";
+import { FilterMetadata } from "primeng/api";
 import { ButtonDirective } from "primeng/button";
-import { TableModule, TablePageEvent } from "primeng/table";
+import { InfoCircleIcon } from "primeng/icons/infocircle";
+import { InputTextModule } from "primeng/inputtext";
+import { ListboxModule } from "primeng/listbox";
+import { PopoverModule } from "primeng/popover";
+import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TagModule } from "primeng/tag";
+import { TooltipModule } from "primeng/tooltip";
+import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
   resolverSeveridadEstado,
   TagSeverity,
@@ -19,34 +26,30 @@ import {
 import { Tramite } from "../../models/tramite";
 import { TramitesMock } from "../../services/tramites-mock";
 import { TramitesNavegacion } from "../../services/tramites-navegacion";
-import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 
-interface EstadoTramite {
-  title: string;
-  severity: TagSeverity;
-}
+type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 
-interface FiltrosTramites {
-  idEstacion: string;
-  fechaApertura: Date[] | null;
-  fechaTermino: Date[] | null;
-  estado: string;
+interface OpcionFiltro<T> {
+  label: string;
+  value: T;
 }
 
 @Component({
   selector: "app-tramites-listado",
   standalone: true,
   imports: [
-    AutoCompleteModule,
     Breadcrumbs,
-    CommonModule,
-    DatePickerModule,
-    FormsModule,
-    RouterLink,
-    FloatLabelModule,
     ButtonDirective,
+    CommonModule,
+    FormsModule,
+    InfoCircleIcon,
+    InputTextModule,
+    ListboxModule,
+    PopoverModule,
+    RouterLink,
     TableModule,
     TagModule,
+    TooltipModule,
   ],
   templateUrl: "./tramites-listado.html",
   styleUrl: "./tramites-listado.scss",
@@ -54,15 +57,9 @@ interface FiltrosTramites {
 export class TramitesListado implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
-  constructor(
-    tramitesMock: TramitesMock,
-    private readonly tramitesNavegacion: TramitesNavegacion,
-  ) {
-    this.tramites = tramitesMock.obtenerTodos();
-    this.tramitesFiltrados = [...this.tramites];
-  }
+  @ViewChild("tabla") tabla?: Table;
 
-  breadcrumbs = [
+  readonly breadcrumbs = [
     {
       label: "Módulo de Gestión de Trámites",
       route: "/tramites",
@@ -71,98 +68,76 @@ export class TramitesListado implements OnInit {
       label: "Consulta de Trámites",
     },
   ];
-  filtros: FiltrosTramites = {
-    idEstacion: "",
-    fechaApertura: null,
-    fechaTermino: null,
-    estado: "",
-  };
 
-  idsEstacion = ["60001", "60002", "60003", "60004", "60005"];
+  readonly tramites: Tramite[];
+  readonly idsTramite: OpcionFiltro<number>[];
+  readonly idsEstacion: OpcionFiltro<string>[];
+  readonly tiposTramite: OpcionFiltro<string>[];
+  readonly comunas: OpcionFiltro<string>[];
+  readonly razonesSociales: OpcionFiltro<string>[];
+  readonly estados: OpcionFiltro<string>[];
 
-  estados: EstadoTramite[] = [
-    "Ingresado",
-    "En revisión",
-    "Observado",
-    "Aprobado",
-    "Finalizado",
-  ].map((title) => ({
-    title,
-    severity: resolverSeveridadEstado(title),
-  }));
-
-  idsEstacionSugeridos = [...this.idsEstacion];
-  estadosSugeridos = this.estados.map((estado) => estado.title);
-
-  tramites: Tramite[];
-  tramitesFiltrados: Tramite[];
+  filtrosTabla: FiltrosTabla = {};
+  busquedaGeneral = "";
+  fechaFiltroIso = "";
   first = 0;
-  rows = 5;
+  rows = 10;
+
+  constructor(
+    tramitesMock: TramitesMock,
+    private readonly tramitesNavegacion: TramitesNavegacion,
+  ) {
+    this.tramites = tramitesMock.obtenerTodos();
+    this.idsTramite = this.crearOpciones(
+      this.valoresUnicos(this.tramites.map(({ id }) => id)).sort(
+        (a, b) => a - b,
+      ),
+    );
+    this.idsEstacion = this.crearOpciones(
+      this.valoresUnicos(
+        this.tramites.map(({ idEstacion }) => idEstacion),
+      ).sort((a, b) => a.localeCompare(b, "es-CL", { numeric: true })),
+    );
+    this.tiposTramite = this.crearOpciones(
+      this.ordenarTexto(this.tramites.map(({ tipoTramite }) => tipoTramite)),
+    );
+    this.comunas = this.crearOpciones(
+      this.ordenarTexto(this.tramites.map(({ comuna }) => comuna)),
+    );
+    this.razonesSociales = this.crearOpciones(
+      this.ordenarTexto(this.tramites.map(({ razonSocial }) => razonSocial)),
+    );
+    this.estados = this.crearOpciones(
+      this.ordenarTexto(this.tramites.map(({ estado }) => estado)),
+    );
+  }
 
   ngOnInit(): void {
     const idEstacion = this.tramitesNavegacion.consumirFiltroEstacion();
 
     if (idEstacion) {
-      this.filtros.idEstacion = idEstacion;
-      this.aplicarFiltros();
+      this.filtrosTabla = {
+        idEstacion: [{ value: [idEstacion], matchMode: "in", operator: "and" }],
+      };
     }
 
     this.tramitesNavegacion.listadoCompleto$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.restablecerFiltros());
+      .subscribe(() => this.limpiarFiltros());
   }
 
-  filtrarIdsEstacion(event: AutoCompleteCompleteEvent): void {
-    this.idsEstacionSugeridos = this.filtrarOpciones(
-      this.idsEstacion,
-      event.query,
-    );
-  }
-
-  filtrarEstados(event: AutoCompleteCompleteEvent): void {
-    this.estadosSugeridos = this.filtrarOpciones(
-      this.estados.map((estado) => estado.title),
-      event.query,
-    );
-  }
-
-  buscar(): void {
-    this.aplicarFiltros();
-  }
-
-  private aplicarFiltros(): void {
-    this.tramitesFiltrados = this.tramites.filter((tramite) => {
-      const coincideIdEstacion =
-        !this.filtros.idEstacion ||
-        tramite.idEstacion === this.filtros.idEstacion;
-
-      const coincideEstado =
-        !this.filtros.estado || tramite.estado === this.filtros.estado;
-
-      const fechaApertura = this.convertirFecha(tramite.fechaApertura);
-      const fechaTermino = this.convertirFecha(tramite.fechaEstimadaTermino);
-
-      const coincideApertura = this.estaDentroDelRango(
-        fechaApertura,
-        this.filtros.fechaApertura,
-      );
-      const coincideTermino = this.estaDentroDelRango(
-        fechaTermino,
-        this.filtros.fechaTermino,
-      );
-
-      return (
-        coincideIdEstacion &&
-        coincideEstado &&
-        coincideApertura &&
-        coincideTermino
-      );
-    });
+  aplicarBusquedaGlobal(event: Event): void {
+    const valor = (event.target as HTMLInputElement).value;
+    this.busquedaGeneral = valor;
+    this.tabla?.filterGlobal(valor, "contains");
     this.first = 0;
   }
 
   limpiarFiltros(): void {
-    this.restablecerFiltros();
+    this.busquedaGeneral = "";
+    this.fechaFiltroIso = "";
+    this.tabla?.clear();
+    this.first = 0;
   }
 
   pageChange(event: TablePageEvent): void {
@@ -170,90 +145,44 @@ export class TramitesListado implements OnInit {
     this.rows = event.rows;
   }
 
-  next(): void {
-    const lastPageFirst =
-      Math.max(Math.ceil(this.tramitesFiltrados.length / this.rows) - 1, 0) *
-      this.rows;
-
-    this.first = Math.min(
-      this.first + this.rows,
-      lastPageFirst,
-    );
-  }
-
-  prev(): void {
-    this.first = Math.max(this.first - this.rows, 0);
-  }
-
-  reset(): void {
-    this.first = 0;
-  }
-
-  isLastPage(): boolean {
-    return this.first + this.rows >= this.tramitesFiltrados.length;
-  }
-
-  isFirstPage(): boolean {
-    return this.first === 0;
-  }
-
   obtenerClaseEstado(estadoActual: string): TagSeverity {
     return resolverSeveridadEstado(estadoActual);
   }
 
-  private convertirFecha(fecha: string): Date {
-    const [dia, mes, anio] = fecha.split("-");
-    return new Date(Number(anio), Number(mes) - 1, Number(dia));
-  }
-
-  private estaDentroDelRango(fecha: Date, rango: Date[] | null): boolean {
-    const [desde, hasta] = rango ?? [];
-
-    if (!desde) {
-      return true;
-    }
-
-    const fechaNormalizada = this.normalizarFecha(fecha);
-    const desdeNormalizado = this.normalizarFecha(desde);
-    const hastaNormalizado = hasta ? this.normalizarFecha(hasta) : null;
-
-    return (
-      fechaNormalizada >= desdeNormalizado &&
-      (!hastaNormalizado || fechaNormalizada <= hastaNormalizado)
-    );
-  }
-
-  private normalizarFecha(fecha: Date): number {
-    return new Date(
-      fecha.getFullYear(),
-      fecha.getMonth(),
-      fecha.getDate(),
-    ).getTime();
-  }
-
-  private filtrarOpciones(opciones: string[], consulta: string): string[] {
-    const consultaNormalizada = this.normalizarTexto(consulta);
-
-    return opciones.filter((opcion) =>
-      this.normalizarTexto(opcion).includes(consultaNormalizada),
-    );
-  }
-
-  private restablecerFiltros(): void {
-    this.filtros = {
-      idEstacion: "",
-      fechaApertura: null,
-      fechaTermino: null,
-      estado: "",
-    };
-    this.tramitesFiltrados = [...this.tramites];
+  aplicarFiltroFecha(
+    fechaIso: string,
+    filterCallback: (valor: string | null) => void,
+  ): void {
+    this.fechaFiltroIso = fechaIso;
+    filterCallback(fechaIso ? this.convertirFechaIso(fechaIso) : null);
     this.first = 0;
   }
 
-  private normalizarTexto(texto: string): string {
-    return texto
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLocaleLowerCase("es-CL");
+  limpiarFiltroFecha(filterCallback: (valor: string | null) => void): void {
+    this.fechaFiltroIso = "";
+    filterCallback(null);
+    this.first = 0;
+  }
+
+  private valoresUnicos<T>(valores: T[]): T[] {
+    return [...new Set(valores)];
+  }
+
+  private ordenarTexto(valores: string[]): string[] {
+    return this.valoresUnicos(valores).sort((a, b) =>
+      a.localeCompare(b, "es-CL", { sensitivity: "base" }),
+    );
+  }
+
+  private crearOpciones<T>(valores: T[]): OpcionFiltro<T>[] {
+    return valores.map((valor) => ({
+      label: String(valor),
+      value: valor,
+    }));
+  }
+
+  private convertirFechaIso(fechaIso: string): string {
+    const [anio, mes, dia] = fechaIso.split("-");
+    return `${dia}-${mes}-${anio}`;
   }
 }
