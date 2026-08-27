@@ -3,13 +3,23 @@ import { MainLayoutComponent } from "./layout/main-layout/main-layout";
 
 export const routes: Routes = [
   {
+    path: "login",
+    title: "Acceso | Gestión de Trámites",
+    loadComponent: () => import("./features/login/login").then((m) => m.Login),
+  },
+  {
     path: "",
     component: MainLayoutComponent,
     children: [
       {
         path: "",
-        redirectTo: "tramites",
+        redirectTo: "home",
         pathMatch: "full",
+      },
+      {
+        path: "home",
+        title: "Inicio | Gestión de Trámites",
+        loadComponent: () => import("./features/home/home").then((m) => m.Home),
       },
       {
         path: "tramites",
@@ -56,6 +66,6 @@ export const routes: Routes = [
   },
   {
     path: "**",
-    redirectTo: "tramites",
+    redirectTo: "home",
   },
 ];
