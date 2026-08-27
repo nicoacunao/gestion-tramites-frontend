@@ -33,8 +33,9 @@
               <div class="section-help-content">
                 <strong>Selección del trámite</strong>
                 <p>
-                  El tipo y la modalidad determinan automáticamente
-                  antecedentes, hitos y subtrámites relacionados.
+                  Comienza por el tipo de trámite. La opción seleccionada
+                  determina los antecedentes disponibles y los hitos o gestiones
+                  asociadas.
                 </p>
               </div>
             </p-popover>
@@ -42,66 +43,104 @@
         </div>
       </div>
 
-      <div class="row g-4">
-        <div class="col-12 col-lg-8">
-          <div class="form-field primary-field">
+      <div class="workflow-step type-selection-step">
+        <div class="workflow-step-heading">
+          <span class="workflow-step-number" aria-hidden="true">1</span>
+          <div>
             <label for="tipoTramite">Tipo de trámite</label>
-            <p-select
-              inputId="tipoTramite"
-              name="tipoTramite"
-              [(ngModel)]="form.tipoTramite"
-              [options]="tiposTramite"
-              optionLabel="nombre"
-              optionValue="id"
-              placeholder="Seleccione la categoría principal"
-              [filter]="true"
-              filterBy="nombre"
-              filterPlaceholder="Buscar tipo de trámite"
-              styleClass="w-100"
-              (ngModelChange)="onTipoTramiteChange($event)"
-            />
+            <small>
+              Selecciona directamente el trámite que necesitas gestionar.
+            </small>
           </div>
         </div>
-
-        <div class="col-12 col-lg-4">
-          <div class="form-field">
-            <label for="modalidadCreacion">Modalidad</label>
-            <p-select
-              inputId="modalidadCreacion"
-              name="modalidadCreacion"
-              [(ngModel)]="modalidadCreacion"
-              [options]="modalidadesCreacion"
-              optionLabel="label"
-              optionValue="value"
-              [disabled]="!form.tipoTramite"
-              styleClass="w-100"
-              (ngModelChange)="onModalidadChange($event)"
-            />
-          </div>
-        </div>
+        <p-select
+          inputId="tipoTramite"
+          name="tipoTramite"
+          [(ngModel)]="form.tipoTramite"
+          [options]="tiposTramite"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione un tipo de trámite"
+          [filter]="true"
+          filterBy="nombre"
+          filterPlaceholder="Buscar tipo de trámite"
+          styleClass="w-100"
+          (ngModelChange)="onTipoTramiteChange($event)"
+        />
       </div>
 
       <ng-container *ngIf="tipoSeleccionado as tipo">
         <div class="configuration-context">
+          <div class="workflow-step scope-selection-step">
+            <div class="workflow-step-heading">
+              <span class="workflow-step-number" aria-hidden="true">2</span>
+              <div>
+                <strong id="modalidadCreacionLabel">
+                  ¿Qué deseas gestionar?
+                </strong>
+                <small>
+                  Elige si realizarás el trámite completo o solo una gestión
+                  específica.
+                </small>
+              </div>
+            </div>
+
+            <div
+              class="creation-choice-grid"
+              role="radiogroup"
+              aria-labelledby="modalidadCreacionLabel"
+            >
+              <button
+                *ngFor="let modalidad of modalidadesCreacion"
+                type="button"
+                class="creation-choice-card"
+                [class.is-selected]="modalidadCreacion === modalidad.value"
+                role="radio"
+                [attr.aria-checked]="modalidadCreacion === modalidad.value"
+                (click)="onModalidadChange(modalidad.value)"
+              >
+                <span class="choice-indicator" aria-hidden="true"></span>
+                <span class="choice-copy">
+                  <strong>{{ modalidad.label }}</strong>
+                  <small>{{ modalidad.descripcion }}</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div
             *ngIf="requiereSeleccionSegundoNivel"
-            class="form-field second-level-field"
+            class="workflow-step second-level-step"
           >
-            <label for="tramiteEspecifico">{{ tipo.segundoNivelLabel }}</label>
-            <p-select
-              inputId="tramiteEspecifico"
-              name="tramiteEspecifico"
-              [(ngModel)]="form.tramiteEspecifico"
-              [options]="tramitesEspecificos"
-              optionLabel="nombre"
-              optionValue="id"
-              placeholder="Seleccione una opción de segundo nivel"
-              [filter]="true"
-              filterBy="nombre"
-              filterPlaceholder="Buscar opción"
-              styleClass="w-100"
-              (ngModelChange)="onTramiteEspecificoChange($event)"
-            />
+            <div class="workflow-step-heading">
+              <span class="workflow-step-number" aria-hidden="true">3</span>
+              <div>
+                <strong id="tramiteEspecificoLabel">
+                  {{ tipo.segundoNivelLabel }}
+                </strong>
+                <small>Selecciona una alternativa del listado.</small>
+              </div>
+            </div>
+
+            <div
+              class="second-level-options"
+              role="radiogroup"
+              aria-labelledby="tramiteEspecificoLabel"
+            >
+              <button
+                *ngFor="let opcion of tramitesEspecificos"
+                type="button"
+                class="second-level-option"
+                [class.is-selected]="form.tramiteEspecifico === opcion.id"
+                role="radio"
+                [attr.aria-checked]="form.tramiteEspecifico === opcion.id"
+                (click)="onTramiteEspecificoChange(opcion.id)"
+              >
+                <span class="choice-indicator" aria-hidden="true"></span>
+                <span>{{ opcion.nombre }}</span>
+              </button>
+            </div>
+
             <small
               class="field-help"
               *ngIf="tipo.id === 'resolucion-sanitaria-alimentos'"
@@ -120,19 +159,25 @@
             </ul>
           </div>
 
-          <div *ngIf="configuracionLista" class="configuration-summary">
+          <div
+            *ngIf="configuracionLista"
+            class="configuration-summary"
+            role="status"
+            aria-live="polite"
+          >
             <span>
-              <strong>{{ antecedentesRequeridos.length }}</strong>
-              antecedentes requeridos
+              <strong>{{ antecedentesDisponibles.length }}</strong>
+              antecedentes disponibles
             </span>
             <span>
               <strong>{{ hitosGestion.length }}</strong>
-              hitos de gestión
+              hitos o gestiones asociadas
             </span>
           </div>
 
           <p *ngIf="!configuracionLista" class="configuration-pending">
-            Selecciona una opción de segundo nivel para generar el formulario.
+            Selecciona una alternativa específica para mostrar sus antecedentes
+            e hitos asociados.
           </p>
         </div>
       </ng-container>
@@ -146,7 +191,7 @@
       </div>
 
       <div class="row g-4">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="estacionServicio">ID de la estación de servicio</label>
             <p-select
@@ -167,14 +212,14 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
-            <label for="concesionario">Razón social / concesionario</label>
+            <label for="razonSocial">Razón social</label>
             <input
               pInputText
-              id="concesionario"
-              name="concesionario"
-              [value]="form.concesionario"
+              id="razonSocial"
+              name="razonSocial"
+              [value]="form.razonSocial"
               placeholder="Se completa al seleccionar la estación"
               class="w-100"
               readonly
@@ -182,7 +227,22 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="form-field">
+            <label for="nombreConcesionario">Nombre del concesionario</label>
+            <input
+              pInputText
+              id="nombreConcesionario"
+              name="nombreConcesionario"
+              [(ngModel)]="form.nombreConcesionario"
+              placeholder="Ingrese el nombre del concesionario"
+              maxlength="150"
+              class="w-100"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="prioridad">Prioridad</label>
             <p-select
@@ -196,7 +256,24 @@
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="form-field">
+            <label for="responsableInterno">Responsable principal</label>
+            <p-select
+              inputId="responsableInterno"
+              name="responsableInterno"
+              [(ngModel)]="form.responsableInterno"
+              [options]="responsables"
+              placeholder="Seleccione responsable principal"
+              [filter]="true"
+              filterPlaceholder="Buscar responsable"
+              styleClass="w-100"
+              (ngModelChange)="onResponsablePrincipalChange($event)"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="estado">Estado inicial</label>
             <p-select
@@ -207,42 +284,14 @@
               placeholder="Seleccione estado inicial"
               styleClass="w-100"
             />
+            <small class="field-help">
+              Borrador permite registrar la solicitud aunque todavía falten
+              antecedentes para iniciar su gestión formal.
+            </small>
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
-          <div class="form-field">
-            <label for="responsableInterno">Responsable o contacto</label>
-            <p-select
-              inputId="responsableInterno"
-              name="responsableInterno"
-              [(ngModel)]="form.responsableInterno"
-              [options]="responsables"
-              placeholder="Seleccione responsable"
-              [filter]="true"
-              filterPlaceholder="Buscar responsable"
-              styleClass="w-100"
-            />
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <div class="form-field">
-            <label for="solicitanteCopec">Solicitante Copec</label>
-            <p-select
-              inputId="solicitanteCopec"
-              name="solicitanteCopec"
-              [(ngModel)]="form.solicitanteCopec"
-              [options]="solicitantesCopec"
-              placeholder="Seleccione solicitante"
-              [filter]="true"
-              filterPlaceholder="Buscar solicitante"
-              styleClass="w-100"
-            />
-          </div>
-        </div>
-
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="fechaApertura">Fecha de apertura</label>
             <p-datepicker
@@ -259,10 +308,32 @@
               styleClass="w-100"
               inputStyleClass="w-100"
             />
+            <small class="field-help">
+              Corresponde al momento en que comienza el registro o la gestión.
+            </small>
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="form-field">
+            <label for="solicitanteCopec">Solicitante</label>
+            <input
+              pInputText
+              id="solicitanteCopec"
+              name="solicitanteCopec"
+              [(ngModel)]="form.solicitanteCopec"
+              placeholder="Ingrese el nombre del solicitante"
+              autocomplete="name"
+              maxlength="150"
+              class="w-100"
+            />
+            <small class="field-help">
+              Registra a la persona que solicitó originalmente la gestión.
+            </small>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="fechaEstimadaTermino">Fecha estimada de término</label>
             <p-datepicker
@@ -279,6 +350,9 @@
               styleClass="w-100"
               inputStyleClass="w-100"
             />
+            <small class="field-help">
+              Se utilizará para seguimiento de plazos, alertas y atrasos.
+            </small>
           </div>
         </div>
       </div>
@@ -306,8 +380,8 @@
               <div class="section-help-content">
                 <strong>Antecedentes requeridos</strong>
                 <p>
-                  Los nombres y condiciones provienen del catálogo y no se
-                  configuran manualmente para cada trámite.
+                  Selecciona desde el catálogo los antecedentes que deseas
+                  ingresar en este trámite.
                 </p>
               </div>
             </p-popover>
@@ -425,6 +499,30 @@
             </tr>
           </ng-template>
         </p-table>
+      </div>
+
+      <div
+        *ngIf="configuracionLista && !antecedentesRequeridos.length"
+        class="empty-configuration d-flex flex-column gap-1"
+      >
+        <strong>Aún no has seleccionado antecedentes.</strong>
+        <span>
+          Abre el listado y marca los documentos que deseas ingresar en este
+          trámite.
+        </span>
+      </div>
+
+      <div *ngIf="configuracionLista" class="section-actions mt-3">
+        <button
+          pButton
+          type="button"
+          [outlined]="true"
+          size="small"
+          (click)="abrirSelectorAntecedentes()"
+        >
+          <svg data-p-icon="plus"></svg>
+          <span>Seleccionar antecedentes</span>
+        </button>
       </div>
     </section>
 
@@ -767,6 +865,71 @@
       </button>
     </div>
   </form>
+
+  <p-dialog
+    header="Seleccionar antecedentes"
+    [(visible)]="selectorAntecedentesVisible"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [blockScroll]="true"
+    [style]="{ width: 'min(92vw, 640px)' }"
+    styleClass="antecedentes-selection-dialog"
+  >
+    <div class="d-flex flex-column gap-3">
+      <p class="m-0 text-secondary">
+        Marca los antecedentes que deseas ingresar. Puedes volver a esta lista
+        para modificar la selección.
+      </p>
+
+      <div class="count-badge align-self-start" aria-live="polite">
+        <strong
+          >{{ antecedentesSeleccionadosBorrador.length }} de {{
+          antecedentesDisponibles.length }} seleccionados
+        </strong>
+      </div>
+
+      <div
+        class="antecedentes-checklist"
+        role="group"
+        aria-label="Antecedentes disponibles"
+      >
+        <label
+          *ngFor="let antecedente of antecedentesDisponibles; let i = index"
+          class="antecedente-check-option d-flex align-items-start gap-3 border rounded-2 p-3"
+          [for]="'antecedenteDisponible' + i"
+        >
+          <p-checkbox
+            class="flex-shrink-0 mt-1"
+            [inputId]="'antecedenteDisponible' + i"
+            [value]="antecedente"
+            [(ngModel)]="antecedentesSeleccionadosBorrador"
+          />
+          <span>{{ antecedente }}</span>
+        </label>
+      </div>
+    </div>
+
+    <ng-template #footer>
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [text]="true"
+        (click)="selectorAntecedentesVisible = false"
+      >
+        Cancelar
+      </button>
+      <button
+        pButton
+        type="button"
+        [disabled]="!antecedentesSeleccionadosBorrador.length"
+        (click)="guardarSeleccionAntecedentes()"
+      >
+        Agregar
+      </button>
+    </ng-template>
+  </p-dialog>
 
   <p-dialog
     header="Trámite creado correctamente"

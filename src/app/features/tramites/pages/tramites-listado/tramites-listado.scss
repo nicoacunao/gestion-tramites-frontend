@@ -79,28 +79,32 @@
 
 :host ::ng-deep .tramites-table {
   table {
-    min-width: 880px;
+    min-width: 1290px;
     table-layout: fixed;
   }
 
-  .col-tramite-id {
-    width: 100px;
+  .col-tramite-code {
+    width: 155px;
   }
 
   .col-station-id {
-    width: 120px;
+    width: 115px;
   }
 
   .col-type {
-    width: 205px;
+    width: 190px;
   }
 
   .col-comuna {
-    width: 130px;
+    width: 125px;
   }
 
   .col-business-name {
-    width: 220px;
+    width: 190px;
+  }
+
+  .col-dealer-name {
+    width: 180px;
   }
 
   .col-date {
@@ -211,6 +215,14 @@ td {
   border-radius: 3px;
   outline: 2px solid #175cd3;
   outline-offset: 3px;
+}
+
+.tramite-family {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 .empty-state {

@@ -10,6 +10,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { ButtonDirective } from "primeng/button";
+import { CheckboxModule } from "primeng/checkbox";
 import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
 import { FileSelectEvent, FileUploadModule } from "primeng/fileupload";
@@ -58,7 +59,6 @@ interface CatalogosTramite {
   estacionesServicio: EstacionServicio[];
   prioridades: string[];
   responsables: string[];
-  solicitantesCopec: string[];
   tiposTramite: TipoTramite[];
 }
 
@@ -71,6 +71,7 @@ type ModalidadCreacion = "principal" | "subtramite";
     Breadcrumbs,
     ButtonDirective,
     CheckIcon,
+    CheckboxModule,
     CommonModule,
     DatePickerModule,
     DialogModule,
@@ -104,11 +105,13 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   ];
   readonly modalidadesCreacion = [
     {
-      label: "Trámite principal completo",
+      label: "Trámite completo",
+      descripcion: "Incluye todas las gestiones asociadas al tipo de trámite.",
       value: "principal" as ModalidadCreacion,
     },
     {
-      label: "Solo un subtrámite específico",
+      label: "Una gestión/subtrámite específico",
+      descripcion: "Permite gestionar únicamente una alternativa específica.",
       value: "subtramite" as ModalidadCreacion,
     },
   ];
@@ -120,7 +123,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   estacionesServicio: EstacionServicio[] = [];
   prioridades: string[] = [];
   responsables: string[] = [];
-  solicitantesCopec: string[] = [];
   tiposTramite: TipoTramite[] = [];
   tramitesEspecificos: TramiteEspecifico[] = [];
 
@@ -134,7 +136,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     tipoTramite: "",
     tramiteEspecifico: "",
     estacionServicio: "",
-    concesionario: "",
+    razonSocial: "",
+    nombreConcesionario: "",
     prioridad: "",
     estado: "Borrador",
     responsableInterno: "",
@@ -144,6 +147,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   };
 
   antecedentesRequeridos: Array<ReturnType<typeof this.crearAntecedente>> = [];
+  antecedentesDisponibles: string[] = [];
+  antecedentesSeleccionadosBorrador: string[] = [];
+  selectorAntecedentesVisible = false;
   antecedentesComplementarios = [this.crearAntecedenteComplementario()];
   hitosGestion: Array<ReturnType<typeof this.crearHito>> = [];
 
@@ -181,12 +187,20 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   onModalidadChange(modalidad: ModalidadCreacion): void {
+    if (this.modalidadCreacion === modalidad) {
+      return;
+    }
+
     this.modalidadCreacion = modalidad;
     this.form.tramiteEspecifico = "";
     this.reconfigurarFormulario();
   }
 
   onTramiteEspecificoChange(tramiteEspecificoId: string): void {
+    if (this.form.tramiteEspecifico === tramiteEspecificoId) {
+      return;
+    }
+
     this.form.tramiteEspecifico = tramiteEspecificoId;
     this.reconfigurarFormulario();
   }
@@ -196,9 +210,21 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       (item) => item.codigo === this.form.estacionServicio,
     );
 
-    this.form.concesionario = estacion
-      ? `${estacion.concesionario} · RUT ${estacion.rut}`
+    this.form.razonSocial = estacion?.concesionario ?? "";
+    this.form.nombreConcesionario = estacion
+      ? this.obtenerNombreConcesionario(estacion.concesionario)
       : "";
+  }
+
+  onResponsablePrincipalChange(responsable: string): void {
+    this.form.responsableInterno = responsable;
+
+    for (const antecedente of [
+      ...this.antecedentesRequeridos,
+      ...this.antecedentesComplementarios,
+    ]) {
+      antecedente.responsable = responsable;
+    }
   }
 
   agregarAntecedenteComplementario(): void {
@@ -210,6 +236,37 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       ...this.antecedentesComplementarios,
       this.crearAntecedenteComplementario(),
     ];
+  }
+
+  abrirSelectorAntecedentes(): void {
+    if (!this.configuracionLista) {
+      return;
+    }
+
+    this.antecedentesSeleccionadosBorrador = this.antecedentesRequeridos.map(
+      (item) => item.antecedente,
+    );
+    this.selectorAntecedentesVisible = true;
+  }
+
+  guardarSeleccionAntecedentes(): void {
+    if (!this.antecedentesSeleccionadosBorrador.length) {
+      return;
+    }
+
+    const antecedentesConfigurados = new Map(
+      this.antecedentesRequeridos.map((item) => [item.antecedente, item]),
+    );
+    const seleccionados = new Set(this.antecedentesSeleccionadosBorrador);
+
+    this.antecedentesRequeridos = this.antecedentesDisponibles
+      .filter((antecedente) => seleccionados.has(antecedente))
+      .map(
+        (antecedente) =>
+          antecedentesConfigurados.get(antecedente) ??
+          this.crearAntecedente(antecedente),
+      );
+    this.selectorAntecedentesVisible = false;
   }
 
   onFileSelect(
@@ -248,7 +305,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     const tipo = this.tipoSeleccionado;
 
     if (!tipo) {
+      this.antecedentesDisponibles = [];
       this.antecedentesRequeridos = [];
+      this.antecedentesSeleccionadosBorrador = [];
+      this.selectorAntecedentesVisible = false;
       this.hitosGestion = [];
       return;
     }
@@ -267,9 +327,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     const antecedentes = [
       ...new Set(subtramites.flatMap((item) => item.antecedentes)),
     ];
-    this.antecedentesRequeridos = antecedentes.map((antecedente) =>
-      this.crearAntecedente(antecedente),
-    );
+    this.antecedentesDisponibles = antecedentes;
+    this.antecedentesRequeridos = [];
+    this.antecedentesSeleccionadosBorrador = [];
+    this.selectorAntecedentesVisible = false;
 
     if (!subtramites.length) {
       this.hitosGestion = [];
@@ -293,7 +354,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     return {
       antecedente,
       obligatorio: true,
-      responsable: "",
+      responsable: this.form.responsableInterno,
       estado: "Pendiente",
       observaciones: "",
       archivo: null as File | null,
@@ -305,7 +366,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     return {
       antecedente: "",
       obligatorio: false,
-      responsable: "",
+      responsable: this.form.responsableInterno,
       estado: "Pendiente",
       observaciones: "",
       archivo: null as File | null,
@@ -350,8 +411,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         estacion?.codigo || this.form.estacionServicio || "Sin especificar",
       estacionServicio:
         estacion?.nombre || this.form.estacionServicio || "Sin especificar",
-      razonSocial:
-        this.form.concesionario.split(" · RUT ")[0] || "Sin especificar",
+      razonSocial: this.form.razonSocial || "Sin especificar",
       comuna: estacion?.comuna ?? "Sin especificar",
       direccion: estacion?.direccion ?? "Sin especificar",
       estado: this.form.estado,
@@ -365,6 +425,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
           : "Sin especificar"),
       solicitanteCopec: this.form.solicitanteCopec || "Sin especificar",
       modalidadCreacion: this.modalidadCreacion,
+      datosAdicionales: {
+        nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
+      },
       subtramitesAsociados:
         this.modalidadCreacion === "principal" && !subtramite
           ? this.tramitesEspecificos.map((item) => item.nombre)
@@ -386,13 +449,16 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     return fecha ? fecha.replaceAll("/", "-") : "Sin especificar";
   }
 
+  private obtenerNombreConcesionario(razonSocial: string): string {
+    return razonSocial.replace(/\s+(SpA|Ltda\.?|Limitada|S\.?A\.?)$/i, "");
+  }
+
   private cargarCatalogos(): void {
     this.http.get<CatalogosTramite>("/data/tramite-catalogos.json").subscribe({
       next: (catalogos) => {
         this.estacionesServicio = catalogos.estacionesServicio;
         this.prioridades = catalogos.prioridades;
         this.responsables = catalogos.responsables;
-        this.solicitantesCopec = catalogos.solicitantesCopec;
         this.tiposTramite = catalogos.tiposTramite;
         this.catalogosError = "";
         this.changeDetectorRef.markForCheck();
