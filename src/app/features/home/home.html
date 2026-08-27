@@ -1,0 +1,265 @@
+<section class="home-page" aria-labelledby="home-title">
+  <header class="home-hero">
+    <div class="hero-decoration hero-decoration--one" aria-hidden="true"></div>
+    <div class="hero-decoration hero-decoration--two" aria-hidden="true"></div>
+
+    <div class="hero-main">
+      <div class="brand" aria-label="Portal de Gestión de Trámites">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M9 7.5h10l4 4v13H9z"></path>
+            <path d="M19 7.5v5h4M13 17h6M13 21h4"></path>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <strong>Portal de Gestión</strong>
+          <small>Trámites y seguimiento</small>
+        </span>
+      </div>
+
+      <div class="hero-copy">
+        <p class="eyebrow">Escritorio principal</p>
+        <h1 id="home-title">{{ greeting }}, {{ user.firstName }}.</h1>
+        <p>
+          Revisa lo que requiere tu atención y continúa tus gestiones desde un
+          solo lugar.
+        </p>
+
+        <a pButton routerLink="/tramites" class="hero-button">
+          Ver mis trámites
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M5 12h13M14 7l5 5-5 5"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-summary" aria-label="Resumen de trámites">
+      <div class="summary-heading">
+        <span>Resumen de hoy</span>
+        <p-tag value="Actualizado" severity="success" [rounded]="true" />
+      </div>
+
+      <div class="summary-metrics">
+        <div>
+          <strong>24</strong>
+          <span>Trámites activos</span>
+        </div>
+        <div>
+          <strong>4</strong>
+          <span>Requieren atención</span>
+        </div>
+        <div>
+          <strong>3</strong>
+          <span>Vencen esta semana</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="home-grid">
+    <div class="quick-access-column">
+      <section
+        class="quick-access-section"
+        aria-labelledby="quick-access-title"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Navegación</p>
+            <h2 id="quick-access-title">Accesos rápidos</h2>
+          </div>
+          <p>Ingresa directamente a tus principales opciones.</p>
+        </div>
+
+        <div class="quick-access-grid">
+          @for (access of quickAccesses; track access.id) {
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            [text]="true"
+            class="quick-access-tile"
+            [class.quick-access-tile--pending]="access.status"
+            [disabled]="!access.route && !access.action"
+            [attr.aria-label]="
+              access.status
+                ? access.title + ', ' + access.status
+                : 'Abrir ' + access.title
+            "
+            (click)="openQuickAccess(access)"
+          >
+            <span class="quick-access-icon" aria-hidden="true">
+              @switch (access.id) { @case ("datos") {
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"></path>
+              </svg>
+              } @case ("estaciones") {
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20"
+                ></path>
+                <path
+                  d="M7.5 7h5v4h-5zM3.5 20h13M15 8h2l2 2.5V17a1.5 1.5 0 0 0 3 0v-5.5L19.5 9"
+                ></path>
+              </svg>
+              } @case ("tareas") {
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M8 4h11v16H8zM5 7H3.5v3H5M5 14H3.5v3H5"></path>
+                <path d="m11 9 1.3 1.3L16 7M11 15h5"></path>
+              </svg>
+              } @case ("reporte") {
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 3.5h9l3 3V20H6zM15 3.5V7h3"></path>
+                <path d="M9 16v-3M12 16V9M15 16v-5"></path>
+              </svg>
+              } }
+            </span>
+
+            <strong class="quick-access-title">{{ access.title }}</strong>
+            <span class="quick-access-caption">{{ access.caption }}</span>
+            @if (access.status) {
+            <span class="quick-access-status">{{ access.status }}</span>
+            }
+          </button>
+          }
+        </div>
+      </section>
+    </div>
+
+    <div class="home-main-column">
+      <section class="activity-section" aria-labelledby="activity-title">
+        <p-card styleClass="activity-card">
+          <div class="activity-heading">
+            <div>
+              <p class="section-kicker">Seguimiento</p>
+              <h2 id="activity-title">Actividad reciente</h2>
+            </div>
+            <a
+              pButton
+              routerLink="/tramites"
+              severity="secondary"
+              [text]="true"
+              size="small"
+            >
+              Ver todo
+            </a>
+          </div>
+
+          <ul class="activity-list">
+            @for (activity of recentActivity; track activity.title) {
+            <li>
+              <span
+                class="activity-dot activity-dot--{{ activity.tone }}"
+                aria-hidden="true"
+              ></span>
+              <div class="activity-copy">
+                <strong>{{ activity.title }}</strong>
+                <span>{{ activity.detail }}</span>
+              </div>
+              <time>{{ activity.time }}</time>
+              <a
+                [routerLink]="activity.route"
+                class="activity-link"
+                [attr.aria-label]="'Abrir ' + activity.title"
+              >
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </a>
+            </li>
+            }
+          </ul>
+        </p-card>
+      </section>
+    </div>
+
+    <aside class="home-sidebar" aria-label="Información del usuario conectado">
+      <p-card #profileCard styleClass="profile-card">
+        <div class="profile-status">
+          <span>Usuario conectado</span>
+          <p-tag value="Sesión activa" severity="success" [rounded]="true" />
+        </div>
+
+        <div class="profile-identity">
+          <p-avatar
+            [label]="user.initials"
+            size="xlarge"
+            shape="circle"
+            [attr.aria-label]="'Avatar de ' + user.fullName"
+          />
+          <div>
+            <h2>{{ user.fullName }}</h2>
+            <strong>{{ user.role }}</strong>
+            <p>{{ user.description }}</p>
+          </div>
+        </div>
+
+        @if (showUserData) {
+        <dl class="user-data">
+          <div>
+            <dt>RUT</dt>
+            <dd>{{ user.rut }}</dd>
+          </div>
+          <div>
+            <dt>Correo</dt>
+            <dd>{{ user.email }}</dd>
+          </div>
+          <div>
+            <dt>Organización</dt>
+            <dd>{{ user.organization }}</dd>
+          </div>
+        </dl>
+        }
+
+        <div class="profile-actions">
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            [outlined]="true"
+            [attr.aria-expanded]="showUserData"
+            (click)="toggleUserData()"
+          >
+            {{ showUserData ? "Ocultar mis datos" : "Ver mis datos" }}
+          </button>
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            [text]="true"
+            class="sign-out-button"
+            (click)="signOut()"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </p-card>
+
+      <p-card styleClass="progress-card">
+        <div class="progress-heading">
+          <span class="progress-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5"></path>
+              <path d="M12 3.5V12h8.5"></path>
+            </svg>
+          </span>
+          <div>
+            <p class="section-kicker">Avance semanal</p>
+            <h2>Gestiones revisadas</h2>
+          </div>
+          <strong>72%</strong>
+        </div>
+
+        <p-progressbar [value]="72" [showValue]="false" />
+        <p>Has revisado 18 de los 25 trámites programados para esta semana.</p>
+      </p-card>
+    </aside>
+  </div>
+</section>
