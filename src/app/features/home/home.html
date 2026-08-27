@@ -1,4 +1,6 @@
 <section class="home-page" aria-labelledby="home-title">
+  <p-toast position="top-right" />
+
   <header class="home-hero">
     <div class="hero-decoration hero-decoration--one" aria-hidden="true"></div>
     <div class="hero-decoration hero-decoration--two" aria-hidden="true"></div>
@@ -77,22 +79,34 @@
           <p>Ingresa directamente a tus principales opciones.</p>
         </div>
 
-        <div class="quick-access-grid">
+        <div
+          class="quick-access-grid"
+          role="tablist"
+          aria-label="Secciones del escritorio"
+          aria-orientation="vertical"
+        >
           @for (access of quickAccesses; track access.id) {
           <button
+            #quickAccessTab
             pButton
             type="button"
+            role="tab"
             severity="secondary"
             [text]="true"
             class="quick-access-tile"
             [class.quick-access-tile--pending]="access.status"
-            [disabled]="!access.route && !access.action"
+            [class.quick-access-tile--active]="activeAccessId === access.id"
+            [id]="'home-tab-' + access.id"
+            aria-controls="home-tab-panel"
+            [attr.aria-selected]="activeAccessId === access.id"
+            [attr.tabindex]="activeAccessId === access.id ? 0 : -1"
             [attr.aria-label]="
               access.status
                 ? access.title + ', ' + access.status
-                : 'Abrir ' + access.title
+                : 'Mostrar ' + access.title
             "
-            (click)="openQuickAccess(access)"
+            (click)="selectQuickAccess(access.id)"
+            (keydown)="handleTabKey($event, access.id)"
           >
             <span class="quick-access-icon" aria-hidden="true">
               @switch (access.id) { @case ("datos") {
@@ -134,12 +148,242 @@
     </div>
 
     <div class="home-main-column">
-      <section class="activity-section" aria-labelledby="activity-title">
-        <p-card styleClass="activity-card">
+      <div
+        #homeTabPanel
+        id="home-tab-panel"
+        class="home-tab-panel"
+        role="tabpanel"
+        [attr.aria-labelledby]="'home-tab-' + activeAccessId"
+        tabindex="0"
+      >
+        @switch (activeAccessId) { @case ("datos") {
+        <p-card styleClass="tab-content-card user-data-card">
+          <div class="tab-panel-heading">
+            <div>
+              <p class="section-kicker">Perfil personal</p>
+              <h2>Mis datos</h2>
+              <p>
+                Revisa y actualiza la información básica asociada a tu cuenta.
+              </p>
+            </div>
+          </div>
+
+          <div class="user-data-heading">
+            <p-avatar
+              [label]="user.initials"
+              size="xlarge"
+              shape="circle"
+              [attr.aria-label]="'Avatar de ' + user.fullName"
+            />
+            <div>
+              <strong>{{ user.fullName }}</strong>
+              <span>{{ user.email }}</span>
+            </div>
+          </div>
+
+          <div
+            class="system-data"
+            aria-label="Datos administrados por el sistema"
+          >
+            <div>
+              <span>RUT</span>
+              <strong>{{ user.rut }}</strong>
+            </div>
+            <div>
+              <span>Cargo o rol</span>
+              <strong>{{ user.role }}</strong>
+            </div>
+            <div>
+              <span>Organización</span>
+              <strong>{{ user.organization }}</strong>
+            </div>
+          </div>
+
+          <form
+            id="user-profile-form"
+            class="user-profile-form"
+            [formGroup]="userForm"
+            (ngSubmit)="saveUserData()"
+            novalidate
+          >
+            <div class="profile-field profile-field--wide">
+              <label for="profile-full-name">Nombre completo</label>
+              <input
+                pInputText
+                id="profile-full-name"
+                type="text"
+                formControlName="fullName"
+                autocomplete="name"
+                maxlength="80"
+                [attr.aria-describedby]="
+                      userForm.controls.fullName.touched &&
+                      userForm.controls.fullName.invalid
+                        ? 'profile-full-name-error'
+                        : null
+                    "
+                [attr.aria-invalid]="
+                      userForm.controls.fullName.touched &&
+                      userForm.controls.fullName.invalid
+                    "
+              />
+              @if ( userForm.controls.fullName.touched &&
+              userForm.controls.fullName.invalid ) {
+              <small
+                id="profile-full-name-error"
+                class="field-error"
+                role="alert"
+              >
+                Ingresa un nombre de al menos 3 caracteres.
+              </small>
+              }
+            </div>
+
+            <div class="profile-field">
+              <label for="profile-email">Correo electrónico</label>
+              <input
+                pInputText
+                id="profile-email"
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+                [attr.aria-describedby]="
+                      userForm.controls.email.touched &&
+                      userForm.controls.email.invalid
+                        ? 'profile-email-error'
+                        : null
+                    "
+                [attr.aria-invalid]="
+                      userForm.controls.email.touched &&
+                      userForm.controls.email.invalid
+                    "
+              />
+              @if ( userForm.controls.email.touched &&
+              userForm.controls.email.invalid ) {
+              <small id="profile-email-error" class="field-error" role="alert">
+                Ingresa un correo electrónico válido.
+              </small>
+              }
+            </div>
+
+            <div class="profile-field">
+              <label for="profile-phone">Teléfono</label>
+              <input
+                pInputText
+                id="profile-phone"
+                type="tel"
+                inputmode="tel"
+                formControlName="phone"
+                autocomplete="tel"
+                placeholder="+56 9 1234 5678"
+                [attr.aria-describedby]="
+                      userForm.controls.phone.touched &&
+                      userForm.controls.phone.invalid
+                        ? 'profile-phone-error'
+                        : null
+                    "
+                [attr.aria-invalid]="
+                      userForm.controls.phone.touched &&
+                      userForm.controls.phone.invalid
+                    "
+              />
+              @if ( userForm.controls.phone.touched &&
+              userForm.controls.phone.invalid ) {
+              <small id="profile-phone-error" class="field-error" role="alert">
+                Ingresa un teléfono válido.
+              </small>
+              }
+            </div>
+
+            <div class="profile-field profile-field--wide">
+              <div class="field-label-row">
+                <label for="profile-description">Descripción breve</label>
+                <span
+                  >{{ userForm.controls.description.value.length }}/140</span
+                >
+              </div>
+              <textarea
+                pTextarea
+                id="profile-description"
+                formControlName="description"
+                rows="3"
+                maxlength="140"
+                [attr.aria-describedby]="
+                      userForm.controls.description.touched &&
+                      userForm.controls.description.invalid
+                        ? 'profile-description-error'
+                        : null
+                    "
+                [attr.aria-invalid]="
+                      userForm.controls.description.touched &&
+                      userForm.controls.description.invalid
+                    "
+              ></textarea>
+              @if ( userForm.controls.description.touched &&
+              userForm.controls.description.invalid ) {
+              <small
+                id="profile-description-error"
+                class="field-error"
+                role="alert"
+              >
+                Ingresa una descripción breve.
+              </small>
+              }
+            </div>
+
+            <div class="form-actions">
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [outlined]="true"
+                (click)="resetUserData()"
+              >
+                Descartar cambios
+              </button>
+              <button pButton type="submit">Guardar cambios</button>
+            </div>
+          </form>
+        </p-card>
+        } @case ("estaciones") {
+        <p-card styleClass="tab-content-card">
+          <div class="tab-panel-heading">
+            <div>
+              <p class="section-kicker">Información operativa</p>
+              <h2>Datos estaciones de servicio</h2>
+              <p>
+                Consulta la información y el estado de las estaciones de
+                servicio registradas.
+              </p>
+            </div>
+          </div>
+
+          <div class="module-placeholder">
+            <span class="module-placeholder-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20"
+                ></path>
+                <path
+                  d="M7.5 7h5v4h-5zM3.5 20h13M15 8h2l2 2.5V17a1.5 1.5 0 0 0 3 0v-5.5L19.5 9"
+                ></path>
+              </svg>
+            </span>
+            <h3>Información de estaciones</h3>
+            <p>
+              Esta sección central reunirá los datos y estados relevantes de
+              cada estación.
+            </p>
+            <a pButton routerLink="/tramites/estado-estaciones">
+              Abrir módulo
+            </a>
+          </div>
+        </p-card>
+        } @case ("tareas") {
+        <p-card styleClass="activity-card tab-content-card">
           <div class="activity-heading">
             <div>
               <p class="section-kicker">Seguimiento</p>
-              <h2 id="activity-title">Actividad reciente</h2>
+              <h2>Mis tareas</h2>
             </div>
             <a
               pButton
@@ -177,11 +421,39 @@
             }
           </ul>
         </p-card>
-      </section>
+        } @case ("reporte") {
+        <p-card styleClass="tab-content-card">
+          <div class="tab-panel-heading">
+            <div>
+              <p class="section-kicker">Documentos</p>
+              <h2>Reporte</h2>
+              <p>
+                Consulta y descarga los reportes disponibles para tus gestiones.
+              </p>
+            </div>
+            <p-tag value="Próximamente" severity="secondary" />
+          </div>
+
+          <div class="module-placeholder">
+            <span class="module-placeholder-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 3.5h9l3 3V20H6zM15 3.5V7h3"></path>
+                <path d="M9 16v-3M12 16V9M15 16v-5"></path>
+              </svg>
+            </span>
+            <h3>Módulo en preparación</h3>
+            <p>
+              Dejamos listo este espacio para incorporar reportes y documentos
+              en una siguiente etapa.
+            </p>
+          </div>
+        </p-card>
+        } }
+      </div>
     </div>
 
     <aside class="home-sidebar" aria-label="Información del usuario conectado">
-      <p-card #profileCard styleClass="profile-card">
+      <p-card styleClass="profile-card">
         <div class="profile-status">
           <span>Usuario conectado</span>
           <p-tag value="Sesión activa" severity="success" [rounded]="true" />
@@ -201,33 +473,15 @@
           </div>
         </div>
 
-        @if (showUserData) {
-        <dl class="user-data">
-          <div>
-            <dt>RUT</dt>
-            <dd>{{ user.rut }}</dd>
-          </div>
-          <div>
-            <dt>Correo</dt>
-            <dd>{{ user.email }}</dd>
-          </div>
-          <div>
-            <dt>Organización</dt>
-            <dd>{{ user.organization }}</dd>
-          </div>
-        </dl>
-        }
-
         <div class="profile-actions">
           <button
             pButton
             type="button"
             severity="secondary"
             [outlined]="true"
-            [attr.aria-expanded]="showUserData"
-            (click)="toggleUserData()"
+            (click)="selectQuickAccess('datos')"
           >
-            {{ showUserData ? "Ocultar mis datos" : "Ver mis datos" }}
+            Editar mis datos
           </button>
           <button
             pButton
