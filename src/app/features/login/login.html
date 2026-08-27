@@ -1,0 +1,151 @@
+<main class="login-page">
+  <section class="welcome-panel" aria-labelledby="welcome-title">
+    <div class="brand" aria-label="Gestión de Trámites">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M9 7.5h10l4 4V24.5H9z" />
+          <path d="M19 7.5v5h4M13 17h6M13 21h4" />
+        </svg>
+      </span>
+      <span class="brand-name">
+        <strong>Gestión</strong>
+        <span>de Trámites</span>
+      </span>
+    </div>
+
+    <div class="welcome-copy">
+      <p class="eyebrow">Plataforma de gestión</p>
+      <h1 id="welcome-title">Tus trámites, en un solo lugar.</h1>
+      <p>
+        Administra, consulta y realiza el seguimiento de cada gestión de forma
+        simple, ordenada y segura.
+      </p>
+    </div>
+
+    <p class="welcome-footnote">
+      <span aria-hidden="true"></span>
+      Acceso exclusivo para usuarios autorizados
+    </p>
+  </section>
+
+  <section class="access-panel" aria-labelledby="access-title">
+    <div class="access-card">
+      <header class="access-heading">
+        <p class="eyebrow">Acceso seguro</p>
+        <h2 id="access-title">Ingresa a tu cuenta</h2>
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field-group">
+          <label for="login-rut">RUT</label>
+          <div class="input-wrapper">
+            <svg
+              class="field-icon"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <circle cx="12" cy="8" r="3.5"></circle>
+              <path d="M5.5 20c.5-4 2.7-6 6.5-6s6 2 6.5 6"></path>
+            </svg>
+            <input
+              pInputText
+              id="login-rut"
+              type="text"
+              formControlName="rut"
+              autocomplete="username"
+              autocapitalize="characters"
+              inputmode="text"
+              maxlength="12"
+              placeholder="12.345.678-9"
+              aria-describedby="rut-help rut-error"
+              [attr.aria-invalid]="
+                form.controls.rut.touched && form.controls.rut.invalid
+              "
+              (input)="formatRut($event)"
+            />
+          </div>
+          <small id="rut-help" class="field-help"
+            >Incluye dígito verificador.</small
+          >
+          @if (form.controls.rut.touched && form.controls.rut.errors) {
+          <small id="rut-error" class="field-error" role="alert">
+            @if (form.controls.rut.hasError("required")) { Ingresa tu RUT. }
+            @else { Revisa el RUT ingresado. }
+          </small>
+          }
+        </div>
+
+        <div class="field-group">
+          <label id="password-label" for="login-password">Contraseña</label>
+          <div class="input-wrapper password-wrapper">
+            <svg
+              class="field-icon"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+              <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10M12 14v2.5"></path>
+            </svg>
+            <p-password
+              class="password-control"
+              inputId="login-password"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              ariaLabelledBy="password-label"
+              [feedback]="false"
+              [toggleMask]="true"
+            />
+          </div>
+          @if ( form.controls.password.touched &&
+          form.controls.password.hasError("required") ) {
+          <small id="password-error" class="field-error" role="alert">
+            Ingresa tu contraseña.
+          </small>
+          }
+        </div>
+
+        <button pButton type="submit" class="submit-button">
+          <span pButtonLabel>Ingresar</span>
+          <svg
+            class="button-arrow"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M5 12h13M14 7l5 5-5 5"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div class="security-note">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path
+            d="M12 3 5.5 6v5c0 4.5 2.6 7.8 6.5 10 3.9-2.2 6.5-5.5 6.5-10V6z"
+          ></path>
+          <path d="m9.3 12 1.8 1.8 3.8-4"></path>
+        </svg>
+        <p>
+          <strong>Conexión protegida</strong>
+          Tus credenciales se utilizan únicamente para verificar tu identidad.
+        </p>
+      </div>
+    </div>
+
+    <p class="access-footer">Gestión de Trámites · Plataforma interna</p>
+  </section>
+</main>
