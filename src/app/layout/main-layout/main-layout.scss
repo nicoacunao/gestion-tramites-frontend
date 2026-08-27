@@ -7,18 +7,16 @@
 
 .app-layout {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
   width: 100%;
   max-width: 100vw;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   background: #ffffff;
 }
 
 .app-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
   overflow: hidden;
 }

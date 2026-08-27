@@ -1,16 +1,4 @@
 <header class="header">
-  <button
-    type="button"
-    class="sidebar-trigger"
-    aria-controls="main-sidebar"
-    [attr.aria-expanded]="sidebarOpen"
-    [attr.aria-label]="sidebarOpen ? 'Cerrar menú principal' : 'Abrir menú principal'"
-    [attr.title]="sidebarOpen ? 'Cerrar menú' : 'Abrir menú'"
-    (click)="toggleSidebar()"
-  >
-    <mat-icon aria-hidden="true">{{ sidebarOpen ? "menu_open" : "menu" }}</mat-icon>
-  </button>
-
   <div class="header-copy">
     <h1>Módulo de Gestión de Trámites</h1>
     <p>Maqueta funcional para visualización y validación del flujo.</p>

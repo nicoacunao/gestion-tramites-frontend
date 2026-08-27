@@ -1,0 +1,51 @@
+<nav class="main-menu" aria-label="Navegación principal">
+  <p-menubar
+    [model]="menuItems"
+    breakpoint="767px"
+    ariaLabel="Menú principal"
+    [pt]="{
+      button: {
+        'aria-label': 'Abrir menú principal',
+        title: 'Abrir menú principal',
+      },
+    }"
+    styleClass="portal-menubar"
+  >
+    <!-- <ng-template #start>
+      <span class="menu-heading" aria-hidden="true">
+        <mat-icon>apps</mat-icon>
+        <span>Menú</span>
+      </span>
+    </ng-template> -->
+
+    <ng-template #item let-item let-root="root">
+      @if (item.routerLink) {
+      <a
+        class="menu-link"
+        [class.menu-link--active]="estaActivo(item)"
+        [routerLink]="item.routerLink"
+        [attr.aria-current]="estaActivo(item) ? 'page' : null"
+        [attr.title]="item.title"
+      >
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+      } @else {
+      <span
+        class="menu-link"
+        [class.menu-link--active]="estaActivo(item)"
+        [class.menu-link--disabled]="item.disabled"
+        [attr.title]="item.title"
+      >
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+        @if (item.items && root) {
+        <mat-icon class="submenu-indicator" aria-hidden="true">
+          keyboard_arrow_down
+        </mat-icon>
+        }
+      </span>
+      }
+    </ng-template>
+  </p-menubar>
+</nav>
