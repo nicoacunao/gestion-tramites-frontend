@@ -20,11 +20,10 @@ export class MenuComponent {
       routerLink: "/home",
     },
     {
-      id: "mi-escritorio",
-      label: "Mi escritorio",
+      id: "escritorio",
+      label: "Escritorio",
       icon: "space_dashboard",
-      routerLink: "",
-
+      routerLink: "/escritorio",
     },
     {
       id: "todas-las-gestiones",
@@ -44,7 +43,7 @@ export class MenuComponent {
   constructor(
     private readonly router: Router,
     private readonly tramitesNavegacion: TramitesNavegacion,
-  ) { }
+  ) {}
 
   estaActivo(item: MenuItem): boolean {
     const rutaActual = this.router.url.split(/[?#]/)[0];
@@ -52,6 +51,8 @@ export class MenuComponent {
     switch (item.id) {
       case "home":
         return rutaActual === "/home";
+      case "escritorio":
+        return rutaActual === "/escritorio";
       case "tramites-menu":
         return rutaActual.startsWith("/tramites");
       case "todas-las-gestiones":

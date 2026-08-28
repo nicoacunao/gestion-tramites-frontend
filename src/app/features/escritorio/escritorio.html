@@ -1,0 +1,287 @@
+<section class="escritorio-page" aria-labelledby="escritorio-title">
+  <app-breadcrumbs [items]="breadcrumbs" />
+
+  <header class="page-heading">
+    <div>
+      <p class="page-kicker">Gestiones asignadas</p>
+      <h1 id="escritorio-title">Escritorio</h1>
+      <p>
+        Revisa, prioriza y continúa los trámites que tienes asociados en un solo
+        lugar.
+      </p>
+    </div>
+
+    <div class="heading-summary" aria-label="Resumen del escritorio">
+      <strong>{{ gestiones.length }}</strong>
+      <span>gestiones asociadas</span>
+    </div>
+  </header>
+
+  <section class="status-summary" aria-label="Filtrar gestiones por semáforo">
+    <button
+      type="button"
+      class="summary-card summary-card--all"
+      [class.summary-card--active]="filtroSemaforo === 'todos'"
+      [attr.aria-pressed]="filtroSemaforo === 'todos'"
+      (click)="seleccionarSemaforo('todos')"
+    >
+      <span class="summary-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M5 5h14M5 12h14M5 19h14"></path>
+        </svg>
+      </span>
+      <span class="summary-copy">
+        <strong>{{ gestiones.length }}</strong>
+        <span>Total asignadas</span>
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="summary-card summary-card--success"
+      [class.summary-card--active]="filtroSemaforo === 'al-dia'"
+      [attr.aria-pressed]="filtroSemaforo === 'al-dia'"
+      (click)="seleccionarSemaforo('al-dia')"
+    >
+      <span class="summary-dot" aria-hidden="true"></span>
+      <span class="summary-copy">
+        <strong>{{ totalPorSemaforo("al-dia") }}</strong>
+        <span>Al día</span>
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="summary-card summary-card--warning"
+      [class.summary-card--active]="filtroSemaforo === 'proximo-vencer'"
+      [attr.aria-pressed]="filtroSemaforo === 'proximo-vencer'"
+      (click)="seleccionarSemaforo('proximo-vencer')"
+    >
+      <span class="summary-dot" aria-hidden="true"></span>
+      <span class="summary-copy">
+        <strong>{{ totalPorSemaforo("proximo-vencer") }}</strong>
+        <span>Próximas a vencer</span>
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="summary-card summary-card--danger"
+      [class.summary-card--active]="filtroSemaforo === 'atrasado'"
+      [attr.aria-pressed]="filtroSemaforo === 'atrasado'"
+      (click)="seleccionarSemaforo('atrasado')"
+    >
+      <span class="summary-dot" aria-hidden="true"></span>
+      <span class="summary-copy">
+        <strong>{{ totalPorSemaforo("atrasado") }}</strong>
+        <span>Requieren atención</span>
+      </span>
+    </button>
+  </section>
+
+  <section class="workspace-panel" aria-labelledby="gestiones-title">
+    <div class="panel-heading">
+      <div>
+        <h2 id="gestiones-title">Gestiones asociadas</h2>
+        <p aria-live="polite">
+          {{ gestionesFiltradas.length }} {{ gestionesFiltradas.length === 1 ?
+          "resultado" : "resultados" }}
+        </p>
+      </div>
+
+      <div class="traffic-legend" aria-label="Leyenda del semáforo">
+        <span><i class="legend-dot legend-dot--success"></i>Al día</span>
+        <span
+          ><i class="legend-dot legend-dot--warning"></i>Próxima a vencer</span
+        >
+        <span><i class="legend-dot legend-dot--danger"></i>Atención</span>
+      </div>
+    </div>
+
+    <div class="list-toolbar" role="search">
+      <label class="search-field">
+        <span class="visually-hidden">Buscar en el escritorio</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-4-4"></path>
+        </svg>
+        <input
+          pInputText
+          type="search"
+          [ngModel]="consulta"
+          (ngModelChange)="actualizarConsulta($event)"
+          placeholder="Buscar por ID, estación, RUT, razón social o descripción"
+        />
+      </label>
+
+      <label class="status-filter">
+        <span>Semáforo</span>
+        <select
+          [ngModel]="filtroSemaforo"
+          (ngModelChange)="seleccionarSemaforo($event)"
+        >
+          <option value="todos">Todos los estados</option>
+          <option value="al-dia">Al día</option>
+          <option value="proximo-vencer">Próximas a vencer</option>
+          <option value="atrasado">Requieren atención</option>
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="clear-button"
+        [disabled]="!hayFiltrosActivos"
+        (click)="limpiarFiltros()"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+
+    <div
+      class="table-scroll"
+      tabindex="0"
+      aria-label="Tabla de gestiones asociadas"
+    >
+      <p-table
+        [value]="gestionesFiltradas"
+        dataKey="id"
+        sortField="fechaIngresoOrden"
+        [sortOrder]="-1"
+        styleClass="escritorio-table"
+        showGridlines
+        [paginator]="true"
+        [rows]="rows"
+        [first]="first"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} gestiones"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        (onPage)="pageChange($event)"
+      >
+        <ng-template #header>
+          <tr>
+            <th class="col-id" pSortableColumn="codigo">
+              ID del trámite <p-sortIcon field="codigo" />
+            </th>
+            <th class="col-station" pSortableColumn="estacionServicio">
+              Estación de servicio <p-sortIcon field="estacionServicio" />
+            </th>
+            <th class="col-address">Dirección</th>
+            <th class="col-town" pSortableColumn="comuna">
+              Comuna <p-sortIcon field="comuna" />
+            </th>
+            <th class="col-rut">RUT razón social</th>
+            <th class="col-business" pSortableColumn="razonSocial">
+              Razón social <p-sortIcon field="razonSocial" />
+            </th>
+            <th class="col-representative">Representante legal</th>
+            <th class="col-rut">RUT representante</th>
+            <th class="col-description">Descripción del trámite</th>
+            <th class="col-date" pSortableColumn="fechaIngresoOrden">
+              Fecha de ingreso <p-sortIcon field="fechaIngresoOrden" />
+            </th>
+            <th class="col-traffic" pSortableColumn="semaforo">
+              Semáforo <p-sortIcon field="semaforo" />
+            </th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-gestion>
+          <tr>
+            <td class="col-id">
+              <a
+                class="tramite-link"
+                [routerLink]="['/tramites', gestion.id]"
+                pTooltip="Ver detalle del trámite"
+                tooltipPosition="top"
+              >
+                {{ gestion.codigo }}
+              </a>
+            </td>
+            <td class="col-station">
+              <strong>{{ gestion.estacionServicio }}</strong>
+              <small>EDS {{ gestion.idEstacion }}</small>
+            </td>
+            <td class="col-address">{{ gestion.direccion }}</td>
+            <td class="col-town">{{ gestion.comuna }}</td>
+            <td class="col-rut">
+              <span class="rut-value">{{ gestion.rutRazonSocial }}</span>
+            </td>
+            <td class="col-business">{{ gestion.razonSocial }}</td>
+            <td class="col-representative">{{ gestion.representanteLegal }}</td>
+            <td class="col-rut">
+              <span class="rut-value">{{ gestion.rutRepresentanteLegal }}</span>
+            </td>
+            <td class="col-description">{{ gestion.descripcion }}</td>
+            <td class="col-date">{{ gestion.fechaIngreso }}</td>
+            <td class="col-traffic">
+              <span
+                class="traffic-status traffic-status--{{ gestion.semaforo }}"
+              >
+                <span class="traffic-light" aria-hidden="true">
+                  <i [class.is-active]="gestion.semaforo === 'atrasado'"></i>
+                  <i
+                    [class.is-active]="gestion.semaforo === 'proximo-vencer'"
+                  ></i>
+                  <i [class.is-active]="gestion.semaforo === 'al-dia'"></i>
+                </span>
+                <span>{{ gestion.semaforoEtiqueta }}</span>
+              </span>
+            </td>
+            <td class="col-actions">
+              <div class="row-actions">
+                <a
+                  class="action-button action-button--primary"
+                  [routerLink]="['/tramites', gestion.id]"
+                  pTooltip="Abrir gestión"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Abrir gestión ' + gestion.codigo"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 12s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"></path>
+                    <circle cx="12" cy="12" r="2.25"></circle>
+                  </svg>
+                </a>
+                @if (gestion.editable) {
+                <a
+                  class="action-button"
+                  [routerLink]="['/tramites', gestion.id, 'modificar']"
+                  pTooltip="Continuar gestión"
+                  tooltipPosition="top"
+                  [attr.aria-label]="'Continuar gestión ' + gestion.codigo"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="m14.5 5.5 4 4M5 19l1-4 9.5-9.5a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2L9 18l-4 1Z"
+                    ></path>
+                  </svg>
+                </a>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="12" class="empty-state">
+              <span class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="6"></circle>
+                  <path d="m16 16 4 4"></path>
+                </svg>
+              </span>
+              <strong>No encontramos gestiones</strong>
+              <span
+                >Prueba con otro criterio o limpia los filtros aplicados.</span
+              >
+              <button type="button" (click)="limpiarFiltros()">
+                Limpiar filtros
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</section>

@@ -13,8 +13,14 @@ export const routes: Routes = [
     children: [
       {
         path: "",
-        redirectTo: "home",
+        redirectTo: "escritorio",
         pathMatch: "full",
+      },
+      {
+        path: "escritorio",
+        title: "Escritorio | Gestión de Trámites",
+        loadComponent: () =>
+          import("./features/escritorio/escritorio").then((m) => m.Escritorio),
       },
       {
         path: "home",
