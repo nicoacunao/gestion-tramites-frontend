@@ -409,7 +409,7 @@
               <div class="row-options">
                 <span
                   class="option-tooltip"
-                  pTooltip="Opción R · Funcionalidad por definir"
+                  pTooltip="Responsable"
                   tooltipPosition="top"
                 >
                   <button
@@ -426,16 +426,15 @@
 
                 <span
                   class="option-tooltip"
-                  pTooltip="Bitácora · Próximamente"
+                  pTooltip="Abrir bitácora"
                   tooltipPosition="top"
                 >
                   <button
                     type="button"
-                    class="option-button option-button--circle"
-                    disabled
-                    [attr.aria-label]="
-                      'Bitácora de ' + gestion.codigo + ' (próximamente)'
-                    "
+                    class="option-button option-button--circle option-button--bitacora"
+                    [attr.aria-label]="'Abrir bitácora de ' + gestion.codigo"
+                    aria-haspopup="dialog"
+                    (click)="abrirBitacora(gestion)"
                   >
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <path d="M6.5 3.5h9v14h-9z"></path>
@@ -449,7 +448,7 @@
 
                 <span
                   class="option-tooltip"
-                  pTooltip="Opción monetaria · Funcionalidad por definir"
+                  pTooltip="Cobro"
                   tooltipPosition="top"
                 >
                   <button
@@ -495,4 +494,9 @@
       </p-table>
     </div>
   </section>
+
+  <app-bitacora
+    [(visible)]="bitacoraVisible"
+    [gestion]="gestionBitacoraSeleccionada"
+  />
 </section>

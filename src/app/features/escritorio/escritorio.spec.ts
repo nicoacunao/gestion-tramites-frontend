@@ -32,4 +32,13 @@ describe("Escritorio", () => {
       { field: "codigo", order: -1 },
     ]);
   });
+
+  it("abre la bitácora con la gestión seleccionada", () => {
+    const gestion = componente.gestiones[0];
+
+    componente.abrirBitacora(gestion);
+
+    expect(componente.bitacoraVisible).toBe(true);
+    expect(componente.gestionBitacoraSeleccionada?.codigo).toBe(gestion.codigo);
+  });
 });

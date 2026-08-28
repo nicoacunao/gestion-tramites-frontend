@@ -489,6 +489,10 @@
   font: inherit;
   font-weight: 750;
 
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+
   &:disabled {
     cursor: not-allowed;
     opacity: 1;
@@ -515,6 +519,18 @@
 
 .option-button--circle {
   border-radius: 50%;
+}
+
+.option-button--bitacora {
+  border-color: #9dbbd9;
+  background: #edf5fd;
+  color: #1c5d9d;
+
+  &:hover {
+    border-color: #1d63ad;
+    background: #1d63ad;
+    color: #fff;
+  }
 }
 
 .option-button--triangle {

@@ -1,0 +1,511 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="actualizarVisibilidad($event)"
+  [modal]="true"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  closeAriaLabel="Cerrar bitácora"
+  [draggable]="false"
+  [resizable]="false"
+  [blockScroll]="true"
+  [style]="{ width: 'min(96vw, 1480px)', height: 'min(92vh, 940px)' }"
+  styleClass="bitacora-dialog"
+>
+  <ng-template #header>
+    <div class="dialog-title">
+      <span class="dialog-title__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6 3.5h9.5a2 2 0 0 1 2 2v15H8a2 2 0 0 1-2-2v-15Z"></path>
+          <path d="M8 20.5c0-1.1.9-2 2-2h7.5M9.5 8h5M9.5 11.5h3.5"></path>
+        </svg>
+      </span>
+      <div>
+        <span class="dialog-title__eyebrow">Bitácora de la gestión</span>
+        <div class="dialog-title__heading">
+          <h2>Bitácora</h2>
+          @if (gestion) {
+          <strong class="dialog-title__code">{{ gestion.codigo }}</strong>
+          }
+        </div>
+        @if (gestion) {
+        <div class="dialog-title__description">
+          <strong>{{ gestion.nivel }}</strong>
+          <span>{{ gestion.descripcion }}</span>
+        </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  @if (gestion) {
+  <article class="bitacora" [attr.aria-label]="'Bitácora de ' + gestion.codigo">
+    <section class="general-card" aria-labelledby="datos-generales-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-heading__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8.5"></circle>
+              <path d="M12 10.5v5M12 7.5h.01"></path>
+            </svg>
+          </span>
+          <h4 id="datos-generales-title">Información general</h4>
+        </div>
+      </div>
+
+      <div class="information-groups">
+        <section class="information-group" aria-labelledby="ubicacion-title">
+          <h5 id="ubicacion-title">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"
+                ></path>
+                <circle cx="12" cy="10" r="2"></circle>
+              </svg>
+            </span>
+            Ubicación
+          </h5>
+          <dl>
+            <div>
+              <dt>Estación de servicio</dt>
+              <dd>
+                {{ gestion.estacionServicio }}
+                <small>ID {{ gestion.idEstacion }}</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Dirección</dt>
+              <dd>{{ gestion.direccion }}</dd>
+            </div>
+            <div>
+              <dt>Comuna</dt>
+              <dd>{{ gestion.comuna }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section
+          class="information-group"
+          aria-labelledby="planificacion-title"
+        >
+          <h5 id="planificacion-title">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M6 5h12v14H6zM8.5 3v4M15.5 3v4M6 9h12"></path>
+              </svg>
+            </span>
+            Planificación y estado
+          </h5>
+          <dl>
+            <div>
+              <dt>Fecha de inicio</dt>
+              <dd>{{ gestion.fechaInicio }}</dd>
+            </div>
+            <div>
+              <dt>Fecha estimada de término</dt>
+              <dd>{{ gestion.fechaEstimadaTermino }}</dd>
+            </div>
+            <div>
+              <dt>Semáforo</dt>
+              <dd>
+                <span
+                  class="general-semaforo"
+                  [attr.aria-label]="
+                    'Estado de la gestión: ' + gestion.semaforoEtiqueta
+                  "
+                >
+                  <span class="semaforo-summary__lights" aria-hidden="true">
+                    <i [class.is-active]="gestion.semaforo === 'atrasado'"></i>
+                    <i
+                      [class.is-active]="gestion.semaforo === 'proximo-vencer'"
+                    ></i>
+                    <i [class.is-active]="gestion.semaforo === 'al-dia'"></i>
+                  </span>
+                  <strong>{{ gestion.semaforoEtiqueta }}</strong>
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section
+          class="information-group information-group--parties"
+          aria-labelledby="titularidad-title"
+        >
+          <h5 id="titularidad-title">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 20h16M6 20V8h12v12M9 12h2M13 12h2M9 16h2M13 16h2M8 8V5h8v3"
+                ></path>
+              </svg>
+            </span>
+            Titularidad
+          </h5>
+          <dl>
+            <div>
+              <dt>Concesionario</dt>
+              <dd>{{ gestion.concesionario }}</dd>
+            </div>
+            <div>
+              <dt>Razón social</dt>
+              <dd>{{ gestion.razonSocial }}</dd>
+            </div>
+            <div>
+              <dt>Representante legal</dt>
+              <dd>{{ gestion.representanteLegal }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+    </section>
+
+    <section
+      class="content-card records-card"
+      aria-labelledby="antecedentes-title"
+    >
+      <div class="section-heading section-heading--content">
+        <div>
+          <span class="section-heading__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 5.5h14v14H5zM8 9h8M8 12.5h8M8 16h5"></path>
+            </svg>
+          </span>
+          <h4 id="antecedentes-title">Antecedentes requeridos</h4>
+        </div>
+        <span
+          >{{ antecedentesVisibles.length }} de {{ antecedentes.length }}
+          visibles</span
+        >
+      </div>
+
+      <div class="hierarchy-guide">
+        <span class="hierarchy-guide__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M7 5.5h4v4H7zM13 14.5h4v4h-4zM9 9.5v3a4 4 0 0 0 4 4"
+            ></path>
+          </svg>
+        </span>
+        <p>
+          Se muestran primero los antecedentes de nivel
+          <strong>{{ gestion.nivel === "N1" ? "N2" : "inferior" }}</strong>. Usa
+          la columna <strong>Ocultar</strong> para desplegar o contraer N3 y N4.
+        </p>
+      </div>
+
+      <div class="records-table-wrap">
+        <table class="records-table">
+          <caption class="visually-hidden">
+            Antecedentes requeridos y niveles secundarios de la gestión
+          </caption>
+          <thead>
+            <tr>
+              <th>Nivel</th>
+              <th>ID</th>
+              <th>ID gestión/trámite</th>
+              <th>Descripción</th>
+              <th>Requisito</th>
+              <th>Semáforo / check</th>
+              <th>Archivo adjunto</th>
+              <th>Descargar</th>
+              <th>Observación</th>
+              <th>Fecha solicitada</th>
+              <th>Fecha entrega</th>
+              <th>Ocultar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (antecedente of antecedentesVisibles; track antecedente.id) {
+            <tr [class.records-table__row--secondary]="antecedente.padreId">
+              <td>
+                <span class="table-level">{{ antecedente.nivel }}</span>
+              </td>
+              <td>
+                <strong class="antecedent-id">{{ antecedente.id }}</strong>
+              </td>
+              <td>
+                <div
+                  class="record-identity"
+                  [style.padding-left.px]="obtenerSangria(antecedente.nivel)"
+                >
+                  @if (antecedente.padreId) {
+                  <span class="tree-connector" aria-hidden="true"></span>
+                  }
+                  <strong class="record-code"
+                    >{{ antecedente.idGestionTramite }}</strong
+                  >
+                </div>
+              </td>
+              <td class="record-description">{{ antecedente.descripcion }}</td>
+              <td>
+                <span
+                  class="requirement-status"
+                  [class.requirement-status--yes]="antecedente.requisito"
+                  [class.requirement-status--no]="!antecedente.requisito"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    @if (antecedente.requisito) {
+                    <path d="m6.5 12.5 3.5 3.5 7.5-8"></path>
+                    } @else {
+                    <path d="m8 8 8 8M16 8l-8 8"></path>
+                    }
+                  </svg>
+                  {{ antecedente.requisito ? "Sí" : "No" }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="completion-status"
+                  [class.completion-status--done]="antecedente.completado"
+                  [class.completion-status--pending]="!antecedente.completado"
+                >
+                  <span class="completion-status__light" aria-hidden="true">
+                    @if (antecedente.completado) {
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="m7 12.5 3.3 3.3L17 8.5"></path>
+                    </svg>
+                    }
+                  </span>
+                  {{ antecedente.completado ? "Completado" : "Pendiente" }}
+                </span>
+              </td>
+              <td>
+                @if (antecedente.archivoAdjunto) {
+                <span
+                  class="attached-file"
+                  [title]="antecedente.archivoAdjunto"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="m9 12.5 4.8-4.8a3 3 0 0 1 4.2 4.2l-6.3 6.3a5 5 0 0 1-7.1-7.1l6.2-6.2"
+                    ></path>
+                  </svg>
+                  {{ antecedente.archivoAdjunto }}
+                </span>
+                } @else {
+                <span class="empty-value">Sin archivo</span>
+                }
+              </td>
+              <td class="download-cell">
+                <button
+                  type="button"
+                  class="download-button"
+                  [disabled]="!antecedente.archivoAdjunto"
+                  [attr.aria-label]="
+                    antecedente.archivoAdjunto
+                      ? 'Descargar ' + antecedente.archivoAdjunto
+                      : 'Sin archivo disponible para descargar'
+                  "
+                  [title]="
+                    antecedente.archivoAdjunto
+                      ? 'Descargar archivo'
+                      : 'Sin archivo disponible'
+                  "
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 4v10M8 10l4 4 4-4M5 18.5h14"></path>
+                  </svg>
+                </button>
+              </td>
+              <td class="record-observation">{{ antecedente.observacion }}</td>
+              <td class="date-value">{{ antecedente.fechaSolicitada }}</td>
+              <td class="date-value">{{ antecedente.fechaEntrega ?? "—" }}</td>
+              <td class="hierarchy-cell">
+                @if (tieneNivelesInferiores(antecedente.id)) {
+                <button
+                  type="button"
+                  class="hierarchy-toggle"
+                  [class.hierarchy-toggle--expanded]="estaExpandido(antecedente.id)"
+                  [attr.aria-expanded]="estaExpandido(antecedente.id)"
+                  [attr.aria-label]="
+                    (estaExpandido(antecedente.id) ? 'Ocultar ' : 'Mostrar ') +
+                    etiquetaNivelesInferiores(antecedente.id) +
+                    ' de ' +
+                    antecedente.idGestionTramite
+                  "
+                  (click)="alternarNivelesInferiores(antecedente.id)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M3.5 12s3-5 8.5-5 8.5 5 8.5 5-3 5-8.5 5-8.5-5-8.5-5Z"
+                    ></path>
+                    <circle cx="12" cy="12" r="2.2"></circle>
+                    @if (estaExpandido(antecedente.id)) {
+                    <path d="m5 5 14 14"></path>
+                    }
+                  </svg>
+                  <span>{{ cantidadNivelesInferiores(antecedente.id) }}</span>
+                </button>
+                } @else {
+                <span class="empty-value">—</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section
+      class="content-card records-card associated-card"
+      aria-labelledby="otros-asociados-title"
+    >
+      <div class="section-heading section-heading--content">
+        <div>
+          <span class="section-heading__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 4.5h7l2 2h3v13H6z"></path>
+              <path d="M9 10h6M9 13.5h6M9 17h4"></path>
+            </svg>
+          </span>
+          <h4 id="otros-asociados-title">
+            Otros antecedentes y gestiones asociadas
+          </h4>
+        </div>
+        <span
+          >{{ otrosAntecedentesGestionesVisibles.length }} de {{
+          otrosAntecedentesGestiones.length }} visibles</span
+        >
+      </div>
+
+      <div class="records-table-wrap">
+        <table class="records-table associated-table">
+          <caption class="visually-hidden">
+            Otros antecedentes y gestiones asociados a la gestión principal
+          </caption>
+          <thead>
+            <tr>
+              <th>Nivel</th>
+              <th>ID gestión/trámite</th>
+              <th>Descripción</th>
+              <th>Archivo adjunto</th>
+              <th>Descargar</th>
+              <th>Observaciones</th>
+              <th>Semáforo / check</th>
+              <th>Fecha solicitud</th>
+              <th>Fecha entrega</th>
+              <th>Ocultar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (elemento of otrosAntecedentesGestionesVisibles; track
+            elemento.id) {
+            <tr [class.records-table__row--secondary]="elemento.padreId">
+              <td>
+                <span class="table-level">{{ elemento.nivel }}</span>
+              </td>
+              <td>
+                <div
+                  class="record-identity"
+                  [style.padding-left.px]="obtenerSangria(elemento.nivel)"
+                >
+                  @if (elemento.padreId) {
+                  <span class="tree-connector" aria-hidden="true"></span>
+                  }
+                  <strong class="record-code"
+                    >{{ elemento.idGestionTramite }}</strong
+                  >
+                </div>
+              </td>
+              <td class="record-description">{{ elemento.descripcion }}</td>
+              <td>
+                @if (elemento.archivoAdjunto) {
+                <span class="attached-file" [title]="elemento.archivoAdjunto">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="m9 12.5 4.8-4.8a3 3 0 0 1 4.2 4.2l-6.3 6.3a5 5 0 0 1-7.1-7.1l6.2-6.2"
+                    ></path>
+                  </svg>
+                  {{ elemento.archivoAdjunto }}
+                </span>
+                } @else {
+                <span class="empty-value">Sin archivo</span>
+                }
+              </td>
+              <td class="download-cell">
+                <button
+                  type="button"
+                  class="download-button"
+                  [disabled]="!elemento.archivoAdjunto"
+                  [attr.aria-label]="
+                    elemento.archivoAdjunto
+                      ? 'Descargar ' + elemento.archivoAdjunto
+                      : 'Sin archivo disponible para descargar'
+                  "
+                  [title]="
+                    elemento.archivoAdjunto
+                      ? 'Descargar archivo'
+                      : 'Sin archivo disponible'
+                  "
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 4v10M8 10l4 4 4-4M5 18.5h14"></path>
+                  </svg>
+                </button>
+              </td>
+              <td class="record-observation">{{ elemento.observacion }}</td>
+              <td>
+                <span
+                  class="completion-status"
+                  [class.completion-status--done]="elemento.completado"
+                  [class.completion-status--pending]="!elemento.completado"
+                >
+                  <span class="completion-status__light" aria-hidden="true">
+                    @if (elemento.completado) {
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="m7 12.5 3.3 3.3L17 8.5"></path>
+                    </svg>
+                    }
+                  </span>
+                  {{ elemento.completado ? "Completado" : "Pendiente" }}
+                </span>
+              </td>
+              <td class="date-value">{{ elemento.fechaSolicitada }}</td>
+              <td class="date-value">{{ elemento.fechaEntrega ?? "—" }}</td>
+              <td class="hierarchy-cell">
+                @if (tieneNivelesInferiores(elemento.id)) {
+                <button
+                  type="button"
+                  class="hierarchy-toggle"
+                  [class.hierarchy-toggle--expanded]="estaExpandido(elemento.id)"
+                  [attr.aria-expanded]="estaExpandido(elemento.id)"
+                  [attr.aria-label]="
+                    (estaExpandido(elemento.id) ? 'Ocultar ' : 'Mostrar ') +
+                    etiquetaNivelesInferiores(elemento.id) +
+                    ' de ' +
+                    elemento.idGestionTramite
+                  "
+                  (click)="alternarNivelesInferiores(elemento.id)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M3.5 12s3-5 8.5-5 8.5 5 8.5 5-3 5-8.5 5-8.5-5-8.5-5Z"
+                    ></path>
+                    <circle cx="12" cy="12" r="2.2"></circle>
+                    @if (estaExpandido(elemento.id)) {
+                    <path d="m5 5 14 14"></path>
+                    }
+                  </svg>
+                  <span>{{ cantidadNivelesInferiores(elemento.id) }}</span>
+                </button>
+                } @else {
+                <span class="empty-value">—</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </article>
+  }
+
+  <ng-template #footer>
+    <button type="button" class="close-button" (click)="cerrar()">
+      Cerrar bitácora
+    </button>
+  </ng-template>
+</p-dialog>

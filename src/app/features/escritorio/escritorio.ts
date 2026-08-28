@@ -10,10 +10,15 @@ import { ListboxModule } from "primeng/listbox";
 import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TooltipModule } from "primeng/tooltip";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
+import {
+  Bitacora,
+  EstadoSemaforoBitacora,
+  GestionBitacora,
+} from "../bitacora/bitacora";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
 
-type EstadoSemaforo = "al-dia" | "proximo-vencer" | "atrasado";
+type EstadoSemaforo = EstadoSemaforoBitacora;
 type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 type NivelGestion = `N${number}`;
 
@@ -48,25 +53,14 @@ interface DatosAsociados {
   semaforo: EstadoSemaforo;
 }
 
-interface GestionEscritorio {
-  id: number;
-  codigo: string;
-  nivel: NivelGestion;
+interface GestionEscritorio extends GestionBitacora {
   ambito: string;
   codigoAmbito: string;
   correlativo: number;
-  idEstacion: string;
-  direccion: string;
-  comuna: string;
   rutRazonSocial: string;
-  razonSocial: string;
-  representanteLegal: string;
   rutRepresentanteLegal: string;
-  descripcion: string;
   fechaIngreso: string;
   fechaIngresoOrden: string;
-  semaforo: EstadoSemaforo;
-  semaforoEtiqueta: string;
 }
 
 const VALOR_TODOS = "__todos__";
@@ -180,6 +174,7 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
   selector: "app-escritorio",
   standalone: true,
   imports: [
+    Bitacora,
     Breadcrumbs,
     CommonModule,
     FormsModule,
@@ -222,6 +217,8 @@ export class Escritorio {
   first = 0;
   rows = 10;
   ordenamientos: SortMeta[] = [{ field: "fechaIngresoOrden", order: -1 }];
+  gestionBitacoraSeleccionada: GestionBitacora | null = null;
+  bitacoraVisible = false;
 
   constructor(tramitesMock: TramitesMock) {
     const correlativosPorNivel = new Map<NivelGestion, number>();
@@ -295,6 +292,11 @@ export class Escritorio {
 
   limpiarFiltroFecha(): void {
     this.fechaFiltroIso = "";
+  }
+
+  abrirBitacora(gestion: GestionEscritorio): void {
+    this.gestionBitacoraSeleccionada = gestion;
+    this.bitacoraVisible = true;
   }
 
   pageChange(event: TablePageEvent): void {
@@ -381,6 +383,7 @@ export class Escritorio {
       codigoAmbito: ambito.codigo,
       correlativo,
       idEstacion: tramite.idEstacion,
+      estacionServicio: tramite.estacionServicio,
       direccion: tramite.direccion,
       comuna: tramite.comuna,
       rutRazonSocial: datos.rutRazonSocial,
@@ -388,11 +391,19 @@ export class Escritorio {
       representanteLegal: datos.representanteLegal,
       rutRepresentanteLegal: datos.rutRepresentanteLegal,
       descripcion: tramite.tramiteEspecifico,
+      fechaInicio: tramite.fechaApertura,
       fechaIngreso: tramite.fechaApertura,
       fechaIngresoOrden: this.convertirFechaAOrden(tramite.fechaApertura),
+      fechaEstimadaTermino: tramite.fechaEstimadaTermino,
+      concesionario: this.obtenerNombreConcesionario(tramite.razonSocial),
+      responsableInterno: tramite.responsableInterno,
       semaforo: datos.semaforo,
       semaforoEtiqueta: ETIQUETAS_SEMAFORO[datos.semaforo],
     };
+  }
+
+  private obtenerNombreConcesionario(razonSocial: string): string {
+    return razonSocial.replace(/\s+(SpA|Ltda\.)$/i, "");
   }
 
   private obtenerNivel(tramite: Tramite): NivelGestion {
