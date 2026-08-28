@@ -417,7 +417,6 @@
 
 :host ::ng-deep .activity-card,
 :host ::ng-deep .tab-content-card,
-:host ::ng-deep .profile-card,
 :host ::ng-deep .progress-card {
   border: 1px solid var(--home-line);
   border-radius: 17px;
@@ -564,67 +563,6 @@
     stroke-linejoin: round;
     stroke-width: 1.8;
   }
-}
-
-.profile-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 23px;
-  gap: 12px;
-
-  > span {
-    color: var(--home-muted);
-    font-size: 12px;
-    font-weight: 650;
-  }
-}
-
-.profile-identity {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 15px;
-
-  h2 {
-    margin: 1px 0 3px;
-    font-size: 19px;
-    letter-spacing: -0.02em;
-  }
-
-  strong {
-    color: #285c9e;
-    font-size: 12px;
-  }
-
-  p {
-    margin: 6px 0 0;
-    color: var(--home-muted);
-    font-size: 12px;
-    line-height: 1.45;
-  }
-}
-
-:host ::ng-deep .profile-identity .p-avatar {
-  background: #dceaff;
-  color: #174f98;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.profile-actions {
-  display: grid;
-  margin-top: 23px;
-  grid-template-columns: 1fr;
-  gap: 6px;
-
-  button {
-    justify-content: center;
-  }
-}
-
-.sign-out-button {
-  color: #66758a;
 }
 
 .progress-heading {
@@ -884,7 +822,7 @@
 
   .home-sidebar {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 

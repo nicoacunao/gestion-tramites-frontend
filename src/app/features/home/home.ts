@@ -1,6 +1,7 @@
 import {
   Component,
   ElementRef,
+  inject,
   QueryList,
   ViewChild,
   ViewChildren,
@@ -11,7 +12,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { RouterLink } from "@angular/router";
 import { MessageService } from "primeng/api";
 import { AvatarModule } from "primeng/avatar";
 import { ButtonDirective } from "primeng/button";
@@ -21,21 +22,10 @@ import { ProgressBarModule } from "primeng/progressbar";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
+import { UserSessionService } from "../../shared/services/user-session";
 
 type ActivityTone = "success" | "info" | "warn";
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
-
-interface ConnectedUser {
-  firstName: string;
-  fullName: string;
-  initials: string;
-  role: string;
-  description: string;
-  email: string;
-  phone: string;
-  rut: string;
-  organization: string;
-}
 
 interface QuickAccess {
   id: QuickAccessId;
@@ -72,6 +62,9 @@ interface RecentActivity {
   styleUrl: "./home.scss",
 })
 export class Home {
+  private readonly userSession = inject(UserSessionService);
+  private readonly messageService = inject(MessageService);
+
   @ViewChild("homeTabPanel", { read: ElementRef })
   private homeTabPanel?: ElementRef<HTMLElement>;
 
@@ -80,20 +73,10 @@ export class Home {
 
   activeAccessId: QuickAccessId = "tareas";
 
-  readonly user: ConnectedUser = {
-    firstName: "María",
-    fullName: "María Contreras",
-    initials: "MC",
-    role: "Gestora de trámites",
-    description: "Administración y seguimiento de gestiones municipales",
-    email: "maria.contreras@gestion.cl",
-    phone: "+56 9 6123 4587",
-    rut: "15.482.963-7",
-    organization: "Municipalidad de Santiago",
-  };
+  readonly user = this.userSession.currentUser;
 
   readonly userForm = new FormGroup({
-    fullName: new FormControl(this.user.fullName, {
+    fullName: new FormControl(this.user().fullName, {
       nonNullable: true,
       validators: [
         Validators.required,
@@ -101,18 +84,18 @@ export class Home {
         Validators.maxLength(80),
       ],
     }),
-    email: new FormControl(this.user.email, {
+    email: new FormControl(this.user().email, {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
     }),
-    phone: new FormControl(this.user.phone, {
+    phone: new FormControl(this.user().phone, {
       nonNullable: true,
       validators: [
         Validators.required,
         Validators.pattern(/^\+?[0-9][0-9\s-]{7,17}$/),
       ],
     }),
-    description: new FormControl(this.user.description, {
+    description: new FormControl(this.user().description, {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(140)],
     }),
@@ -165,11 +148,6 @@ export class Home {
       route: "/tramites",
     },
   ];
-
-  constructor(
-    private readonly router: Router,
-    private readonly messageService: MessageService,
-  ) {}
 
   get greeting(): string {
     const hour = new Date().getHours();
@@ -229,10 +207,10 @@ export class Home {
 
   resetUserData(): void {
     this.userForm.reset({
-      fullName: this.user.fullName,
-      email: this.user.email,
-      phone: this.user.phone,
-      description: this.user.description,
+      fullName: this.user().fullName,
+      email: this.user().email,
+      phone: this.user().phone,
+      description: this.user().description,
     });
   }
 
@@ -242,15 +220,7 @@ export class Home {
       return;
     }
 
-    const values = this.userForm.getRawValue();
-    const fullName = values.fullName.trim();
-
-    this.user.fullName = fullName;
-    this.user.firstName = fullName.split(/\s+/)[0];
-    this.user.initials = this.createInitials(fullName);
-    this.user.email = values.email.trim().toLowerCase();
-    this.user.phone = values.phone.trim();
-    this.user.description = values.description.trim();
+    this.userSession.updateProfile(this.userForm.getRawValue());
     this.userForm.markAsPristine();
 
     this.messageService.add({
@@ -259,18 +229,5 @@ export class Home {
       detail: "Los cambios de tu perfil se guardaron correctamente.",
       life: 4500,
     });
-  }
-
-  signOut(): void {
-    void this.router.navigate(["/login"]);
-  }
-
-  private createInitials(fullName: string): string {
-    return fullName
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join("");
   }
 }

@@ -1,70 +1,6 @@
 <section class="home-page" aria-labelledby="home-title">
   <p-toast position="top-right" />
 
-  <header class="home-hero">
-    <div class="hero-decoration hero-decoration--one" aria-hidden="true"></div>
-    <div class="hero-decoration hero-decoration--two" aria-hidden="true"></div>
-
-    <div class="hero-main">
-      <div class="brand" aria-label="Portal de Gestión de Trámites">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none">
-            <path d="M9 7.5h10l4 4v13H9z"></path>
-            <path d="M19 7.5v5h4M13 17h6M13 21h4"></path>
-          </svg>
-        </span>
-        <span class="brand-copy">
-          <strong>Portal de Gestión</strong>
-          <small>Trámites y seguimiento</small>
-        </span>
-      </div>
-
-      <div class="hero-copy">
-        <p class="eyebrow">Escritorio principal</p>
-        <h1 id="home-title">{{ greeting }}, {{ user.firstName }}.</h1>
-        <p>
-          Revisa lo que requiere tu atención y continúa tus gestiones desde un
-          solo lugar.
-        </p>
-
-        <a pButton routerLink="/tramites" class="hero-button">
-          Ver mis trámites
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M5 12h13M14 7l5 5-5 5"></path>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-    <div class="hero-summary" aria-label="Resumen de trámites">
-      <div class="summary-heading">
-        <span>Resumen de hoy</span>
-        <p-tag value="Actualizado" severity="success" [rounded]="true" />
-      </div>
-
-      <div class="summary-metrics">
-        <div>
-          <strong>24</strong>
-          <span>Trámites activos</span>
-        </div>
-        <div>
-          <strong>4</strong>
-          <span>Requieren atención</span>
-        </div>
-        <div>
-          <strong>3</strong>
-          <span>Vencen esta semana</span>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <div class="home-grid">
     <div class="quick-access-column">
       <section
@@ -170,14 +106,14 @@
 
           <div class="user-data-heading">
             <p-avatar
-              [label]="user.initials"
+              [label]="user().initials"
               size="xlarge"
               shape="circle"
-              [attr.aria-label]="'Avatar de ' + user.fullName"
+              [attr.aria-label]="'Avatar de ' + user().fullName"
             />
             <div>
-              <strong>{{ user.fullName }}</strong>
-              <span>{{ user.email }}</span>
+              <strong>{{ user().fullName }}</strong>
+              <span>{{ user().email }}</span>
             </div>
           </div>
 
@@ -187,15 +123,15 @@
           >
             <div>
               <span>RUT</span>
-              <strong>{{ user.rut }}</strong>
+              <strong>{{ user().rut }}</strong>
             </div>
             <div>
               <span>Cargo o rol</span>
-              <strong>{{ user.role }}</strong>
+              <strong>{{ user().role }}</strong>
             </div>
             <div>
               <span>Organización</span>
-              <strong>{{ user.organization }}</strong>
+              <strong>{{ user().organization }}</strong>
             </div>
           </div>
 
@@ -373,9 +309,7 @@
               Esta sección central reunirá los datos y estados relevantes de
               cada estación.
             </p>
-            <a pButton routerLink="/tramites/estado-estaciones">
-              Abrir módulo
-            </a>
+
           </div>
         </p-card>
         } @case ("tareas") {
@@ -452,68 +386,8 @@
       </div>
     </div>
 
-    <aside class="home-sidebar" aria-label="Información del usuario conectado">
-      <p-card styleClass="profile-card">
-        <div class="profile-status">
-          <span>Usuario conectado</span>
-          <p-tag value="Sesión activa" severity="success" [rounded]="true" />
-        </div>
+    <aside class="home-sidebar" aria-label="Resumen de avance">
 
-        <div class="profile-identity">
-          <p-avatar
-            [label]="user.initials"
-            size="xlarge"
-            shape="circle"
-            [attr.aria-label]="'Avatar de ' + user.fullName"
-          />
-          <div>
-            <h2>{{ user.fullName }}</h2>
-            <strong>{{ user.role }}</strong>
-            <p>{{ user.description }}</p>
-          </div>
-        </div>
-
-        <div class="profile-actions">
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            [outlined]="true"
-            (click)="selectQuickAccess('datos')"
-          >
-            Editar mis datos
-          </button>
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            [text]="true"
-            class="sign-out-button"
-            (click)="signOut()"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </p-card>
-
-      <p-card styleClass="progress-card">
-        <div class="progress-heading">
-          <span class="progress-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5"></path>
-              <path d="M12 3.5V12h8.5"></path>
-            </svg>
-          </span>
-          <div>
-            <p class="section-kicker">Avance semanal</p>
-            <h2>Gestiones revisadas</h2>
-          </div>
-          <strong>72%</strong>
-        </div>
-
-        <p-progressbar [value]="72" [showValue]="false" />
-        <p>Has revisado 18 de los 25 trámites programados para esta semana.</p>
-      </p-card>
     </aside>
   </div>
 </section>
