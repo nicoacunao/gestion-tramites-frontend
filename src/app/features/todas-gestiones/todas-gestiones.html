@@ -1,0 +1,518 @@
+<section class="all-managements-page" aria-labelledby="all-managements-title">
+  <app-breadcrumbs [items]="breadcrumbs" />
+
+  <header class="page-heading">
+    <div>
+      <span class="scope-label">Vista global</span>
+      <h1 id="all-managements-title">Todas las gestiones</h1>
+    </div>
+  </header>
+
+  <section class="global-panel" aria-labelledby="global-list-title">
+    <div class="panel-heading">
+      <div>
+        <h2 id="global-list-title">Gestiones de la organización</h2>
+      </div>
+
+      <div class="traffic-legend" aria-label="Leyenda del semáforo">
+        <span><i class="legend-dot legend-dot--success"></i>Al día</span>
+        <span
+          ><i class="legend-dot legend-dot--warning"></i>Próxima a vencer</span
+        >
+        <span><i class="legend-dot legend-dot--danger"></i>Atención</span>
+      </div>
+    </div>
+
+    <div class="filters-toolbar" role="search">
+      <label class="search-field">
+        <span class="visually-hidden">Buscar en todas las gestiones</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-4-4"></path>
+        </svg>
+        <input
+          pInputText
+          type="search"
+          [(ngModel)]="busquedaGeneral"
+          (keydown.enter)="buscarGestiones()"
+          placeholder="Escribe un criterio y presiona Buscar"
+        />
+      </label>
+
+      <button type="button" class="clear-button" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+      <button type="button" class="search-button" (click)="buscarGestiones()">
+        Buscar
+      </button>
+    </div>
+
+    <div class="table-region" aria-label="Tabla de todas las gestiones">
+      <p-table
+        #tabla
+        [value]="gestiones"
+        [filters]="filtrosTabla"
+        [globalFilterFields]="[
+          'codigo',
+          'idEstacion',
+          'direccion',
+          'comuna',
+          'rutRazonSocial',
+          'razonSocial',
+          'representanteLegal',
+          'rutRepresentanteLegal',
+          'descripcion',
+          'responsableInterno',
+          'fechaIngreso',
+          'semaforoEtiqueta',
+        ]"
+        filterLocale="es-CL"
+        dataKey="id"
+        sortMode="multiple"
+        [multiSortMeta]="[{ field: 'fechaIngresoOrden', order: -1 }]"
+        styleClass="global-managements-table"
+        showGridlines
+        [paginator]="true"
+        [rows]="rows"
+        [first]="first"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} gestiones"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        (onPage)="pageChange($event)"
+      >
+        <ng-template #header>
+          <tr>
+            <th class="col-id" pSortableColumn="codigo">
+              <div class="column-heading">
+                <span>ID del trámite</span>
+                <p-sortIcon field="codigo" />
+                <p-columnFilter
+                  field="codigo"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.codigo"
+                      [options]="codigos"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      [filter]="true"
+                      filterPlaceHolder="Buscar ID"
+                      ariaFilterLabel="Buscar ID del trámite"
+                      emptyMessage="Sin opciones"
+                      emptyFilterMessage="Sin resultados"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-station" pSortableColumn="idEstacion">
+              <div class="column-heading">
+                <span>ID estación de servicio</span>
+                <p-sortIcon field="idEstacion" />
+                <p-columnFilter
+                  field="idEstacion"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.idEstacion"
+                      [options]="idsEstacion"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      [filter]="true"
+                      filterPlaceHolder="Buscar ID"
+                      ariaFilterLabel="Buscar ID de estación de servicio"
+                      emptyMessage="Sin opciones"
+                      emptyFilterMessage="Sin resultados"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-address">Dirección</th>
+            <th class="col-town" pSortableColumn="comuna">
+              <div class="column-heading">
+                <span>Comuna</span>
+                <p-sortIcon field="comuna" />
+                <p-columnFilter
+                  field="comuna"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.comuna"
+                      [options]="comunas"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      [filter]="true"
+                      filterPlaceHolder="Buscar comuna"
+                      ariaFilterLabel="Buscar comuna"
+                      emptyMessage="Sin opciones"
+                      emptyFilterMessage="Sin resultados"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-rut">RUT razón social</th>
+            <th class="col-business" pSortableColumn="razonSocial">
+              <div class="column-heading">
+                <span>Razón social</span>
+                <p-sortIcon field="razonSocial" />
+                <p-columnFilter
+                  field="razonSocial"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.razonSocial"
+                      [options]="razonesSociales"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      [filter]="true"
+                      filterPlaceHolder="Buscar razón social"
+                      ariaFilterLabel="Buscar razón social"
+                      emptyMessage="Sin opciones"
+                      emptyFilterMessage="Sin resultados"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-representative">Representante legal</th>
+            <th class="col-rut">RUT representante</th>
+            <th class="col-description">
+              <div class="column-heading">
+                <span>Descripción del trámite</span>
+                <p-columnFilter
+                  field="descripcion"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.descripcion"
+                      [options]="descripciones"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      [filter]="true"
+                      filterPlaceHolder="Buscar descripción"
+                      ariaFilterLabel="Buscar descripción del trámite"
+                      emptyMessage="Sin opciones"
+                      emptyFilterMessage="Sin resultados"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-owner" pSortableColumn="responsableInterno">
+              <div class="column-heading">
+                <span>Responsable interno</span>
+                <p-sortIcon field="responsableInterno" />
+                <p-columnFilter
+                  field="responsableInterno"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.responsableInterno"
+                      [options]="opcionesResponsables"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      emptyMessage="Sin opciones"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-date" pSortableColumn="fechaIngresoOrden">
+              <div class="column-heading">
+                <span>Fecha de ingreso</span>
+                <p-sortIcon field="fechaIngresoOrden" />
+                <p-columnFilter
+                  field="fechaIngreso"
+                  matchMode="equals"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <div class="date-filter">
+                      <label for="fechaIngresoFiltroGlobal"
+                        >Fecha específica</label
+                      >
+                      <input
+                        pInputText
+                        id="fechaIngresoFiltroGlobal"
+                        type="date"
+                        [ngModel]="fechaFiltroIso"
+                        (ngModelChange)="actualizarFiltroFecha($event)"
+                      />
+                      <button
+                        type="button"
+                        [disabled]="!fechaFiltroIso"
+                        (click)="limpiarFiltroFecha()"
+                      >
+                        Limpiar fecha
+                      </button>
+                    </div>
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-traffic" pSortableColumn="semaforoEtiqueta">
+              <div class="column-heading">
+                <span>Semáforo</span>
+                <p-sortIcon field="semaforoEtiqueta" />
+                <p-columnFilter
+                  field="semaforoEtiqueta"
+                  matchMode="in"
+                  display="menu"
+                  [showMatchModes]="false"
+                  [showOperator]="false"
+                  [showAddButton]="false"
+                  [showApplyButton]="false"
+                  [showClearButton]="false"
+                >
+                  <ng-template #filter>
+                    <p-listbox
+                      [(ngModel)]="filtrosPendientes.semaforoEtiqueta"
+                      [options]="estadosSemaforo"
+                      optionLabel="label"
+                      optionValue="value"
+                      [multiple]="true"
+                      [checkbox]="true"
+                      [metaKeySelection]="false"
+                      [showToggleAll]="false"
+                      emptyMessage="Sin opciones"
+                      scrollHeight="220px"
+                      styleClass="column-filter-listbox"
+                    />
+                  </ng-template>
+                </p-columnFilter>
+              </div>
+            </th>
+            <th class="col-options">Opciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-gestion>
+          <tr>
+            <td class="col-id">
+              <a
+                class="tramite-link"
+                [class.is-disabled]="!gestion.tieneDetalle"
+                [routerLink]="
+                  gestion.tieneDetalle ? ['/tramites', gestion.id] : null
+                "
+                [pTooltip]="
+                  gestion.tieneDetalle
+                    ? 'Ver detalle del trámite'
+                    : 'Detalle disponible próximamente'
+                "
+                tooltipPosition="top"
+              >
+                {{ gestion.codigo }}
+              </a>
+            </td>
+            <td class="col-station">
+              <strong>{{ gestion.idEstacion }}</strong>
+            </td>
+            <td class="col-address">{{ gestion.direccion }}</td>
+            <td class="col-town">{{ gestion.comuna }}</td>
+            <td class="col-rut">
+              <span class="rut-value">{{ gestion.rutRazonSocial }}</span>
+            </td>
+            <td class="col-business">{{ gestion.razonSocial }}</td>
+            <td class="col-representative">{{ gestion.representanteLegal }}</td>
+            <td class="col-rut">
+              <span class="rut-value">{{ gestion.rutRepresentanteLegal }}</span>
+            </td>
+            <td class="col-description">{{ gestion.descripcion }}</td>
+            <td class="col-owner">{{ gestion.responsableInterno }}</td>
+            <td class="col-date">{{ gestion.fechaIngreso }}</td>
+            <td class="col-traffic">
+              <span
+                class="traffic-status"
+                [attr.aria-label]="'Semáforo: ' + gestion.semaforoEtiqueta"
+              >
+                <span class="traffic-light" aria-hidden="true">
+                  <i [class.is-active]="gestion.semaforo === 'atrasado'"></i>
+                  <i
+                    [class.is-active]="gestion.semaforo === 'proximo-vencer'"
+                  ></i>
+                  <i [class.is-active]="gestion.semaforo === 'al-dia'"></i>
+                </span>
+              </span>
+            </td>
+            <td class="col-options">
+              <div class="row-options">
+                <span
+                  class="option-tooltip"
+                  [pTooltip]="'Responsable: ' + gestion.responsableInterno"
+                  tooltipPosition="top"
+                >
+                  <button
+                    type="button"
+                    class="option-button option-button--square"
+                    disabled
+                    [attr.aria-label]="
+                      'Responsable de ' +
+                      gestion.codigo +
+                      ': ' +
+                      gestion.responsableInterno
+                    "
+                  >
+                    <span aria-hidden="true">R</span>
+                  </button>
+                </span>
+
+                <span
+                  class="option-tooltip"
+                  pTooltip="Abrir bitácora"
+                  tooltipPosition="top"
+                >
+                  <button
+                    type="button"
+                    class="option-button option-button--circle option-button--bitacora"
+                    [attr.aria-label]="'Abrir bitácora de ' + gestion.codigo"
+                    aria-haspopup="dialog"
+                    (click)="abrirBitacora(gestion)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M6.5 3.5h9v14h-9z"></path>
+                      <path d="M9 7h4M9 10h3"></path>
+                      <path
+                        d="m12.8 17.1.5-2.5 4.4-4.4 2.1 2.1-4.4 4.4-2.6.4Z"
+                      ></path>
+                    </svg>
+                  </button>
+                </span>
+
+                <span
+                  class="option-tooltip"
+                  pTooltip="Cobro"
+                  tooltipPosition="top"
+                >
+                  <button
+                    type="button"
+                    class="option-button option-button--triangle"
+                    disabled
+                    [attr.aria-label]="
+                      'Opción monetaria de ' +
+                      gestion.codigo +
+                      ' (por definir)'
+                    "
+                  >
+                    <svg viewBox="0 0 36 34" aria-hidden="true">
+                      <path d="M18 2.5 34 31.5H2Z"></path>
+                      <text x="18" y="24">$</text>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="13" class="empty-state">
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="6"></circle>
+                  <path d="m16 16 4 4"></path>
+                </svg>
+              </span>
+              <strong>No encontramos gestiones</strong>
+              <p>Prueba con otros criterios o limpia los filtros aplicados.</p>
+              <button type="button" (click)="limpiarFiltros()">
+                Limpiar filtros
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+
+  <app-bitacora
+    [(visible)]="bitacoraVisible"
+    [gestion]="gestionBitacoraSeleccionada"
+  />
+</section>

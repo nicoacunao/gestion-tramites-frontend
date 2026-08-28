@@ -23,6 +23,14 @@ export const routes: Routes = [
           import("./features/escritorio/escritorio").then((m) => m.Escritorio),
       },
       {
+        path: "todas-las-gestiones",
+        title: "Todas las gestiones | Gestión de Trámites",
+        loadComponent: () =>
+          import("./features/todas-gestiones/todas-gestiones").then(
+            (m) => m.TodasGestiones,
+          ),
+      },
+      {
         path: "home",
         title: "Inicio | Gestión de Trámites",
         loadComponent: () => import("./features/home/home").then((m) => m.Home),
