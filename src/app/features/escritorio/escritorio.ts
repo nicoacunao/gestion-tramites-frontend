@@ -1,16 +1,45 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, ViewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { RouterLink } from "@angular/router";
+import { FilterMetadata, SortMeta } from "primeng/api";
 import { InputTextModule } from "primeng/inputtext";
-import { TableModule, TablePageEvent } from "primeng/table";
+import { SortAmountDownIcon } from "primeng/icons/sortamountdown";
+import { SortAmountUpAltIcon } from "primeng/icons/sortamountupalt";
+import { ListboxModule } from "primeng/listbox";
+import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TooltipModule } from "primeng/tooltip";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
 
 type EstadoSemaforo = "al-dia" | "proximo-vencer" | "atrasado";
-type FiltroSemaforo = EstadoSemaforo | "todos";
+type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
+type NivelGestion = `N${number}`;
+
+interface EventoOrdenamientoMultiple {
+  multisortmeta?: SortMeta[];
+}
+
+interface AmbitoGestion {
+  codigo: string;
+  nombre: string;
+  terminos: string[];
+}
+
+interface FiltrosPendientes {
+  codigo: string[];
+  idEstacion: string[];
+  comuna: string[];
+  razonSocial: string[];
+  descripcion: string[];
+  semaforoEtiqueta: string[];
+}
+
+interface OpcionFiltro<T> {
+  label: string;
+  value: T | typeof VALOR_TODOS;
+}
 
 interface DatosAsociados {
   rutRazonSocial: string;
@@ -22,8 +51,11 @@ interface DatosAsociados {
 interface GestionEscritorio {
   id: number;
   codigo: string;
+  nivel: NivelGestion;
+  ambito: string;
+  codigoAmbito: string;
+  correlativo: number;
   idEstacion: string;
-  estacionServicio: string;
   direccion: string;
   comuna: string;
   rutRazonSocial: string;
@@ -35,8 +67,75 @@ interface GestionEscritorio {
   fechaIngresoOrden: string;
   semaforo: EstadoSemaforo;
   semaforoEtiqueta: string;
-  editable: boolean;
 }
+
+const VALOR_TODOS = "__todos__";
+
+const AMBITOS_GESTION: AmbitoGestion[] = [
+  {
+    codigo: "MUN",
+    nombre: "Municipalidades",
+    terminos: ["patente", "municipalidad", "permiso municipal"],
+  },
+  {
+    codigo: "DOM",
+    nombre: "Dirección de Obras Municipales",
+    terminos: [
+      "direccion de obras",
+      "obra menor",
+      "regularizacion de obras",
+      "edificacion",
+      "recepcion final",
+      "dom",
+    ],
+  },
+  {
+    codigo: "LEG",
+    nombre: "Legales",
+    terminos: ["legal", "contrato", "notari", "societario"],
+  },
+  {
+    codigo: "SAN",
+    nombre: "Sanitarios",
+    terminos: ["sanitari", "seremi", "alimento", "salud"],
+  },
+  {
+    codigo: "SII",
+    nombre: "Servicio de Impuestos Internos",
+    terminos: ["impuesto", "tributari", "sii"],
+  },
+  {
+    codigo: "URB",
+    nombre: "Serviu/MOP o urbanismo",
+    terminos: ["serviu", "mop", "urbanismo", "vialidad", "camino"],
+  },
+  {
+    codigo: "ORP",
+    nombre: "Organismos particulares",
+    terminos: ["organismo particular", "organismo privado"],
+  },
+  {
+    codigo: "ESA",
+    nombre: "Empresas sanitarias",
+    terminos: ["empresa sanitaria", "agua potable", "alcantarillado"],
+  },
+  {
+    codigo: "ELE",
+    nombre: "Empresas eléctricas",
+    terminos: ["electric", "energia", "sec"],
+  },
+  {
+    codigo: "OSE",
+    nombre: "Otros servicios",
+    terminos: ["otro servicio"],
+  },
+];
+
+const AMBITO_OTROS: AmbitoGestion = {
+  codigo: "OTR",
+  nombre: "Otros",
+  terminos: [],
+};
 
 const DATOS_ASOCIADOS: Record<number, DatosAsociados> = {
   1001: {
@@ -85,7 +184,10 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
     CommonModule,
     FormsModule,
     InputTextModule,
+    ListboxModule,
     RouterLink,
+    SortAmountDownIcon,
+    SortAmountUpAltIcon,
     TableModule,
     TooltipModule,
   ],
@@ -93,6 +195,8 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
   styleUrl: "./escritorio.scss",
 })
 export class Escritorio {
+  @ViewChild("tabla") tabla?: Table;
+
   readonly breadcrumbs = [
     {
       label: "Módulo de Gestión de Trámites",
@@ -104,74 +208,93 @@ export class Escritorio {
   ];
 
   readonly gestiones: GestionEscritorio[];
+  readonly codigos: OpcionFiltro<string>[];
+  readonly idsEstacion: OpcionFiltro<string>[];
+  readonly comunas: OpcionFiltro<string>[];
+  readonly razonesSociales: OpcionFiltro<string>[];
+  readonly descripciones: OpcionFiltro<string>[];
+  readonly estadosSemaforo: OpcionFiltro<string>[];
 
-  consulta = "";
-  filtroSemaforo: FiltroSemaforo = "todos";
+  filtrosTabla: FiltrosTabla = this.crearFiltrosTablaVacios();
+  filtrosPendientes: FiltrosPendientes = this.crearFiltrosPendientes();
+  busquedaGeneral = "";
+  fechaFiltroIso = "";
   first = 0;
   rows = 10;
+  ordenamientos: SortMeta[] = [{ field: "fechaIngresoOrden", order: -1 }];
 
   constructor(tramitesMock: TramitesMock) {
-    this.gestiones = tramitesMock
-      .obtenerTodos()
-      .map((tramite) => this.crearGestion(tramite));
-  }
+    const correlativosPorNivel = new Map<NivelGestion, number>();
 
-  get gestionesFiltradas(): GestionEscritorio[] {
-    const consultaNormalizada = this.normalizar(this.consulta.trim());
+    this.gestiones = tramitesMock.obtenerTodos().map((tramite) => {
+      const nivel = this.obtenerNivel(tramite);
+      const correlativo = (correlativosPorNivel.get(nivel) ?? 0) + 1;
 
-    return this.gestiones.filter((gestion) => {
-      const coincideSemaforo =
-        this.filtroSemaforo === "todos" ||
-        gestion.semaforo === this.filtroSemaforo;
+      correlativosPorNivel.set(nivel, correlativo);
 
-      if (!coincideSemaforo || !consultaNormalizada) {
-        return coincideSemaforo;
-      }
-
-      const contenido = [
-        gestion.codigo,
-        gestion.idEstacion,
-        gestion.estacionServicio,
-        gestion.direccion,
-        gestion.comuna,
-        gestion.rutRazonSocial,
-        gestion.razonSocial,
-        gestion.representanteLegal,
-        gestion.rutRepresentanteLegal,
-        gestion.descripcion,
-        gestion.fechaIngreso,
-        gestion.semaforoEtiqueta,
-      ]
-        .map((valor) => this.normalizar(valor))
-        .join(" ");
-
-      return contenido.includes(consultaNormalizada);
+      return this.crearGestion(tramite, nivel, correlativo);
     });
+    this.codigos = this.crearOpciones(
+      this.ordenarTexto(this.gestiones.map(({ codigo }) => codigo)),
+    );
+    this.idsEstacion = this.crearOpciones(
+      this.ordenarTexto(this.gestiones.map(({ idEstacion }) => idEstacion)),
+    );
+    this.comunas = this.crearOpciones(
+      this.ordenarTexto(this.gestiones.map(({ comuna }) => comuna)),
+    );
+    this.razonesSociales = this.crearOpciones(
+      this.ordenarTexto(this.gestiones.map(({ razonSocial }) => razonSocial)),
+    );
+    this.descripciones = this.crearOpciones(
+      this.ordenarTexto(this.gestiones.map(({ descripcion }) => descripcion)),
+    );
+    this.estadosSemaforo = this.crearOpciones(
+      this.ordenarTexto(
+        this.gestiones.map(({ semaforoEtiqueta }) => semaforoEtiqueta),
+      ),
+    );
   }
 
-  get hayFiltrosActivos(): boolean {
-    return Boolean(this.consulta.trim()) || this.filtroSemaforo !== "todos";
+  get cantidadResultados(): number {
+    return this.tabla?.filteredValue?.length ?? this.gestiones.length;
   }
 
-  totalPorSemaforo(estado: EstadoSemaforo): number {
-    return this.gestiones.filter((gestion) => gestion.semaforo === estado)
-      .length;
-  }
+  buscarGestiones(): void {
+    const filtros = this.construirFiltrosTabla();
 
-  seleccionarSemaforo(estado: FiltroSemaforo): void {
-    this.filtroSemaforo = estado;
-    this.first = 0;
-  }
+    this.filtrosTabla = filtros;
 
-  actualizarConsulta(valor: string): void {
-    this.consulta = valor;
+    if (this.tabla) {
+      this.tabla.filters = filtros;
+      this.tabla._filter();
+    }
+
     this.first = 0;
   }
 
   limpiarFiltros(): void {
-    this.consulta = "";
-    this.filtroSemaforo = "todos";
+    this.busquedaGeneral = "";
+    this.fechaFiltroIso = "";
+    this.filtrosPendientes = this.crearFiltrosPendientes();
+    const filtros = this.construirFiltrosTabla();
+
+    this.filtrosTabla = filtros;
+
+    if (this.tabla) {
+      this.tabla.filters = filtros;
+      this.tabla._filter();
+    }
+
     this.first = 0;
+  }
+
+  actualizarFiltroFecha(fechaIso: string): void {
+    this.fechaFiltroIso = fechaIso;
+  }
+
+  limpiarFiltroFecha(): void {
+    this.fechaFiltroIso = "";
   }
 
   pageChange(event: TablePageEvent): void {
@@ -179,7 +302,66 @@ export class Escritorio {
     this.rows = event.rows;
   }
 
-  private crearGestion(tramite: Tramite): GestionEscritorio {
+  acumularOrdenamiento(event: EventoOrdenamientoMultiple): void {
+    const ordenamientosGenerados = event.multisortmeta ?? [];
+
+    if (
+      !ordenamientosGenerados.length ||
+      this.sonLosMismosOrdenamientos(ordenamientosGenerados, this.ordenamientos)
+    ) {
+      return;
+    }
+
+    if (ordenamientosGenerados.length > 1) {
+      this.ordenamientos = ordenamientosGenerados.map((ordenamiento) => ({
+        ...ordenamiento,
+      }));
+      return;
+    }
+
+    const ordenamientoSeleccionado = ordenamientosGenerados[0];
+    const ordenamientosAcumulados = this.ordenamientos.map((ordenamiento) => ({
+      ...ordenamiento,
+    }));
+    const indiceExistente = ordenamientosAcumulados.findIndex(
+      ({ field }) => field === ordenamientoSeleccionado.field,
+    );
+
+    if (indiceExistente >= 0) {
+      ordenamientosAcumulados[indiceExistente] = {
+        ...ordenamientoSeleccionado,
+      };
+    } else {
+      ordenamientosAcumulados.push({ ...ordenamientoSeleccionado });
+    }
+
+    this.ordenamientos = ordenamientosAcumulados;
+
+    if (this.tabla) {
+      this.tabla.multiSortMeta = this.ordenamientos;
+      this.tabla.sortMultiple();
+    }
+  }
+
+  private sonLosMismosOrdenamientos(
+    primeros: SortMeta[],
+    segundos: SortMeta[],
+  ): boolean {
+    return (
+      primeros.length === segundos.length &&
+      primeros.every(
+        (ordenamiento, indice) =>
+          ordenamiento.field === segundos[indice].field &&
+          ordenamiento.order === segundos[indice].order,
+      )
+    );
+  }
+
+  private crearGestion(
+    tramite: Tramite,
+    nivel: NivelGestion,
+    correlativo: number,
+  ): GestionEscritorio {
     const datos = DATOS_ASOCIADOS[tramite.id] ?? {
       rutRazonSocial:
         tramite.datosAdicionales?.["rutRazonSocial"] ?? "Sin registrar",
@@ -189,12 +371,16 @@ export class Escritorio {
         tramite.datosAdicionales?.["rutRepresentanteLegal"] ?? "Sin registrar",
       semaforo: "al-dia",
     };
+    const ambito = this.obtenerAmbito(tramite);
 
     return {
       id: tramite.id,
-      codigo: `TR-2026-${tramite.id}`,
+      codigo: `${nivel}-${ambito.codigo}-${String(correlativo).padStart(3, "0")}`,
+      nivel,
+      ambito: ambito.nombre,
+      codigoAmbito: ambito.codigo,
+      correlativo,
       idEstacion: tramite.idEstacion,
-      estacionServicio: tramite.estacionServicio,
       direccion: tramite.direccion,
       comuna: tramite.comuna,
       rutRazonSocial: datos.rutRazonSocial,
@@ -206,10 +392,32 @@ export class Escritorio {
       fechaIngresoOrden: this.convertirFechaAOrden(tramite.fechaApertura),
       semaforo: datos.semaforo,
       semaforoEtiqueta: ETIQUETAS_SEMAFORO[datos.semaforo],
-      editable: !tramite.estado
-        .toLocaleLowerCase("es-CL")
-        .startsWith("terminado"),
     };
+  }
+
+  private obtenerNivel(tramite: Tramite): NivelGestion {
+    return tramite.modalidadCreacion === "subtramite" ? "N2" : "N1";
+  }
+
+  private obtenerAmbito(tramite: Tramite): AmbitoGestion {
+    const texto = this.normalizarTexto(
+      `${tramite.tipoTramite} ${tramite.tramiteEspecifico}`,
+    );
+
+    return (
+      AMBITOS_GESTION.find(({ terminos }) =>
+        terminos.some((termino) =>
+          texto.includes(this.normalizarTexto(termino)),
+        ),
+      ) ?? AMBITO_OTROS
+    );
+  }
+
+  private normalizarTexto(valor: string): string {
+    return valor
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es-CL");
   }
 
   private convertirFechaAOrden(fecha: string): string {
@@ -217,10 +425,109 @@ export class Escritorio {
     return `${anio}-${mes}-${dia}`;
   }
 
-  private normalizar(valor: string): string {
-    return valor
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("es-CL");
+  private construirFiltrosTabla(): FiltrosTabla {
+    const filtros = this.crearFiltrosTablaVacios();
+
+    this.agregarFiltroOpciones(
+      filtros,
+      "codigo",
+      this.filtrosPendientes.codigo,
+    );
+    this.agregarFiltroOpciones(
+      filtros,
+      "idEstacion",
+      this.filtrosPendientes.idEstacion,
+    );
+    this.agregarFiltroOpciones(
+      filtros,
+      "comuna",
+      this.filtrosPendientes.comuna,
+    );
+    this.agregarFiltroOpciones(
+      filtros,
+      "razonSocial",
+      this.filtrosPendientes.razonSocial,
+    );
+    this.agregarFiltroOpciones(
+      filtros,
+      "descripcion",
+      this.filtrosPendientes.descripcion,
+    );
+    this.agregarFiltroOpciones(
+      filtros,
+      "semaforoEtiqueta",
+      this.filtrosPendientes.semaforoEtiqueta,
+    );
+
+    const busqueda = this.busquedaGeneral.trim().toLocaleLowerCase("es-CL");
+
+    if (busqueda) {
+      filtros["global"] = { value: busqueda, matchMode: "contains" };
+    }
+
+    if (this.fechaFiltroIso) {
+      filtros["fechaIngreso"] = [
+        {
+          value: this.convertirFechaIso(this.fechaFiltroIso),
+          matchMode: "equals",
+          operator: "and",
+        },
+      ];
+    }
+
+    return filtros;
+  }
+
+  private agregarFiltroOpciones(
+    filtros: FiltrosTabla,
+    campo: keyof FiltrosPendientes,
+    valores: string[],
+  ): void {
+    if (!valores.length || valores.includes(VALOR_TODOS)) {
+      return;
+    }
+
+    filtros[campo] = [{ value: valores, matchMode: "in", operator: "and" }];
+  }
+
+  private crearFiltrosTablaVacios(): FiltrosTabla {
+    return {
+      codigo: [{ value: null, matchMode: "in", operator: "and" }],
+      idEstacion: [{ value: null, matchMode: "in", operator: "and" }],
+      comuna: [{ value: null, matchMode: "in", operator: "and" }],
+      razonSocial: [{ value: null, matchMode: "in", operator: "and" }],
+      descripcion: [{ value: null, matchMode: "in", operator: "and" }],
+      semaforoEtiqueta: [{ value: null, matchMode: "in", operator: "and" }],
+      fechaIngreso: [{ value: null, matchMode: "equals", operator: "and" }],
+    };
+  }
+
+  private crearFiltrosPendientes(): FiltrosPendientes {
+    return {
+      codigo: [],
+      idEstacion: [],
+      comuna: [],
+      razonSocial: [],
+      descripcion: [],
+      semaforoEtiqueta: [],
+    };
+  }
+
+  private crearOpciones<T>(valores: T[]): OpcionFiltro<T>[] {
+    return [
+      { label: "Todos", value: VALOR_TODOS },
+      ...valores.map((valor) => ({ label: String(valor), value: valor })),
+    ];
+  }
+
+  private ordenarTexto(valores: string[]): string[] {
+    return [...new Set(valores)].sort((a, b) =>
+      a.localeCompare(b, "es-CL", { sensitivity: "base", numeric: true }),
+    );
+  }
+
+  private convertirFechaIso(fechaIso: string): string {
+    const [anio, mes, dia] = fechaIso.split("-");
+    return `${dia}-${mes}-${anio}`;
   }
 }
