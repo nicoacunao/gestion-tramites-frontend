@@ -78,7 +78,7 @@ export class Login {
     }),
   });
 
-  constructor(private readonly router: Router) {}
+  constructor(private readonly router: Router) { }
 
   formatRut(event: Event): void {
     const input = event.target as HTMLInputElement;

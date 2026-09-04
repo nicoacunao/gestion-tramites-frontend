@@ -131,24 +131,6 @@
   text-transform: uppercase;
 }
 
-.welcome-footnote {
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  color: rgb(255 255 255 / 60%);
-  font-size: 12px;
-
-  span {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4cd7a3;
-    box-shadow: 0 0 0 5px rgb(76 215 163 / 12%);
-  }
-}
-
 .access-panel {
   position: relative;
   display: flex;
@@ -236,15 +218,10 @@ form {
   transform: translateY(-50%);
 }
 
-.field-help,
 .field-error {
   margin-top: 7px;
   font-size: 12px;
   line-height: 1.35;
-}
-
-.field-help {
-  color: #748094;
 }
 
 .field-error {
@@ -265,45 +242,6 @@ form {
     height: 19px;
     margin-left: 7px;
   }
-}
-
-.security-note {
-  display: flex;
-  margin-top: 28px;
-  padding: 16px 17px;
-  border: 1px solid #e3e8ef;
-  border-radius: 11px;
-  gap: 12px;
-  background: #fff;
-
-  > svg {
-    width: 21px;
-    height: 21px;
-    flex: 0 0 auto;
-    color: var(--brand-600);
-  }
-
-  p {
-    margin: 0;
-    color: #687589;
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
-  strong {
-    display: block;
-    margin-bottom: 2px;
-    color: #34445a;
-    font-size: 12px;
-  }
-}
-
-.access-footer {
-  position: absolute;
-  bottom: 24px;
-  margin: 0;
-  color: #8b96a7;
-  font-size: 11px;
 }
 
 :host ::ng-deep .password-control {
@@ -345,8 +283,7 @@ form {
   }
 
   .welcome-panel::before,
-  .welcome-panel::after,
-  .welcome-footnote {
+  .welcome-panel::after{
     display: none;
   }
 
@@ -368,10 +305,6 @@ form {
     padding: 54px clamp(24px, 8vw, 72px) 72px;
   }
 
-  .access-footer {
-    position: static;
-    margin-top: 48px;
-  }
 }
 
 @media (max-width: 480px) {
