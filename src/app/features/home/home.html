@@ -1,4 +1,4 @@
-<section class="home-page" aria-labelledby="home-title">
+<section class="home-page" aria-label="Inicio">
   <p-toast position="top-right" />
 
   <div class="home-grid">
@@ -12,14 +12,12 @@
             <p class="section-kicker">Navegación</p>
             <h2 id="quick-access-title">Accesos rápidos</h2>
           </div>
-          <p>Ingresa directamente a tus principales opciones.</p>
         </div>
 
         <div
           class="quick-access-grid"
           role="tablist"
           aria-label="Secciones del escritorio"
-          aria-orientation="vertical"
         >
           @for (access of quickAccesses; track access.id) {
           <button
@@ -97,10 +95,29 @@
           <div class="tab-panel-heading">
             <div>
               <p class="section-kicker">Perfil personal</p>
-              <h2>Mis datos</h2>
-              <p>
-                Revisa y actualiza la información básica asociada a tu cuenta.
-              </p>
+              <div class="content-title-row">
+                <h2 class="content-title">Mis datos</h2>
+                <button
+                  pButton
+                  type="button"
+                  class="content-info-button"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  (click)="
+                    showCardInfo(
+                      'Mis datos',
+                      'Revisa y actualiza la información básica asociada a tu cuenta.'
+                    )
+                  "
+                  aria-label="Información sobre Mis datos"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10.5V17M12 7.2v.2"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -285,11 +302,29 @@
           <div class="tab-panel-heading">
             <div>
               <p class="section-kicker">Información operativa</p>
-              <h2>Datos estaciones de servicio</h2>
-              <p>
-                Consulta la información y el estado de las estaciones de
-                servicio registradas.
-              </p>
+              <div class="content-title-row">
+                <h2 class="content-title">Datos estaciones de servicio</h2>
+                <button
+                  pButton
+                  type="button"
+                  class="content-info-button"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  (click)="
+                    showCardInfo(
+                      'Datos estaciones de servicio',
+                      'Consulta la información y el estado de las estaciones de servicio registradas.'
+                    )
+                  "
+                  aria-label="Información sobre Datos estaciones de servicio"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10.5V17M12 7.2v.2"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -309,7 +344,6 @@
               Esta sección central reunirá los datos y estados relevantes de
               cada estación.
             </p>
-
           </div>
         </p-card>
         } @case ("tareas") {
@@ -317,7 +351,7 @@
           <div class="activity-heading">
             <div>
               <p class="section-kicker">Seguimiento</p>
-              <h2>Mis tareas</h2>
+              <h2 class="content-title">Mis tareas</h2>
             </div>
             <a
               pButton
@@ -360,10 +394,29 @@
           <div class="tab-panel-heading">
             <div>
               <p class="section-kicker">Documentos</p>
-              <h2>Reporte</h2>
-              <p>
-                Consulta y descarga los reportes disponibles para tus gestiones.
-              </p>
+              <div class="content-title-row">
+                <h2 class="content-title">Reporte</h2>
+                <button
+                  pButton
+                  type="button"
+                  class="content-info-button"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  (click)="
+                    showCardInfo(
+                      'Reporte',
+                      'Consulta y descarga los reportes disponibles para tus gestiones.'
+                    )
+                  "
+                  aria-label="Información sobre Reporte"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 10.5V17M12 7.2v.2"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
             <p-tag value="Próximamente" severity="secondary" />
           </div>
@@ -385,9 +438,5 @@
         } }
       </div>
     </div>
-
-    <aside class="home-sidebar" aria-label="Resumen de avance">
-
-    </aside>
   </div>
 </section>

@@ -31,6 +31,12 @@
   background: #ffffff;
 }
 
+@media (min-width: 1280px) {
+  .page-content:has(app-home) {
+    padding-top: 18px;
+  }
+}
+
 @media (max-width: 767px) {
   .page-content {
     padding: 24px 16px;

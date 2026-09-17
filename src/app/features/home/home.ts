@@ -18,7 +18,6 @@ import { AvatarModule } from "primeng/avatar";
 import { ButtonDirective } from "primeng/button";
 import { CardModule } from "primeng/card";
 import { InputTextModule } from "primeng/inputtext";
-import { ProgressBarModule } from "primeng/progressbar";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
@@ -50,7 +49,6 @@ interface RecentActivity {
     ButtonDirective,
     CardModule,
     InputTextModule,
-    ProgressBarModule,
     ReactiveFormsModule,
     RouterLink,
     TagModule,
@@ -149,20 +147,6 @@ export class Home {
     },
   ];
 
-  get greeting(): string {
-    const hour = new Date().getHours();
-
-    if (hour < 12) {
-      return "Buenos días";
-    }
-
-    if (hour < 20) {
-      return "Buenas tardes";
-    }
-
-    return "Buenas noches";
-  }
-
   selectQuickAccess(id: QuickAccessId, scrollPanel = true): void {
     this.activeAccessId = id;
 
@@ -203,6 +187,16 @@ export class Home {
     event.preventDefault();
     this.selectQuickAccess(this.quickAccesses[nextIndex].id, false);
     this.quickAccessTabs?.get(nextIndex)?.nativeElement.focus();
+  }
+
+  showCardInfo(summary: string, detail: string): void {
+    this.messageService.clear();
+    this.messageService.add({
+      severity: "info",
+      summary,
+      detail,
+      life: 5000,
+    });
   }
 
   resetUserData(): void {
