@@ -1,44 +1,17 @@
-import { CommonModule } from "@angular/common";
-import { Component, ViewChild } from "@angular/core";
-import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
-import { FilterMetadata } from "primeng/api";
-import { InputTextModule } from "primeng/inputtext";
-import { ListboxModule } from "primeng/listbox";
-import { Table, TableModule, TablePageEvent } from "primeng/table";
-import { TooltipModule } from "primeng/tooltip";
+import { Component } from "@angular/core";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import {
-  Bitacora,
-  EstadoSemaforoBitacora,
-  GestionBitacora,
-} from "../bitacora/bitacora";
+  GestionListado,
+  GestionListadoItem,
+} from "../../shared/components/gestion-listado/gestion-listado";
+import { EstadoSemaforoBitacora } from "../bitacora/bitacora";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
 
 type EstadoSemaforo = EstadoSemaforoBitacora;
-type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 
-interface FiltrosPendientes {
-  codigo: string[];
-  idEstacion: string[];
-  comuna: string[];
-  razonSocial: string[];
-  descripcion: string[];
-  responsableInterno: string[];
-  semaforoEtiqueta: string[];
-}
-
-interface OpcionFiltro<T> {
-  label: string;
-  value: T | typeof VALOR_TODOS;
-}
-
-interface GestionGlobal extends GestionBitacora {
-  rutRazonSocial: string;
+interface GestionGlobal extends GestionListadoItem {
   rutRepresentanteLegal: string;
-  fechaIngreso: string;
-  fechaIngresoOrden: string;
   tieneDetalle: boolean;
 }
 
@@ -54,8 +27,6 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
   "proximo-vencer": "Próximo a vencer",
   atrasado: "Requiere atención",
 };
-
-const VALOR_TODOS = "__todos__";
 
 const CODIGOS_GESTIONES: Record<number, string> = {
   1001: "N1-MUN-001",
@@ -174,141 +145,44 @@ const GESTIONES_GLOBALES_ADICIONALES: Tramite[] = [
 @Component({
   selector: "app-todas-gestiones",
   standalone: true,
-  imports: [
-    Bitacora,
-    Breadcrumbs,
-    CommonModule,
-    FormsModule,
-    InputTextModule,
-    ListboxModule,
-    RouterLink,
-    TableModule,
-    TooltipModule,
-  ],
+  imports: [Breadcrumbs, GestionListado],
   templateUrl: "./todas-gestiones.html",
   styleUrl: "./todas-gestiones.scss",
 })
 export class TodasGestiones {
-  @ViewChild("tabla") tabla?: Table;
-
   readonly breadcrumbs = [
     { label: "Módulo de Gestión de Trámites", route: "/home" },
     { label: "Todas las gestiones" },
   ];
 
   readonly gestiones: GestionGlobal[];
-  readonly responsables: string[];
-  readonly codigos: OpcionFiltro<string>[];
-  readonly idsEstacion: OpcionFiltro<string>[];
-  readonly comunas: OpcionFiltro<string>[];
-  readonly razonesSociales: OpcionFiltro<string>[];
-  readonly descripciones: OpcionFiltro<string>[];
-  readonly opcionesResponsables: OpcionFiltro<string>[];
-  readonly estadosSemaforo: OpcionFiltro<string>[];
-
-  filtrosTabla: FiltrosTabla = this.crearFiltrosTablaVacios();
-  filtrosPendientes: FiltrosPendientes = this.crearFiltrosPendientes();
-  busquedaGeneral = "";
-  fechaFiltroIso = "";
-  first = 0;
-  rows = 10;
-  gestionBitacoraSeleccionada: GestionBitacora | null = null;
-  bitacoraVisible = false;
 
   constructor(tramitesMock: TramitesMock) {
+    const tramitesConDetalle = tramitesMock.obtenerTodos();
+    const idsConDetalle = new Set(tramitesConDetalle.map(({ id }) => id));
     const tramitesGlobales = [
-      ...tramitesMock.obtenerTodos(),
+      ...tramitesConDetalle,
       ...GESTIONES_GLOBALES_ADICIONALES,
     ];
 
     this.gestiones = tramitesGlobales.map((tramite) =>
-      this.crearGestionGlobal(tramite),
-    );
-    this.responsables = [
-      ...new Set(
-        this.gestiones.map(({ responsableInterno }) => responsableInterno),
-      ),
-    ].sort((a, b) => a.localeCompare(b, "es-CL", { sensitivity: "base" }));
-    this.codigos = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ codigo }) => codigo)),
-    );
-    this.idsEstacion = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ idEstacion }) => idEstacion)),
-    );
-    this.comunas = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ comuna }) => comuna)),
-    );
-    this.razonesSociales = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ razonSocial }) => razonSocial)),
-    );
-    this.descripciones = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ descripcion }) => descripcion)),
-    );
-    this.opcionesResponsables = this.crearOpciones(this.responsables);
-    this.estadosSemaforo = this.crearOpciones(
-      this.ordenarTexto(
-        this.gestiones.map(({ semaforoEtiqueta }) => semaforoEtiqueta),
-      ),
+      this.crearGestionGlobal(tramite, idsConDetalle.has(tramite.id)),
     );
   }
 
-  get cantidadResultados(): number {
-    return this.tabla?.filteredValue?.length ?? this.gestiones.length;
-  }
-
-  get cantidadResponsables(): number {
-    return this.responsables.length;
-  }
-
-  buscarGestiones(): void {
-    const filtros = this.construirFiltrosTabla();
-
-    this.filtrosTabla = filtros;
-
-    if (this.tabla) {
-      this.tabla.filters = filtros;
-      this.tabla._filter();
-    }
-
-    this.first = 0;
-  }
-
-  limpiarFiltros(): void {
-    this.busquedaGeneral = "";
-    this.fechaFiltroIso = "";
-    this.filtrosPendientes = this.crearFiltrosPendientes();
-    const filtros = this.construirFiltrosTabla();
-
-    this.filtrosTabla = filtros;
-
-    if (this.tabla) {
-      this.tabla.filters = filtros;
-      this.tabla._filter();
-    }
-
-    this.first = 0;
-  }
-
-  actualizarFiltroFecha(fechaIso: string): void {
-    this.fechaFiltroIso = fechaIso;
-  }
-
-  limpiarFiltroFecha(): void {
-    this.fechaFiltroIso = "";
-  }
-
-  abrirBitacora(gestion: GestionGlobal): void {
-    this.gestionBitacoraSeleccionada = gestion;
-    this.bitacoraVisible = true;
-  }
-
-  pageChange(event: TablePageEvent): void {
-    this.first = event.first;
-    this.rows = event.rows;
-  }
-
-  private crearGestionGlobal(tramite: Tramite): GestionGlobal {
-    const datos = DATOS_ASOCIADOS[tramite.id];
+  private crearGestionGlobal(
+    tramite: Tramite,
+    tieneDetalle: boolean,
+  ): GestionGlobal {
+    const datos = DATOS_ASOCIADOS[tramite.id] ?? {
+      rutRazonSocial:
+        tramite.datosAdicionales?.["rutRazonSocial"] ?? "Sin registrar",
+      representanteLegal:
+        tramite.datosAdicionales?.["representanteLegal"] ?? "Sin registrar",
+      rutRepresentanteLegal:
+        tramite.datosAdicionales?.["rutRepresentanteLegal"] ?? "Sin registrar",
+      semaforo: "al-dia",
+    };
     const responsableInterno = this.normalizarResponsable(
       tramite.responsableInterno,
     );
@@ -334,7 +208,7 @@ export class TodasGestiones {
       responsableInterno,
       semaforo: datos.semaforo,
       semaforoEtiqueta: ETIQUETAS_SEMAFORO[datos.semaforo],
-      tieneDetalle: tramite.id < 2000,
+      tieneDetalle,
     };
   }
 
@@ -358,121 +232,8 @@ export class TodasGestiones {
       .toLocaleLowerCase("es-CL");
   }
 
-  private construirFiltrosTabla(): FiltrosTabla {
-    const filtros = this.crearFiltrosTablaVacios();
-
-    this.agregarFiltroOpciones(
-      filtros,
-      "codigo",
-      this.filtrosPendientes.codigo,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "idEstacion",
-      this.filtrosPendientes.idEstacion,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "comuna",
-      this.filtrosPendientes.comuna,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "razonSocial",
-      this.filtrosPendientes.razonSocial,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "descripcion",
-      this.filtrosPendientes.descripcion,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "responsableInterno",
-      this.filtrosPendientes.responsableInterno,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "semaforoEtiqueta",
-      this.filtrosPendientes.semaforoEtiqueta,
-    );
-
-    const busqueda = this.busquedaGeneral.trim().toLocaleLowerCase("es-CL");
-
-    if (busqueda) {
-      filtros["global"] = { value: busqueda, matchMode: "contains" };
-    }
-
-    if (this.fechaFiltroIso) {
-      filtros["fechaIngreso"] = [
-        {
-          value: this.convertirFechaIso(this.fechaFiltroIso),
-          matchMode: "equals",
-          operator: "and",
-        },
-      ];
-    }
-
-    return filtros;
-  }
-
-  private agregarFiltroOpciones(
-    filtros: FiltrosTabla,
-    campo: keyof FiltrosPendientes,
-    valores: string[],
-  ): void {
-    if (!valores.length || valores.includes(VALOR_TODOS)) {
-      return;
-    }
-
-    filtros[campo] = [{ value: valores, matchMode: "in", operator: "and" }];
-  }
-
-  private crearFiltrosTablaVacios(): FiltrosTabla {
-    return {
-      codigo: [{ value: null, matchMode: "in", operator: "and" }],
-      idEstacion: [{ value: null, matchMode: "in", operator: "and" }],
-      comuna: [{ value: null, matchMode: "in", operator: "and" }],
-      razonSocial: [{ value: null, matchMode: "in", operator: "and" }],
-      descripcion: [{ value: null, matchMode: "in", operator: "and" }],
-      responsableInterno: [{ value: null, matchMode: "in", operator: "and" }],
-      semaforoEtiqueta: [{ value: null, matchMode: "in", operator: "and" }],
-      fechaIngreso: [{ value: null, matchMode: "equals", operator: "and" }],
-    };
-  }
-
-  private crearFiltrosPendientes(): FiltrosPendientes {
-    return {
-      codigo: [],
-      idEstacion: [],
-      comuna: [],
-      razonSocial: [],
-      descripcion: [],
-      responsableInterno: [],
-      semaforoEtiqueta: [],
-    };
-  }
-
-  private crearOpciones<T>(valores: T[]): OpcionFiltro<T>[] {
-    return [
-      { label: "Todos", value: VALOR_TODOS },
-      ...valores.map((valor) => ({ label: String(valor), value: valor })),
-    ];
-  }
-
-  private ordenarTexto(valores: string[]): string[] {
-    return [...new Set(valores)].sort((a, b) =>
-      a.localeCompare(b, "es-CL", { sensitivity: "base", numeric: true }),
-    );
-  }
-
   private convertirFechaAOrden(fecha: string): string {
     const [dia, mes, anio] = fecha.split("-");
     return `${anio}-${mes}-${dia}`;
-  }
-
-  private convertirFechaIso(fechaIso: string): string {
-    const [anio, mes, dia] = fechaIso.split("-");
-    return `${dia}-${mes}-${anio}`;
   }
 }

@@ -1,49 +1,20 @@
-import { CommonModule } from "@angular/common";
-import { Component, ViewChild } from "@angular/core";
-import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
-import { FilterMetadata, SortMeta } from "primeng/api";
-import { InputTextModule } from "primeng/inputtext";
-import { SortAmountDownIcon } from "primeng/icons/sortamountdown";
-import { SortAmountUpAltIcon } from "primeng/icons/sortamountupalt";
-import { ListboxModule } from "primeng/listbox";
-import { Table, TableModule, TablePageEvent } from "primeng/table";
-import { TooltipModule } from "primeng/tooltip";
+import { Component } from "@angular/core";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import {
-  Bitacora,
-  EstadoSemaforoBitacora,
-  GestionBitacora,
-} from "../bitacora/bitacora";
+  GestionListado,
+  GestionListadoItem,
+} from "../../shared/components/gestion-listado/gestion-listado";
+import { EstadoSemaforoBitacora } from "../bitacora/bitacora";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
 
 type EstadoSemaforo = EstadoSemaforoBitacora;
-type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 type NivelGestion = `N${number}`;
-
-interface EventoOrdenamientoMultiple {
-  multisortmeta?: SortMeta[];
-}
 
 interface AmbitoGestion {
   codigo: string;
   nombre: string;
   terminos: string[];
-}
-
-interface FiltrosPendientes {
-  codigo: string[];
-  idEstacion: string[];
-  comuna: string[];
-  razonSocial: string[];
-  descripcion: string[];
-  semaforoEtiqueta: string[];
-}
-
-interface OpcionFiltro<T> {
-  label: string;
-  value: T | typeof VALOR_TODOS;
 }
 
 interface DatosAsociados {
@@ -53,17 +24,12 @@ interface DatosAsociados {
   semaforo: EstadoSemaforo;
 }
 
-interface GestionEscritorio extends GestionBitacora {
+interface GestionEscritorio extends GestionListadoItem {
   ambito: string;
   codigoAmbito: string;
   correlativo: number;
-  rutRazonSocial: string;
   rutRepresentanteLegal: string;
-  fechaIngreso: string;
-  fechaIngresoOrden: string;
 }
-
-const VALOR_TODOS = "__todos__";
 
 const AMBITOS_GESTION: AmbitoGestion[] = [
   {
@@ -173,25 +139,11 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
 @Component({
   selector: "app-escritorio",
   standalone: true,
-  imports: [
-    Bitacora,
-    Breadcrumbs,
-    CommonModule,
-    FormsModule,
-    InputTextModule,
-    ListboxModule,
-    RouterLink,
-    SortAmountDownIcon,
-    SortAmountUpAltIcon,
-    TableModule,
-    TooltipModule,
-  ],
+  imports: [Breadcrumbs, GestionListado],
   templateUrl: "./escritorio.html",
   styleUrl: "./escritorio.scss",
 })
 export class Escritorio {
-  @ViewChild("tabla") tabla?: Table;
-
   readonly breadcrumbs = [
     {
       label: "Módulo de Gestión de Trámites",
@@ -203,22 +155,6 @@ export class Escritorio {
   ];
 
   readonly gestiones: GestionEscritorio[];
-  readonly codigos: OpcionFiltro<string>[];
-  readonly idsEstacion: OpcionFiltro<string>[];
-  readonly comunas: OpcionFiltro<string>[];
-  readonly razonesSociales: OpcionFiltro<string>[];
-  readonly descripciones: OpcionFiltro<string>[];
-  readonly estadosSemaforo: OpcionFiltro<string>[];
-
-  filtrosTabla: FiltrosTabla = this.crearFiltrosTablaVacios();
-  filtrosPendientes: FiltrosPendientes = this.crearFiltrosPendientes();
-  busquedaGeneral = "";
-  fechaFiltroIso = "";
-  first = 0;
-  rows = 10;
-  ordenamientos: SortMeta[] = [{ field: "fechaIngresoOrden", order: -1 }];
-  gestionBitacoraSeleccionada: GestionBitacora | null = null;
-  bitacoraVisible = false;
 
   constructor(tramitesMock: TramitesMock) {
     const correlativosPorNivel = new Map<NivelGestion, number>();
@@ -231,132 +167,6 @@ export class Escritorio {
 
       return this.crearGestion(tramite, nivel, correlativo);
     });
-    this.codigos = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ codigo }) => codigo)),
-    );
-    this.idsEstacion = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ idEstacion }) => idEstacion)),
-    );
-    this.comunas = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ comuna }) => comuna)),
-    );
-    this.razonesSociales = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ razonSocial }) => razonSocial)),
-    );
-    this.descripciones = this.crearOpciones(
-      this.ordenarTexto(this.gestiones.map(({ descripcion }) => descripcion)),
-    );
-    this.estadosSemaforo = this.crearOpciones(
-      this.ordenarTexto(
-        this.gestiones.map(({ semaforoEtiqueta }) => semaforoEtiqueta),
-      ),
-    );
-  }
-
-  get cantidadResultados(): number {
-    return this.tabla?.filteredValue?.length ?? this.gestiones.length;
-  }
-
-  buscarGestiones(): void {
-    const filtros = this.construirFiltrosTabla();
-
-    this.filtrosTabla = filtros;
-
-    if (this.tabla) {
-      this.tabla.filters = filtros;
-      this.tabla._filter();
-    }
-
-    this.first = 0;
-  }
-
-  limpiarFiltros(): void {
-    this.busquedaGeneral = "";
-    this.fechaFiltroIso = "";
-    this.filtrosPendientes = this.crearFiltrosPendientes();
-    const filtros = this.construirFiltrosTabla();
-
-    this.filtrosTabla = filtros;
-
-    if (this.tabla) {
-      this.tabla.filters = filtros;
-      this.tabla._filter();
-    }
-
-    this.first = 0;
-  }
-
-  actualizarFiltroFecha(fechaIso: string): void {
-    this.fechaFiltroIso = fechaIso;
-  }
-
-  limpiarFiltroFecha(): void {
-    this.fechaFiltroIso = "";
-  }
-
-  abrirBitacora(gestion: GestionEscritorio): void {
-    this.gestionBitacoraSeleccionada = gestion;
-    this.bitacoraVisible = true;
-  }
-
-  pageChange(event: TablePageEvent): void {
-    this.first = event.first;
-    this.rows = event.rows;
-  }
-
-  acumularOrdenamiento(event: EventoOrdenamientoMultiple): void {
-    const ordenamientosGenerados = event.multisortmeta ?? [];
-
-    if (
-      !ordenamientosGenerados.length ||
-      this.sonLosMismosOrdenamientos(ordenamientosGenerados, this.ordenamientos)
-    ) {
-      return;
-    }
-
-    if (ordenamientosGenerados.length > 1) {
-      this.ordenamientos = ordenamientosGenerados.map((ordenamiento) => ({
-        ...ordenamiento,
-      }));
-      return;
-    }
-
-    const ordenamientoSeleccionado = ordenamientosGenerados[0];
-    const ordenamientosAcumulados = this.ordenamientos.map((ordenamiento) => ({
-      ...ordenamiento,
-    }));
-    const indiceExistente = ordenamientosAcumulados.findIndex(
-      ({ field }) => field === ordenamientoSeleccionado.field,
-    );
-
-    if (indiceExistente >= 0) {
-      ordenamientosAcumulados[indiceExistente] = {
-        ...ordenamientoSeleccionado,
-      };
-    } else {
-      ordenamientosAcumulados.push({ ...ordenamientoSeleccionado });
-    }
-
-    this.ordenamientos = ordenamientosAcumulados;
-
-    if (this.tabla) {
-      this.tabla.multiSortMeta = this.ordenamientos;
-      this.tabla.sortMultiple();
-    }
-  }
-
-  private sonLosMismosOrdenamientos(
-    primeros: SortMeta[],
-    segundos: SortMeta[],
-  ): boolean {
-    return (
-      primeros.length === segundos.length &&
-      primeros.every(
-        (ordenamiento, indice) =>
-          ordenamiento.field === segundos[indice].field &&
-          ordenamiento.order === segundos[indice].order,
-      )
-    );
   }
 
   private crearGestion(
@@ -434,111 +244,5 @@ export class Escritorio {
   private convertirFechaAOrden(fecha: string): string {
     const [dia, mes, anio] = fecha.split("-");
     return `${anio}-${mes}-${dia}`;
-  }
-
-  private construirFiltrosTabla(): FiltrosTabla {
-    const filtros = this.crearFiltrosTablaVacios();
-
-    this.agregarFiltroOpciones(
-      filtros,
-      "codigo",
-      this.filtrosPendientes.codigo,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "idEstacion",
-      this.filtrosPendientes.idEstacion,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "comuna",
-      this.filtrosPendientes.comuna,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "razonSocial",
-      this.filtrosPendientes.razonSocial,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "descripcion",
-      this.filtrosPendientes.descripcion,
-    );
-    this.agregarFiltroOpciones(
-      filtros,
-      "semaforoEtiqueta",
-      this.filtrosPendientes.semaforoEtiqueta,
-    );
-
-    const busqueda = this.busquedaGeneral.trim().toLocaleLowerCase("es-CL");
-
-    if (busqueda) {
-      filtros["global"] = { value: busqueda, matchMode: "contains" };
-    }
-
-    if (this.fechaFiltroIso) {
-      filtros["fechaIngreso"] = [
-        {
-          value: this.convertirFechaIso(this.fechaFiltroIso),
-          matchMode: "equals",
-          operator: "and",
-        },
-      ];
-    }
-
-    return filtros;
-  }
-
-  private agregarFiltroOpciones(
-    filtros: FiltrosTabla,
-    campo: keyof FiltrosPendientes,
-    valores: string[],
-  ): void {
-    if (!valores.length || valores.includes(VALOR_TODOS)) {
-      return;
-    }
-
-    filtros[campo] = [{ value: valores, matchMode: "in", operator: "and" }];
-  }
-
-  private crearFiltrosTablaVacios(): FiltrosTabla {
-    return {
-      codigo: [{ value: null, matchMode: "in", operator: "and" }],
-      idEstacion: [{ value: null, matchMode: "in", operator: "and" }],
-      comuna: [{ value: null, matchMode: "in", operator: "and" }],
-      razonSocial: [{ value: null, matchMode: "in", operator: "and" }],
-      descripcion: [{ value: null, matchMode: "in", operator: "and" }],
-      semaforoEtiqueta: [{ value: null, matchMode: "in", operator: "and" }],
-      fechaIngreso: [{ value: null, matchMode: "equals", operator: "and" }],
-    };
-  }
-
-  private crearFiltrosPendientes(): FiltrosPendientes {
-    return {
-      codigo: [],
-      idEstacion: [],
-      comuna: [],
-      razonSocial: [],
-      descripcion: [],
-      semaforoEtiqueta: [],
-    };
-  }
-
-  private crearOpciones<T>(valores: T[]): OpcionFiltro<T>[] {
-    return [
-      { label: "Todos", value: VALOR_TODOS },
-      ...valores.map((valor) => ({ label: String(valor), value: valor })),
-    ];
-  }
-
-  private ordenarTexto(valores: string[]): string[] {
-    return [...new Set(valores)].sort((a, b) =>
-      a.localeCompare(b, "es-CL", { sensitivity: "base", numeric: true }),
-    );
-  }
-
-  private convertirFechaIso(fechaIso: string): string {
-    const [anio, mes, dia] = fechaIso.split("-");
-    return `${dia}-${mes}-${anio}`;
   }
 }
