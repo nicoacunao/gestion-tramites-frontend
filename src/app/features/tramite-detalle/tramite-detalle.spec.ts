@@ -32,37 +32,30 @@ describe("TramiteDetalle", () => {
     });
   });
 
-  it("muestra gestiones dependientes de niveles inferiores antes de los antecedentes", () => {
+  it("aplica los niveles y su jerarquía directamente a los antecedentes", () => {
     expect(
-      componente.gestionesNivelesInferiores.map(({ nivel }) => nivel),
-    ).toEqual(["N2", "N2"]);
+      componente.antecedentesRequeridosVisibles.map(
+        ({ antecedente }) => antecedente.nivel,
+      ),
+    ).toEqual(["N2", "N3", "N3"]);
+    expect(
+      componente.antecedentesComplementariosVisibles.map(
+        ({ antecedente }) => antecedente.nivel,
+      ),
+    ).toEqual(["N2", "N3"]);
 
-    const gestionConDependencias = componente.gestionesNivelesInferiores[1];
-    expect(
-      gestionConDependencias.gestionesHijas.map(({ nivel }) => nivel),
-    ).toEqual(["N3", "N3"]);
-    expect(
-      gestionConDependencias.gestionesHijas[0].gestionesHijas[0].nivel,
-    ).toBe("N4");
-    expect(
-      componente.gestionesVisibles.map(({ gestion }) => gestion.nivel),
-    ).toEqual(["N2", "N2"]);
-
-    componente.alternarGestionInferior(gestionConDependencias);
-    expect(gestionConDependencias.expandida).toBe(true);
-    expect(
-      componente.gestionesVisibles.map(({ gestion }) => gestion.nivel),
-    ).toEqual(["N2", "N2", "N3", "N3"]);
-
-    componente.alternarGestionInferior(
-      gestionConDependencias.gestionesHijas[0],
+    const antecedentePadre = componente.antecedentesRequeridos[0];
+    componente.alternarAntecedente(
+      antecedentePadre,
+      componente.antecedentesRequeridos,
     );
-    expect(
-      componente.gestionesVisibles.map(({ gestion }) => gestion.nivel),
-    ).toEqual(["N2", "N2", "N3", "N4", "N3"]);
 
-    componente.contraerGestionesInferiores();
-    expect(gestionConDependencias.expandida).toBe(false);
+    expect(antecedentePadre.expandido).toBe(false);
+    expect(
+      componente.antecedentesRequeridosVisibles.map(
+        ({ antecedente }) => antecedente.nivel,
+      ),
+    ).toEqual(["N2"]);
   });
 
   it("asocia un documento adicional y registra su contexto en la bitácora", () => {

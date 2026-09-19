@@ -104,13 +104,6 @@
           <dd>{{ tramite.prioridad }}</dd>
         </div>
         <div class="general-item">
-          <!-- <dt>Nivel en este encargo</dt>
-          <dd class="current-level">
-            <span class="level-badge">{{ nivelGestionActual }}</span>
-            <span>Definido por su relación con la solicitud principal</span>
-          </dd> -->
-        </div>
-        <div class="general-item">
           <dt>Responsable interno</dt>
           <dd>{{ tramite.responsableInterno }}</dd>
         </div>
@@ -123,111 +116,6 @@
 
     <div class="detail-sections">
       <ng-container *ngTemplateOutlet="bitacoraPanel" />
-
-      <p-panel
-        header="Gestiones de niveles inferiores"
-        styleClass="detail-panel lower-level-panel"
-        [toggleable]="true"
-      >
-        <!-- <div class="concept-note concept-note--lower-levels">
-          <span class="concept-note__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M7 4v5M7 9h10M17 9v4M11 13v7M17 13v7"></path>
-              <circle cx="7" cy="4" r="2"></circle>
-              <circle cx="11" cy="20" r="2"></circle>
-              <circle cx="17" cy="20" r="2"></circle>
-            </svg>
-          </span>
-          <div>
-            <strong>Gestiones dependientes del trámite principal</strong>
-            <p>
-              El nivel depende del contexto del encargo. Se muestran primero las
-              gestiones N2; despliega cada una para consultar sus N3 y N4.
-            </p>
-          </div>
-        </div> -->
-
-        <!-- <div class="hierarchy-summary">
-          {{ gestionesNivelesInferiores.length }} gestiones N2 asociadas
-        </div> -->
-
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0 management-table">
-            <thead>
-              <tr>
-                <th>Nivel</th>
-                <th>Código</th>
-                <th>Gestión</th>
-                <th>Estado</th>
-                <th>Responsable</th>
-                <th>Fecha estimada</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of gestionesVisibles; track item.gestion.id) {
-              <tr
-                [class.management-row--nested]="item.profundidad > 0"
-                [class.management-row--deep]="item.profundidad > 1"
-              >
-                <td>
-                  <div
-                    class="management-level-cell"
-                    [style.padding-left.px]="item.profundidad * 28"
-                  >
-                    @if (item.gestion.gestionesHijas.length) {
-                    <button
-                      type="button"
-                      class="tree-toggle"
-                      [attr.aria-expanded]="item.gestion.expandida"
-                      [attr.aria-label]="
-                        (item.gestion.expandida ? 'Ocultar' : 'Mostrar') +
-                        ' gestiones dependientes de ' +
-                        item.gestion.gestion
-                      "
-                      (click)="alternarGestionInferior(item.gestion)"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          [attr.d]="
-                            item.gestion.expandida
-                              ? 'm6 9 6 6 6-6'
-                              : 'm9 6 6 6-6 6'
-                          "
-                        ></path>
-                      </svg>
-                    </button>
-                    } @else {
-                    <span
-                      class="tree-toggle-placeholder"
-                      aria-hidden="true"
-                    ></span>
-                    }
-                    <span class="level-badge">{{ item.gestion.nivel }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span class="management-code">{{ item.gestion.codigo }}</span>
-                </td>
-                <td class="management-description">
-                  <strong>{{ item.gestion.gestion }}</strong>
-                  <span>{{ item.gestion.dependencia }}</span>
-                </td>
-                <td>
-                  <p-tag
-                    [severity]="obtenerSeveridadEstado(item.gestion.estado)"
-                    [rounded]="true"
-                  >
-                    {{ item.gestion.estado }}
-                  </p-tag>
-                </td>
-                <td>{{ item.gestion.responsable }}</td>
-                <td>{{ item.gestion.fechaEstimada }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </p-panel>
 
       <p-panel
         header="Antecedentes requeridos"
@@ -251,9 +139,12 @@
         </div> -->
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
+          <table
+            class="table table-hover align-middle mb-0 levelled-antecedents-table"
+          >
             <thead>
               <tr>
+                <th class="level-column">Nivel</th>
                 <th>Antecedente</th>
                 <th>Condición</th>
                 <th>Responsable</th>
@@ -264,29 +155,84 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of antecedentesRequeridos">
-                <td>{{ item.antecedente }}</td>
-                <td>{{ item.obligatorio ? "Obligatorio" : "Opcional" }}</td>
-                <td>{{ item.responsable }}</td>
+              @for (fila of antecedentesRequeridosVisibles; track
+              fila.antecedente.id) {
+              <tr
+                [class.antecedent-row--nested]="fila.profundidad > 0"
+                [class.antecedent-row--deep]="fila.profundidad > 1"
+              >
+                <td class="level-column">
+                  <span class="level-badge">
+                    {{ fila.antecedente.nivel }}
+                  </span>
+                </td>
+                <td>
+                  <div
+                    class="antecedent-name"
+                    [style.padding-left.px]="fila.profundidad * 24"
+                  >
+                    @if (fila.profundidad > 0) {
+                    <span class="hierarchy-branch" aria-hidden="true"></span>
+                    }
+                    <span>{{ fila.antecedente.antecedente }}</span>
+                  </div>
+                </td>
+                <td>
+                  {{ fila.antecedente.obligatorio ? "Obligatorio" : "Opcional"
+                  }}
+                </td>
+                <td>{{ fila.antecedente.responsable }}</td>
                 <td>
                   <p-tag
-                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [severity]="
+                      obtenerSeveridadEstado(fila.antecedente.estado)
+                    "
                     [rounded]="true"
                   >
-                    {{ item.estado }}
+                    {{ fila.antecedente.estado }}
                   </p-tag>
                 </td>
-                <td>{{ item.fechaCarga }}</td>
-                <td class="file-name">{{ item.archivo }}</td>
+                <td>{{ fila.antecedente.fechaCarga }}</td>
+                <td class="file-name">{{ fila.antecedente.archivo }}</td>
                 <td>
                   <div class="table-actions">
+                    @if (cantidadAntecedentesHijos(fila.antecedente,
+                    antecedentesRequeridos); as cantidad) {
+                    <button
+                      type="button"
+                      class="hierarchy-toggle"
+                      [attr.aria-expanded]="fila.antecedente.expandido"
+                      [attr.aria-label]="
+                        (fila.antecedente.expandido ? 'Ocultar' : 'Mostrar') +
+                        ' antecedentes de ' +
+                        fila.antecedente.antecedente
+                      "
+                      (click)="
+                        alternarAntecedente(
+                          fila.antecedente,
+                          antecedentesRequeridos
+                        )
+                      "
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                        ></path>
+                        <circle cx="12" cy="12" r="2.5"></circle>
+                        @if (fila.antecedente.expandido) {
+                        <path d="m4 4 16 16"></path>
+                        }
+                      </svg>
+                      <span>{{ cantidad }}</span>
+                    </button>
+                    }
                     <button
                       pButton
                       type="button"
                       severity="secondary"
                       [text]="true"
                       size="small"
-                      [disabled]="!tieneArchivo(item.archivo)"
+                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
                     >
                       Descargar
                     </button>
@@ -296,13 +242,14 @@
                       severity="secondary"
                       [text]="true"
                       size="small"
-                      [disabled]="!tieneArchivo(item.archivo)"
+                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
                     >
                       Revisar
                     </button>
                   </div>
                 </td>
               </tr>
+              }
             </tbody>
           </table>
         </div>
@@ -443,9 +390,12 @@
         </div> -->
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
+          <table
+            class="table table-hover align-middle mb-0 levelled-antecedents-table"
+          >
             <thead>
               <tr>
+                <th class="level-column">Nivel</th>
                 <th>Tipo de documento</th>
                 <th>Solicitado por</th>
                 <th>Responsable</th>
@@ -456,29 +406,81 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of antecedentesComplementarios">
-                <td>{{ item.tipoDocumento }}</td>
-                <td>{{ item.solicitadoPor }}</td>
-                <td>{{ item.responsable }}</td>
+              @for (fila of antecedentesComplementariosVisibles; track
+              fila.antecedente.id) {
+              <tr
+                [class.antecedent-row--nested]="fila.profundidad > 0"
+                [class.antecedent-row--deep]="fila.profundidad > 1"
+              >
+                <td class="level-column">
+                  <span class="level-badge">
+                    {{ fila.antecedente.nivel }}
+                  </span>
+                </td>
+                <td>
+                  <div
+                    class="antecedent-name"
+                    [style.padding-left.px]="fila.profundidad * 24"
+                  >
+                    @if (fila.profundidad > 0) {
+                    <span class="hierarchy-branch" aria-hidden="true"></span>
+                    }
+                    <span>{{ fila.antecedente.tipoDocumento }}</span>
+                  </div>
+                </td>
+                <td>{{ fila.antecedente.solicitadoPor }}</td>
+                <td>{{ fila.antecedente.responsable }}</td>
                 <td>
                   <p-tag
-                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [severity]="
+                      obtenerSeveridadEstado(fila.antecedente.estado)
+                    "
                     [rounded]="true"
                   >
-                    {{ item.estado }}
+                    {{ fila.antecedente.estado }}
                   </p-tag>
                 </td>
-                <td>{{ item.fechaCarga }}</td>
-                <td class="file-name">{{ item.archivo }}</td>
+                <td>{{ fila.antecedente.fechaCarga }}</td>
+                <td class="file-name">{{ fila.antecedente.archivo }}</td>
                 <td>
                   <div class="table-actions">
+                    @if (cantidadAntecedentesHijos(fila.antecedente,
+                    antecedentesComplementarios); as cantidad) {
+                    <button
+                      type="button"
+                      class="hierarchy-toggle"
+                      [attr.aria-expanded]="fila.antecedente.expandido"
+                      [attr.aria-label]="
+                        (fila.antecedente.expandido ? 'Ocultar' : 'Mostrar') +
+                        ' antecedentes de ' +
+                        fila.antecedente.tipoDocumento
+                      "
+                      (click)="
+                        alternarAntecedente(
+                          fila.antecedente,
+                          antecedentesComplementarios
+                        )
+                      "
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                        ></path>
+                        <circle cx="12" cy="12" r="2.5"></circle>
+                        @if (fila.antecedente.expandido) {
+                        <path d="m4 4 16 16"></path>
+                        }
+                      </svg>
+                      <span>{{ cantidad }}</span>
+                    </button>
+                    }
                     <button
                       pButton
                       type="button"
                       severity="secondary"
                       [text]="true"
                       size="small"
-                      [disabled]="!tieneArchivo(item.archivo)"
+                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
                     >
                       Descargar
                     </button>
@@ -488,13 +490,14 @@
                       severity="secondary"
                       [text]="true"
                       size="small"
-                      [disabled]="!tieneArchivo(item.archivo)"
+                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
                     >
                       Revisar
                     </button>
                   </div>
                 </td>
               </tr>
+              }
             </tbody>
           </table>
         </div>

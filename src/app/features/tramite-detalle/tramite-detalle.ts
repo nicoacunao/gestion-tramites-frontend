@@ -38,21 +38,33 @@ interface EntradaBitacora {
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
-interface GestionNivelInferior {
+interface AntecedenteConNivel {
   id: string;
   nivel: Exclude<NivelGestion, "N1">;
-  codigo: string;
-  gestion: string;
-  estado: string;
-  responsable: string;
-  fechaEstimada: string;
-  dependencia: string;
-  expandida: boolean;
-  gestionesHijas: GestionNivelInferior[];
+  padreId: string | null;
+  expandido: boolean;
 }
 
-interface GestionVisible {
-  gestion: GestionNivelInferior;
+interface AntecedenteRequerido extends AntecedenteConNivel {
+  antecedente: string;
+  obligatorio: boolean;
+  responsable: string;
+  estado: string;
+  fechaCarga: string;
+  archivo: string;
+}
+
+interface AntecedenteComplementario extends AntecedenteConNivel {
+  tipoDocumento: string;
+  solicitadoPor: string;
+  responsable: string;
+  estado: string;
+  fechaCarga: string;
+  archivo: string;
+}
+
+interface AntecedenteVisible<T extends AntecedenteConNivel> {
+  antecedente: T;
   profundidad: number;
 }
 
@@ -90,7 +102,7 @@ export class TramiteDetalle {
       : undefined;
     this.limpiarFormularioBitacora();
     this.limpiarFormularioDocumento();
-    this.contraerGestionesInferiores();
+    this.restablecerJerarquiaAntecedentes();
   }
 
   get tramiteId(): number | null {
@@ -116,8 +128,12 @@ export class TramiteDetalle {
     "Otro documento",
   ];
 
-  readonly antecedentesRequeridos = [
+  readonly antecedentesRequeridos: AntecedenteRequerido[] = [
     {
+      id: "antecedente-dominio",
+      nivel: "N2",
+      padreId: null,
+      expandido: true,
       antecedente: "Certificado de dominio vigente",
       obligatorio: true,
       responsable: "Concesionario",
@@ -126,6 +142,10 @@ export class TramiteDetalle {
       archivo: "certificado-dominio.pdf",
     },
     {
+      id: "antecedente-plano",
+      nivel: "N3",
+      padreId: "antecedente-dominio",
+      expandido: false,
       antecedente: "Plano de instalaciones",
       obligatorio: true,
       responsable: "Oficina técnica",
@@ -134,6 +154,10 @@ export class TramiteDetalle {
       archivo: "plano-instalaciones-v2.pdf",
     },
     {
+      id: "antecedente-formulario",
+      nivel: "N3",
+      padreId: "antecedente-dominio",
+      expandido: false,
       antecedente: "Formulario de ingreso",
       obligatorio: true,
       responsable: "Concesionario",
@@ -143,74 +167,12 @@ export class TramiteDetalle {
     },
   ];
 
-  readonly gestionesNivelesInferiores: GestionNivelInferior[] = [
+  readonly antecedentesComplementarios: AntecedenteComplementario[] = [
     {
-      id: "gestion-zonificacion",
+      id: "antecedente-seguridad",
       nivel: "N2",
-      codigo: "N2-MUN-001-A",
-      gestion: "Obtención del certificado de zonificación",
-      estado: "Completado",
-      responsable: "Oficina técnica",
-      fechaEstimada: "04-07-2026",
-      dependencia: "Requerido para preparar el expediente municipal.",
-      expandida: false,
-      gestionesHijas: [],
-    },
-    {
-      id: "gestion-obra-menor",
-      nivel: "N2",
-      codigo: "N2-DOM-001-B",
-      gestion: "Regularización de obra menor",
-      estado: "En curso",
-      responsable: "María González",
-      fechaEstimada: "16-07-2026",
-      dependencia: "Debe finalizar antes del reingreso de antecedentes.",
-      expandida: false,
-      gestionesHijas: [
-        {
-          id: "gestion-certificacion-electrica",
-          nivel: "N3",
-          codigo: "N3-SEC-001-C",
-          gestion: "Certificación de instalación eléctrica",
-          estado: "Pendiente",
-          responsable: "Prevención de riesgos",
-          fechaEstimada: "19-07-2026",
-          dependencia: "Necesaria para cerrar la regularización de obra menor.",
-          expandida: false,
-          gestionesHijas: [
-            {
-              id: "gestion-respuesta-sec",
-              nivel: "N4",
-              codigo: "N4-SEC-001-D",
-              gestion: "Respuesta a observaciones de la SEC",
-              estado: "Pendiente",
-              responsable: "Oficina técnica",
-              fechaEstimada: "22-07-2026",
-              dependencia:
-                "Se activa únicamente si la SEC formula observaciones.",
-              expandida: false,
-              gestionesHijas: [],
-            },
-          ],
-        },
-        {
-          id: "gestion-presentacion-dom",
-          nivel: "N3",
-          codigo: "N3-DOM-001-E",
-          gestion: "Presentación complementaria ante la DOM",
-          estado: "En curso",
-          responsable: "María González",
-          fechaEstimada: "18-07-2026",
-          dependencia: "Complementa los antecedentes de la gestión N2.",
-          expandida: false,
-          gestionesHijas: [],
-        },
-      ],
-    },
-  ];
-
-  readonly antecedentesComplementarios = [
-    {
+      padreId: null,
+      expandido: true,
       tipoDocumento: "Informe complementario de seguridad",
       solicitadoPor: "Municipalidad de Concón",
       responsable: "Prevención de riesgos",
@@ -219,6 +181,10 @@ export class TramiteDetalle {
       archivo: "informe-seguridad.pdf",
     },
     {
+      id: "antecedente-matrimonio",
+      nivel: "N3",
+      padreId: "antecedente-seguridad",
+      expandido: false,
       tipoDocumento: "Certificado de matrimonio",
       solicitadoPor: "Municipalidad de Concón",
       responsable: "Concesionario",
@@ -329,32 +295,16 @@ export class TramiteDetalle {
     );
   }
 
-  get nivelGestionActual(): NivelGestion {
-    return this.tramite?.modalidadCreacion === "subtramite" ? "N2" : "N1";
-  }
-
   get puedeAdjuntarAntecedente(): boolean {
     return Boolean(this.tipoAntecedenteNuevo && this.archivoAntecedenteNuevo);
   }
 
-  get gestionesVisibles(): GestionVisible[] {
-    const gestiones: GestionVisible[] = [];
+  get antecedentesRequeridosVisibles(): AntecedenteVisible<AntecedenteRequerido>[] {
+    return this.obtenerAntecedentesVisibles(this.antecedentesRequeridos);
+  }
 
-    const agregarGestiones = (
-      items: GestionNivelInferior[],
-      profundidad: number,
-    ): void => {
-      items.forEach((gestion) => {
-        gestiones.push({ gestion, profundidad });
-
-        if (gestion.expandida) {
-          agregarGestiones(gestion.gestionesHijas, profundidad + 1);
-        }
-      });
-    };
-
-    agregarGestiones(this.gestionesNivelesInferiores, 0);
-    return gestiones;
+  get antecedentesComplementariosVisibles(): AntecedenteVisible<AntecedenteComplementario>[] {
+    return this.obtenerAntecedentesVisibles(this.antecedentesComplementarios);
   }
 
   actualizarVisibilidad(visible: boolean): void {
@@ -432,6 +382,10 @@ export class TramiteDetalle {
     const hora = this.formatearHora(ahora);
 
     this.antecedentesComplementarios.unshift({
+      id: `antecedente-adicional-${ahora.getTime()}`,
+      nivel: "N2",
+      padreId: null,
+      expandido: false,
       tipoDocumento,
       solicitadoPor: "Durante la gestión",
       responsable: usuario.fullName,
@@ -471,23 +425,27 @@ export class TramiteDetalle {
     this.limpiarArchivoSeleccionado();
   }
 
-  alternarGestionInferior(gestion: GestionNivelInferior): void {
-    if (!gestion.gestionesHijas.length) {
+  alternarAntecedente(
+    antecedente: AntecedenteConNivel,
+    antecedentes: readonly AntecedenteConNivel[],
+  ): void {
+    if (!this.cantidadAntecedentesHijos(antecedente, antecedentes)) {
       return;
     }
 
-    gestion.expandida = !gestion.expandida;
+    antecedente.expandido = !antecedente.expandido;
 
-    if (!gestion.expandida) {
-      this.contraerDescendientes(gestion);
+    if (!antecedente.expandido) {
+      this.contraerDescendientes(antecedente, antecedentes);
     }
   }
 
-  contraerGestionesInferiores(): void {
-    this.gestionesNivelesInferiores.forEach((gestion) => {
-      gestion.expandida = false;
-      this.contraerDescendientes(gestion);
-    });
+  cantidadAntecedentesHijos(
+    antecedente: AntecedenteConNivel,
+    antecedentes: readonly AntecedenteConNivel[],
+  ): number {
+    return antecedentes.filter(({ padreId }) => padreId === antecedente.id)
+      .length;
   }
 
   limpiarMensajeBitacora(): void {
@@ -580,11 +538,60 @@ export class TramiteDetalle {
     }
   }
 
-  private contraerDescendientes(gestion: GestionNivelInferior): void {
-    gestion.gestionesHijas.forEach((hija) => {
-      hija.expandida = false;
-      this.contraerDescendientes(hija);
+  private obtenerAntecedentesVisibles<T extends AntecedenteConNivel>(
+    antecedentes: readonly T[],
+  ): AntecedenteVisible<T>[] {
+    const antecedentesPorId = new Map(
+      antecedentes.map((antecedente) => [antecedente.id, antecedente]),
+    );
+
+    return antecedentes.flatMap((antecedente) => {
+      let profundidad = 0;
+      let padreId = antecedente.padreId;
+      const idsVisitados = new Set<string>();
+
+      while (padreId) {
+        if (idsVisitados.has(padreId)) {
+          return [];
+        }
+
+        idsVisitados.add(padreId);
+        const padre = antecedentesPorId.get(padreId);
+
+        if (!padre || !padre.expandido) {
+          return [];
+        }
+
+        profundidad += 1;
+        padreId = padre.padreId;
+      }
+
+      return [{ antecedente, profundidad }];
     });
+  }
+
+  private restablecerJerarquiaAntecedentes(): void {
+    [this.antecedentesRequeridos, this.antecedentesComplementarios].forEach(
+      (antecedentes) => {
+        antecedentes.forEach((antecedente) => {
+          antecedente.expandido =
+            antecedente.padreId === null &&
+            this.cantidadAntecedentesHijos(antecedente, antecedentes) > 0;
+        });
+      },
+    );
+  }
+
+  private contraerDescendientes(
+    antecedente: AntecedenteConNivel,
+    antecedentes: readonly AntecedenteConNivel[],
+  ): void {
+    antecedentes
+      .filter(({ padreId }) => padreId === antecedente.id)
+      .forEach((hijo) => {
+        hijo.expandido = false;
+        this.contraerDescendientes(hijo, antecedentes);
+      });
   }
 
   private obtenerIniciales(nombre: string): string {
