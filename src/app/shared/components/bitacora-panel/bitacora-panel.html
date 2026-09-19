@@ -1,0 +1,153 @@
+<div class="bitacora-panel">
+  <section class="composer-card" [attr.aria-labelledby]="formularioTituloId">
+    <div class="section-heading">
+      <span class="section-heading__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 20h8M16 4.5a2.1 2.1 0 0 1 3 3L8 18.5 4 20l1.5-4L16 4.5Z"
+          ></path>
+        </svg>
+      </span>
+      <h3 [id]="formularioTituloId">Agregar una novedad</h3>
+    </div>
+
+    <form (ngSubmit)="registrarEntrada()" novalidate>
+      <div class="field-group">
+        <label [for]="tituloId">Título de la novedad</label>
+        <input
+          [id]="tituloId"
+          name="tituloBitacora"
+          type="text"
+          [(ngModel)]="tituloNuevo"
+          (ngModelChange)="limpiarMensajes()"
+          [maxlength]="maximoCaracteresTitulo"
+          [attr.aria-invalid]="
+            mensajeValidacion && !tituloNuevo.trim() ? 'true' : 'false'
+          "
+          [attr.aria-describedby]="
+            mensajeValidacion && !tituloNuevo.trim() ? errorId : null
+          "
+          placeholder="Ej.: Retraso por cierre de la institución"
+        />
+
+        <div class="composer-meta">
+          <span
+            [class.composer-meta__count--warning]="
+              caracteresRestantesTitulo < 15
+            "
+          >
+            {{ tituloNuevo.length }}/{{ maximoCaracteresTitulo }}
+          </span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label [for]="comentarioId">Comentario o descripción</label>
+        <textarea
+          [id]="comentarioId"
+          name="comentarioBitacora"
+          [(ngModel)]="comentarioNuevo"
+          (ngModelChange)="limpiarMensajes()"
+          [maxlength]="maximoCaracteres"
+          [attr.aria-invalid]="
+            mensajeValidacion && !comentarioNuevo.trim() ? 'true' : 'false'
+          "
+          [attr.aria-describedby]="
+            mensajeValidacion && !comentarioNuevo.trim() ? errorId : null
+          "
+          rows="4"
+          placeholder="Ej.: La institución informó un retraso y comprometió respuesta para el viernes."
+        ></textarea>
+
+        <div class="composer-meta">
+          <span
+            [class.composer-meta__count--warning]="caracteresRestantes < 100"
+          >
+            {{ comentarioNuevo.length }}/{{ maximoCaracteres }}
+          </span>
+        </div>
+      </div>
+
+      @if (mensajeValidacion) {
+      <p [id]="errorId" class="form-message form-message--error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7.5v5M12 16.5h.01"></path>
+        </svg>
+        {{ mensajeValidacion }}
+      </p>
+      } @if (mensajeConfirmacion) {
+      <p class="form-message form-message--success" role="status">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="m8 12 2.5 2.5L16 9"></path>
+        </svg>
+        {{ mensajeConfirmacion }}
+      </p>
+      }
+
+      <div class="composer-actions">
+        <button
+          type="submit"
+          class="primary-button"
+          [disabled]="!puedeRegistrar"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          Agregar a la bitácora
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="history" [attr.aria-labelledby]="historialTituloId">
+    <div class="history-heading">
+      <h3 [id]="historialTituloId">Historial de la bitácora</h3>
+      <span class="history-count">
+        {{ entradas.length }} {{ entradas.length === 1 ? "registro" :
+        "registros" }}
+      </span>
+    </div>
+
+    <p-timeline [value]="entradas" styleClass="bitacora-timeline">
+      <ng-template #opposite let-entrada>
+        <time
+          class="timeline-date"
+          [attr.datetime]="entrada.fechaIso + 'T' + entrada.hora"
+        >
+          <strong>{{ entrada.fecha }}</strong>
+          <span>{{ entrada.hora }}</span>
+        </time>
+      </ng-template>
+
+      <ng-template #marker>
+        <span class="timeline-marker" aria-hidden="true"></span>
+      </ng-template>
+
+      <ng-template #content let-entrada>
+        <article
+          class="entry-card"
+          [class.entry-card--automatic]="entrada.automatica"
+        >
+          <div class="entry-author">
+            <span class="avatar">{{ entrada.iniciales }}</span>
+            <span>
+              <small>Registrado por</small>
+              <strong>{{ entrada.usuario }}</strong>
+            </span>
+          </div>
+
+          <div class="entry-type">
+            <span>{{ entrada.titulo }}</span>
+            @if (entrada.automatica) {
+            <small>Automático</small>
+            }
+          </div>
+
+          <p>{{ entrada.comentario }}</p>
+        </article>
+      </ng-template>
+    </p-timeline>
+  </section>
+</div>

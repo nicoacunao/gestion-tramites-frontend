@@ -1,4 +1,5 @@
 import { UserSessionService } from "../../shared/services/user-session";
+import { EntradaBitacora } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { Bitacora, GestionBitacora } from "./bitacora";
 
 describe("Bitacora", () => {
@@ -56,11 +57,8 @@ describe("Bitacora", () => {
     ).toBe(true);
   });
 
-  it("agrega una entrada con el usuario conectado y limpia el formulario", () => {
-    componente.tituloNuevo = "Retraso excepcional";
-    componente.comentarioNuevo = "  Se informó un retraso excepcional.  ";
-
-    componente.registrarEntrada();
+  it("incorpora al historial la entrada emitida por el panel compartido", () => {
+    componente.agregarEntrada(crearEntrada("Retraso excepcional"));
 
     expect(componente.entradas[0]).toMatchObject({
       usuario: "Jose Luis Rozas",
@@ -70,38 +68,12 @@ describe("Bitacora", () => {
       comentario: "Se informó un retraso excepcional.",
       automatica: false,
     });
-    expect(componente.tituloNuevo).toBe("");
-    expect(componente.comentarioNuevo).toBe("");
-    expect(componente.mensajeConfirmacion).toBe(
-      "La novedad se agregó correctamente.",
-    );
-  });
-
-  it("no agrega comentarios vacíos", () => {
-    const cantidadInicial = componente.entradas.length;
-    componente.tituloNuevo = "Seguimiento a la institución";
-    componente.comentarioNuevo = "   ";
-
-    componente.registrarEntrada();
-
-    expect(componente.entradas).toHaveLength(cantidadInicial);
-    expect(componente.mensajeValidacion).toContain("Escribe un comentario");
-  });
-
-  it("no agrega registros sin título", () => {
-    const cantidadInicial = componente.entradas.length;
-    componente.comentarioNuevo = "La institución informó una novedad.";
-
-    componente.registrarEntrada();
-
-    expect(componente.entradas).toHaveLength(cantidadInicial);
-    expect(componente.mensajeValidacion).toContain("Escribe un título");
   });
 
   it("mantiene historiales independientes por gestión", () => {
-    componente.tituloNuevo = "Primera gestión";
-    componente.comentarioNuevo = "Novedad de la primera gestión";
-    componente.registrarEntrada();
+    componente.agregarEntrada(
+      crearEntrada("Primera gestión", "Novedad de la primera gestión"),
+    );
 
     componente.gestion = { ...gestion, id: 1002, codigo: "N1-SAN-002" };
 
@@ -112,4 +84,22 @@ describe("Bitacora", () => {
       ),
     ).toBe(false);
   });
+
+  function crearEntrada(
+    titulo: string,
+    comentario = "Se informó un retraso excepcional.",
+  ): EntradaBitacora {
+    return {
+      id: `BIT-1001-${titulo}`,
+      fecha: "19-09-2026",
+      fechaIso: "2026-09-19",
+      hora: "10:30",
+      usuario: "Jose Luis Rozas",
+      iniciales: "JL",
+      tipo: "novedad",
+      titulo,
+      comentario,
+      automatica: false,
+    };
+  }
 });

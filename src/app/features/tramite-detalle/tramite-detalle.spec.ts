@@ -86,11 +86,18 @@ describe("TramiteDetalle", () => {
   });
 
   it("registra novedades sin convertir los hitos en comentarios", () => {
-    componente.tituloNuevaEntrada = "Institución cerrada";
-    componente.comentarioNuevaEntrada =
-      "La visita no pudo realizarse y se coordinó una nueva fecha.";
-
-    componente.registrarNovedad();
+    componente.agregarEntradaBitacora({
+      id: "BIT-1001-novedad",
+      fecha: "19-09-2026",
+      fechaIso: "2026-09-19",
+      hora: "10:30",
+      usuario: "Jose Luis Rozas",
+      iniciales: "JL",
+      tipo: "novedad",
+      titulo: "Institución cerrada",
+      comentario: "La visita no pudo realizarse y se coordinó una nueva fecha.",
+      automatica: false,
+    });
 
     expect(componente.bitacora[0]).toMatchObject({
       usuario: "Jose Luis Rozas",
@@ -98,6 +105,5 @@ describe("TramiteDetalle", () => {
       comentario: "La visita no pudo realizarse y se coordinó una nueva fecha.",
       automatica: false,
     });
-    expect(componente.mensajeBitacora).toContain("se agregó correctamente");
   });
 });

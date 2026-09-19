@@ -15,7 +15,10 @@ import { PanelModule } from "primeng/panel";
 import { SelectModule } from "primeng/select";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
-import { TimelineModule } from "primeng/timeline";
+import {
+  BitacoraPanel,
+  EntradaBitacora,
+} from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
 import {
   resolverSeveridadEstado,
@@ -23,18 +26,6 @@ import {
 } from "../tramites/models/estado-tramite";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
-
-interface EntradaBitacora {
-  id: string;
-  fecha: string;
-  fechaIso: string;
-  hora: string;
-  usuario: string;
-  iniciales: string;
-  titulo: string;
-  comentario: string;
-  automatica: boolean;
-}
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
@@ -72,6 +63,7 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
   selector: "app-tramite-detalle",
   standalone: true,
   imports: [
+    BitacoraPanel,
     ButtonDirective,
     CommonModule,
     DialogModule,
@@ -81,7 +73,6 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
     SelectModule,
     TagModule,
     TextareaModule,
-    TimelineModule,
   ],
   templateUrl: "./tramite-detalle.html",
   styleUrl: "./tramite-detalle.scss",
@@ -100,7 +91,6 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
-    this.limpiarFormularioBitacora();
     this.limpiarFormularioDocumento();
     this.restablecerJerarquiaAntecedentes();
   }
@@ -110,9 +100,6 @@ export class TramiteDetalle {
   }
 
   tramite: Tramite | undefined;
-  tituloNuevaEntrada = "";
-  comentarioNuevaEntrada = "";
-  mensajeBitacora = "";
   tipoAntecedenteNuevo: string | null = null;
   archivoAntecedenteNuevo: File | null = null;
   contextoDocumentoNuevo = "";
@@ -289,12 +276,6 @@ export class TramiteDetalle {
     return entradas;
   }
 
-  get puedeRegistrarNovedad(): boolean {
-    return Boolean(
-      this.tituloNuevaEntrada.trim() && this.comentarioNuevaEntrada.trim(),
-    );
-  }
-
   get puedeAdjuntarAntecedente(): boolean {
     return Boolean(this.tipoAntecedenteNuevo && this.archivoAntecedenteNuevo);
   }
@@ -311,7 +292,6 @@ export class TramiteDetalle {
     this.visible = visible;
 
     if (!visible) {
-      this.limpiarFormularioBitacora();
       this.limpiarFormularioDocumento();
     }
 
@@ -322,29 +302,12 @@ export class TramiteDetalle {
     this.actualizarVisibilidad(false);
   }
 
-  registrarNovedad(): void {
-    if (!this.tramite || !this.puedeRegistrarNovedad) {
+  agregarEntradaBitacora(entrada: EntradaBitacora): void {
+    if (!this.tramite) {
       return;
     }
 
-    const ahora = new Date();
-    const usuario = this.userSession.currentUser();
-    const entrada: EntradaBitacora = {
-      id: `BIT-${this.tramite.id}-${ahora.getTime()}`,
-      fecha: this.formatearFecha(ahora),
-      fechaIso: this.formatearFechaIso(ahora),
-      hora: this.formatearHora(ahora),
-      usuario: usuario.fullName,
-      iniciales: usuario.initials,
-      titulo: this.tituloNuevaEntrada.trim(),
-      comentario: this.comentarioNuevaEntrada.trim(),
-      automatica: false,
-    };
-
     this.entradasPorTramite.set(this.tramite.id, [entrada, ...this.bitacora]);
-    this.tituloNuevaEntrada = "";
-    this.comentarioNuevaEntrada = "";
-    this.mensajeBitacora = "La novedad se agregó correctamente.";
   }
 
   seleccionarArchivo(event: Event): void {
@@ -448,10 +411,6 @@ export class TramiteDetalle {
       .length;
   }
 
-  limpiarMensajeBitacora(): void {
-    this.mensajeBitacora = "";
-  }
-
   limpiarMensajeDocumento(): void {
     this.mensajeDocumento = "";
     this.mensajeDocumentoEsError = false;
@@ -515,12 +474,6 @@ export class TramiteDetalle {
         automatica: true,
       },
     ];
-  }
-
-  private limpiarFormularioBitacora(): void {
-    this.tituloNuevaEntrada = "";
-    this.comentarioNuevaEntrada = "";
-    this.mensajeBitacora = "";
   }
 
   private limpiarFormularioDocumento(): void {

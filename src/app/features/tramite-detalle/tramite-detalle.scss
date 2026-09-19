@@ -540,49 +540,6 @@
   }
 }
 
-.log-composer {
-  padding: 18px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #fbfcfe;
-}
-
-.log-composer__heading,
-.log-history-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-
-  h4,
-  p {
-    margin: 0;
-  }
-
-  h4 {
-    color: #263449;
-    font-size: 17px;
-  }
-
-  p {
-    margin-top: 3px;
-    color: var(--detail-muted);
-    font-size: 13px;
-  }
-}
-
-.log-composer__author {
-  color: #53657a;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.log-fields {
-  display: grid;
-  margin-top: 14px;
-  grid-template-columns: minmax(220px, 0.38fr) minmax(320px, 1fr);
-  gap: 12px;
-}
-
 .field-group {
   min-width: 0;
 
@@ -599,14 +556,6 @@
     width: 100%;
     font-size: 14px;
   }
-}
-
-.log-composer__actions {
-  display: flex;
-  margin-top: 12px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
 }
 
 .success-message {
@@ -629,131 +578,6 @@
 
 .success-message--error {
   color: #b42318;
-}
-
-.log-history-header {
-  padding: 18px 20px 12px;
-  align-items: center;
-
-  > span {
-    display: inline-flex;
-    min-height: 25px;
-    padding: 0 9px;
-    align-items: center;
-    border: 1px solid #d4dee9;
-    border-radius: 999px;
-    background: #f7f9fc;
-    color: #64748a;
-    font-size: 13px;
-    font-weight: 700;
-  }
-}
-
-.activity-date {
-  display: flex;
-  padding-top: 7px;
-  flex-direction: column;
-  color: #718095;
-  font-size: 13px;
-  font-style: normal;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.4;
-  text-align: right;
-
-  strong {
-    color: #35465b;
-    font-size: 14px;
-    font-weight: 750;
-  }
-}
-
-.activity-marker {
-  display: block;
-  width: 13px;
-  height: 13px;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  background: #2b6dae;
-  box-shadow: 0 0 0 2px #bad0e7;
-}
-
-.activity-content {
-  padding: 13px 15px;
-  border: 1px solid var(--detail-border);
-  border-radius: 9px;
-  background: #fff;
-
-  h5 {
-    margin: 11px 0 0;
-    color: #2b3b50;
-    font-size: 15px;
-  }
-
-  > p {
-    margin: 5px 0 0;
-    color: #45556a;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-}
-
-.activity-content--automatic {
-  background: #f8fbfe;
-}
-
-.activity-author {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
-
-  > span:nth-child(2) {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-  }
-
-  small {
-    color: #8290a2;
-    font-size: 10px;
-    font-weight: 750;
-    letter-spacing: 0.055em;
-    text-transform: uppercase;
-  }
-
-  strong {
-    overflow: hidden;
-    color: #46566b;
-    font-size: 13px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.avatar {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: #e7eff8;
-  color: #285f97;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.automatic-badge {
-  display: inline-flex;
-  min-height: 21px;
-  padding: 0 7px;
-  margin-left: auto;
-  align-items: center;
-  border-radius: 999px;
-  background: #e9f1fa;
-  color: #326493;
-  font-size: 11px;
-  font-weight: 700;
 }
 
 .not-found {
@@ -879,10 +703,6 @@
     }
   }
 
-  .log-panel .p-panel-content {
-    padding: 0;
-  }
-
   .documents-panel .p-panel-content {
     padding: 0;
   }
@@ -892,57 +712,11 @@
       width: 100%;
     }
   }
-
-  .activity-timeline {
-    padding: 0 20px 20px;
-
-    .p-timeline-event {
-      min-height: 104px;
-    }
-
-    .p-timeline-event-opposite {
-      flex: 0 0 104px;
-      padding: 0 16px 20px 0;
-    }
-
-    .p-timeline-event-separator {
-      flex: 0 0 18px;
-    }
-
-    .p-timeline-event-marker {
-      margin-top: 7px;
-      border: 0;
-      background: transparent;
-    }
-
-    .p-timeline-event-connector {
-      width: 2px;
-      background: #dbe3ee;
-    }
-
-    .p-timeline-event-content {
-      min-width: 0;
-      padding: 0 0 20px 16px;
-    }
-
-    .p-timeline-event:last-child {
-      min-height: auto;
-
-      .p-timeline-event-content,
-      .p-timeline-event-opposite {
-        padding-bottom: 0;
-      }
-    }
-  }
 }
 
 @media (max-width: 960px) {
   .general-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .log-fields {
-    grid-template-columns: 1fr;
   }
 
   .document-fields {
@@ -974,8 +748,6 @@
   }
 
   .general-card__header,
-  .log-composer__heading,
-  .log-composer__actions,
   .document-composer__heading,
   .document-composer__actions {
     align-items: flex-start;
@@ -990,24 +762,7 @@
     grid-column: auto;
   }
 
-  .log-composer__actions button {
-    width: 100%;
-  }
-
   .document-composer__actions button {
     width: 100%;
-  }
-
-  :host ::ng-deep .activity-timeline {
-    padding-inline: 12px;
-
-    .p-timeline-event-opposite {
-      flex-basis: 72px;
-      padding-right: 9px;
-    }
-
-    .p-timeline-event-content {
-      padding-left: 9px;
-    }
   }
 }

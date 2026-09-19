@@ -562,124 +562,13 @@
           styleClass="detail-panel log-panel"
           [toggleable]="true"
         >
-          <!-- <div class="concept-note concept-note--log">
-            <span class="concept-note__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M5 5.5h14v13H5zM8 9h8M8 12h8M8 15h5"></path>
-              </svg>
-            </span>
-            <div>
-              <strong>Novedades y acontecimientos</strong>
-              <p>
-                Registra situaciones ocurridas durante la ejecución, como
-                contactos, retrasos, solicitudes adicionales o excepciones. No
-                reemplaza la hoja de ruta ni los hitos definidos.
-              </p>
-            </div>
-          </div> -->
-
-          <form class="log-composer" (ngSubmit)="registrarNovedad()" novalidate>
-            <div class="log-composer__heading">
-              <!-- <div>
-                <h4>Agregar una novedad</h4>
-                <p>La fecha, hora y usuario se registrarán automáticamente.</p>
-              </div> -->
-              <span class="log-composer__author">
-                {{ userSession.currentUser().fullName }}
-              </span>
-            </div>
-
-            <div class="log-fields">
-              <div class="field-group field-group--title">
-                <label for="titulo-novedad">Título</label>
-                <input
-                  pInputText
-                  id="titulo-novedad"
-                  name="tituloNovedad"
-                  type="text"
-                  [(ngModel)]="tituloNuevaEntrada"
-                  (ngModelChange)="limpiarMensajeBitacora()"
-                  maxlength="80"
-                  placeholder="Ej.: Retraso por cierre de la institución"
-                />
-              </div>
-              <div class="field-group field-group--comment">
-                <label for="comentario-novedad">Comentario o descripción</label>
-                <textarea
-                  pTextarea
-                  id="comentario-novedad"
-                  name="comentarioNovedad"
-                  [(ngModel)]="comentarioNuevaEntrada"
-                  (ngModelChange)="limpiarMensajeBitacora()"
-                  [autoResize]="true"
-                  maxlength="1000"
-                  rows="2"
-                  placeholder="Describe la situación y su contexto"
-                ></textarea>
-              </div>
-            </div>
-
-            <div class="log-composer__actions">
-              @if (mensajeBitacora) {
-              <span class="success-message" role="status">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="m8 12 2.5 2.5L16 9"></path>
-                </svg>
-                {{ mensajeBitacora }}
-              </span>
-              } @else {
-              <span></span>
-              }
-              <button pButton type="submit" [disabled]="!puedeRegistrarNovedad">
-                Agregar a la bitácora
-              </button>
-            </div>
-          </form>
-
-          <div class="log-history-header">
-            <div>
-              <h4>Historial de la bitácora</h4>
-              <p>Registros ordenados desde el más reciente.</p>
-            </div>
-            <span>{{ bitacora.length }} registros</span>
-          </div>
-
-          <p-timeline [value]="bitacora" styleClass="activity-timeline">
-            <ng-template #opposite let-entrada>
-              <time
-                class="activity-date"
-                [attr.datetime]="entrada.fechaIso + 'T' + entrada.hora"
-              >
-                <strong>{{ entrada.fecha }}</strong>
-                <span>{{ entrada.hora }}</span>
-              </time>
-            </ng-template>
-
-            <ng-template #marker>
-              <span class="activity-marker" aria-hidden="true"></span>
-            </ng-template>
-
-            <ng-template #content let-entrada>
-              <article
-                class="activity-content"
-                [class.activity-content--automatic]="entrada.automatica"
-              >
-                <div class="activity-author">
-                  <span class="avatar">{{ entrada.iniciales }}</span>
-                  <span>
-                    <small>Registrado por</small>
-                    <strong>{{ entrada.usuario }}</strong>
-                  </span>
-                  @if (entrada.automatica) {
-                  <span class="automatic-badge">Automático</span>
-                  }
-                </div>
-                <h5>{{ entrada.titulo }}</h5>
-                <p>{{ entrada.comentario }}</p>
-              </article>
-            </ng-template>
-          </p-timeline>
+          <app-bitacora-panel
+            [entradas]="bitacora"
+            [contextoId]="tramite.id"
+            idBase="bitacora-detalle"
+            [activo]="visible"
+            (entradaRegistrada)="agregarEntradaBitacora($event)"
+          />
         </p-panel>
       </ng-template>
 
