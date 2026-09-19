@@ -48,8 +48,6 @@ export class MenuComponent {
         return rutaActual === "/home";
       case "escritorio":
         return rutaActual === "/escritorio";
-      case "tramites-menu":
-        return rutaActual.startsWith("/tramites");
       case "todas-las-gestiones":
         return rutaActual === "/todas-las-gestiones";
       case "ingreso-proyecto":

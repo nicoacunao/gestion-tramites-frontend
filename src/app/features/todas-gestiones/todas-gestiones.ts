@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import {
   GestionListado,
@@ -156,8 +157,17 @@ export class TodasGestiones {
   ];
 
   readonly gestiones: GestionGlobal[];
+  readonly tramiteDetalleInicialId: number | null;
+  readonly idEstacionInicial: string | null;
 
-  constructor(tramitesMock: TramitesMock) {
+  constructor(tramitesMock: TramitesMock, route?: ActivatedRoute) {
+    const detalleParam = route?.snapshot.queryParamMap.get("detalle") ?? null;
+    const detalle = detalleParam === null ? Number.NaN : Number(detalleParam);
+
+    this.tramiteDetalleInicialId = Number.isInteger(detalle) ? detalle : null;
+    this.idEstacionInicial =
+      route?.snapshot.queryParamMap.get("estacion") ?? null;
+
     const tramitesConDetalle = tramitesMock.obtenerTodos();
     const idsConDetalle = new Set(tramitesConDetalle.map(({ id }) => id));
     const tramitesGlobales = [

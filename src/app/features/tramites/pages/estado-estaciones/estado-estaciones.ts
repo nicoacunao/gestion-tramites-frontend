@@ -13,7 +13,6 @@ import { TagModule } from "primeng/tag";
 import { TooltipModule } from "primeng/tooltip";
 import { ToastModule } from "primeng/toast";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
-import { TramitesNavegacion } from "../../services/tramites-navegacion";
 
 type TagSeverity =
   "success" | "secondary" | "info" | "warn" | "danger" | "contrast";
@@ -71,8 +70,8 @@ export class EstadoEstaciones {
 
   readonly breadcrumbs = [
     {
-      label: "Módulo de Gestión de Trámites",
-      route: "/tramites",
+      label: "Todas las gestiones",
+      route: "/todas-las-gestiones",
     },
     {
       label: "Estado de Estaciones",
@@ -91,10 +90,7 @@ export class EstadoEstaciones {
   first = 0;
   rows = 10;
 
-  constructor(
-    private readonly tramitesNavegacion: TramitesNavegacion,
-    private readonly messageService: MessageService,
-  ) {
+  constructor(private readonly messageService: MessageService) {
     const datosEstaciones: DatosEstacion[] = [
       {
         idEstacion: "60001",
@@ -220,10 +216,6 @@ export class EstadoEstaciones {
     this.filtrosTabla = {};
     this.tabla?.clear();
     this.first = 0;
-  }
-
-  prepararConsultaTramites(idEstacion: string): void {
-    this.tramitesNavegacion.prepararFiltroEstacion(idEstacion);
   }
 
   pageChange(event: TablePageEvent): void {

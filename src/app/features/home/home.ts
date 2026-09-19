@@ -129,7 +129,7 @@ export class Home {
       detail: "Se incorporaron nuevos antecedentes a la solicitud.",
       time: "Hace 18 min",
       tone: "success",
-      route: "/tramites/1001",
+      route: "/todas-las-gestiones?detalle=1001",
     },
     {
       title: "Estación 60003 requiere atención",
@@ -139,11 +139,11 @@ export class Home {
       route: "/tramites/estado-estaciones",
     },
     {
-      title: "Listado de trámites sincronizado",
-      detail: "La información disponible está actualizada.",
+      title: "Listado de gestiones sincronizado",
+      detail: "La información de las gestiones está actualizada.",
       time: "Hoy, 08:45",
       tone: "info",
-      route: "/tramites",
+      route: "/todas-las-gestiones",
     },
   ];
 

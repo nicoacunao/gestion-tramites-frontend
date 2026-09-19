@@ -1,13 +1,13 @@
 import { CommonModule } from "@angular/common";
 import { Component, Input, ViewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
 import { FilterMetadata } from "primeng/api";
 import { InputTextModule } from "primeng/inputtext";
 import { ListboxModule } from "primeng/listbox";
 import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TooltipModule } from "primeng/tooltip";
 import { Bitacora, GestionBitacora } from "../../../features/bitacora/bitacora";
+import { TramiteDetalle } from "../../../features/tramite-detalle/tramite-detalle";
 
 type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 
@@ -43,8 +43,8 @@ const VALOR_TODOS = "__todos__";
     FormsModule,
     InputTextModule,
     ListboxModule,
-    RouterLink,
     TableModule,
+    TramiteDetalle,
     TooltipModule,
   ],
   templateUrl: "./gestion-listado.html",
@@ -61,15 +61,30 @@ export class GestionListado {
   @Input() bitacoraPersonal = false;
 
   private _gestiones: GestionListadoItem[] = [];
+  private _detalleInicialId: number | null = null;
+  private _idEstacionInicial: string | null = null;
 
   @Input({ required: true })
   set gestiones(gestiones: GestionListadoItem[]) {
     this._gestiones = gestiones ?? [];
     this.actualizarOpcionesFiltros();
+    this.aplicarSeleccionInicial();
   }
 
   get gestiones(): GestionListadoItem[] {
     return this._gestiones;
+  }
+
+  @Input()
+  set detalleInicialId(detalleInicialId: number | null) {
+    this._detalleInicialId = detalleInicialId;
+    this.aplicarDetalleInicial();
+  }
+
+  @Input()
+  set idEstacionInicial(idEstacionInicial: string | null) {
+    this._idEstacionInicial = idEstacionInicial;
+    this.aplicarFiltroEstacionInicial();
   }
 
   codigos: OpcionFiltro<string>[] = [];
@@ -90,6 +105,8 @@ export class GestionListado {
   readonly direccionOrdenInicial = -1;
   gestionBitacoraSeleccionada: GestionBitacora | null = null;
   bitacoraVisible = false;
+  tramiteDetalleId: number | null = null;
+  detalleTramiteVisible = false;
 
   get cantidadResultados(): number {
     return this.tabla?.filteredValue?.length ?? this.gestiones.length;
@@ -158,9 +175,48 @@ export class GestionListado {
     this.bitacoraVisible = true;
   }
 
+  abrirDetalle(gestion: GestionListadoItem): void {
+    if (gestion.tieneDetalle === false) {
+      return;
+    }
+
+    this.tramiteDetalleId = gestion.id;
+    this.detalleTramiteVisible = true;
+  }
+
   pageChange(event: TablePageEvent): void {
     this.first = event.first;
     this.rows = event.rows;
+  }
+
+  private aplicarSeleccionInicial(): void {
+    this.aplicarFiltroEstacionInicial();
+    this.aplicarDetalleInicial();
+  }
+
+  private aplicarFiltroEstacionInicial(): void {
+    if (!this._idEstacionInicial) {
+      return;
+    }
+
+    this.filtrosPendientes.idEstacion = [this._idEstacionInicial];
+    this.filtrosTabla = this.construirFiltrosTabla();
+    this.first = 0;
+  }
+
+  private aplicarDetalleInicial(): void {
+    if (!this._detalleInicialId) {
+      return;
+    }
+
+    const gestion = this.gestiones.find(
+      ({ id }) => id === this._detalleInicialId,
+    );
+
+    if (gestion?.tieneDetalle !== false) {
+      this.tramiteDetalleId = gestion?.id ?? null;
+      this.detalleTramiteVisible = Boolean(gestion);
+    }
   }
 
   private actualizarOpcionesFiltros(): void {

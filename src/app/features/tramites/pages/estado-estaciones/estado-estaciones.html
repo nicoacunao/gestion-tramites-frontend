@@ -260,9 +260,9 @@
           <td class="col-station-id">
             <a
               class="station-id-link"
-              [routerLink]="['/tramites']"
-              (click)="prepararConsultaTramites(estacion.idEstacion)"
-              pTooltip="Ver trámites de la estación"
+              [routerLink]="['/todas-las-gestiones']"
+              [queryParams]="{ estacion: estacion.idEstacion }"
+              pTooltip="Ver gestiones de la estación"
               tooltipPosition="top"
             >
               {{ estacion.idEstacion }}

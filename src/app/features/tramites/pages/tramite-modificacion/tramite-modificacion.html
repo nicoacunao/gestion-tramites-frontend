@@ -569,7 +569,8 @@
     <div class="form-actions">
       <a
         pButton
-        [routerLink]="['/tramites', tramiteId]"
+        [routerLink]="['/todas-las-gestiones']"
+        [queryParams]="{ detalle: tramiteId }"
         severity="secondary"
         [outlined]="true"
       >

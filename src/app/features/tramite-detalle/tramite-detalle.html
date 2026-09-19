@@ -1,0 +1,758 @@
+<!-- Vista modal compartida por los listados de gestiones. -->
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="actualizarVisibilidad($event)"
+  [modal]="true"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  closeAriaLabel="Cerrar detalle del trámite"
+  [draggable]="false"
+  [resizable]="false"
+  [blockScroll]="true"
+  [style]="{ width: 'min(98vw, 1480px)', height: 'min(94vh, 920px)' }"
+  styleClass="tramite-detail-dialog"
+>
+  <ng-template #header>
+    <div class="dialog-title">
+      <span class="dialog-title__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6 3.5h9.5a2 2 0 0 1 2 2v15H8a2 2 0 0 1-2-2v-15Z"></path>
+          <path d="M8 20.5c0-1.1.9-2 2-2h7.5M9.5 8h5M9.5 11.5h3.5"></path>
+        </svg>
+      </span>
+
+      <div class="dialog-title__content">
+        <span class="dialog-title__eyebrow">Detalle del trámite</span>
+        <div class="dialog-title__heading">
+          <h2>Trámite #{{ tramite?.id ?? tramiteId }}</h2>
+          @if (tramite) {
+          <p-tag
+            [severity]="obtenerSeveridadEstado(tramite.estado)"
+            [rounded]="true"
+          >
+            {{ tramite.estado }}
+          </p-tag>
+          }
+        </div>
+        @if (tramite) {
+        <p class="dialog-title__description">{{ tramite.tipoTramite }}</p>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  @if (tramite) {
+  <article
+    class="detail-content"
+    [attr.aria-label]="'Detalle del trámite ' + tramite.id"
+  >
+    <section class="general-card" aria-labelledby="general-title">
+      <header class="general-card__header">
+        <div>
+          <span class="section-kicker">Información de origen</span>
+          <h3 id="general-title">Datos generales del trámite</h3>
+          <p>
+            Información registrada al momento de crear el trámite. Estos datos
+            se muestran solo para consulta.
+          </p>
+        </div>
+
+        <span class="read-only-badge">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+          </svg>
+          Solo lectura
+        </span>
+      </header>
+
+      <dl class="general-grid">
+        <div class="general-item general-item--featured">
+          <dt>Estación de servicio</dt>
+          <dd>{{ tramite.idEstacion }} · {{ tramite.estacionServicio }}</dd>
+        </div>
+        <div class="general-item">
+          <dt>Comuna</dt>
+          <dd>{{ tramite.comuna }}</dd>
+        </div>
+        <div class="general-item general-item--wide">
+          <dt>Dirección</dt>
+          <dd>{{ tramite.direccion }}</dd>
+        </div>
+        <div class="general-item general-item--wide">
+          <dt>Razón social</dt>
+          <dd>{{ tramite.razonSocial }}</dd>
+        </div>
+        <div class="general-item general-item--wide">
+          <dt>Tipo de trámite</dt>
+          <dd>{{ tramite.tipoTramite }}</dd>
+        </div>
+        <div class="general-item general-item--wide">
+          <dt>Trámite específico</dt>
+          <dd>{{ tramite.tramiteEspecifico }}</dd>
+        </div>
+        <div class="general-item">
+          <dt>Fecha de apertura</dt>
+          <dd>{{ tramite.fechaApertura }}</dd>
+        </div>
+        <div class="general-item">
+          <dt>Fecha estimada de término</dt>
+          <dd>{{ tramite.fechaEstimadaTermino }}</dd>
+        </div>
+        <div class="general-item">
+          <dt>Prioridad</dt>
+          <dd>{{ tramite.prioridad }}</dd>
+        </div>
+        <div class="general-item">
+          <!-- <dt>Nivel en este encargo</dt>
+          <dd class="current-level">
+            <span class="level-badge">{{ nivelGestionActual }}</span>
+            <span>Definido por su relación con la solicitud principal</span>
+          </dd> -->
+        </div>
+        <div class="general-item">
+          <dt>Responsable interno</dt>
+          <dd>{{ tramite.responsableInterno }}</dd>
+        </div>
+        <div class="general-item">
+          <dt>Solicitante Copec</dt>
+          <dd>{{ tramite.solicitanteCopec }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="detail-sections">
+      <ng-container *ngTemplateOutlet="bitacoraPanel" />
+
+      <p-panel
+        header="Gestiones de niveles inferiores"
+        styleClass="detail-panel lower-level-panel"
+        [toggleable]="true"
+      >
+        <!-- <div class="concept-note concept-note--lower-levels">
+          <span class="concept-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 4v5M7 9h10M17 9v4M11 13v7M17 13v7"></path>
+              <circle cx="7" cy="4" r="2"></circle>
+              <circle cx="11" cy="20" r="2"></circle>
+              <circle cx="17" cy="20" r="2"></circle>
+            </svg>
+          </span>
+          <div>
+            <strong>Gestiones dependientes del trámite principal</strong>
+            <p>
+              El nivel depende del contexto del encargo. Se muestran primero las
+              gestiones N2; despliega cada una para consultar sus N3 y N4.
+            </p>
+          </div>
+        </div> -->
+
+        <!-- <div class="hierarchy-summary">
+          {{ gestionesNivelesInferiores.length }} gestiones N2 asociadas
+        </div> -->
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 management-table">
+            <thead>
+              <tr>
+                <th>Nivel</th>
+                <th>Código</th>
+                <th>Gestión</th>
+                <th>Estado</th>
+                <th>Responsable</th>
+                <th>Fecha estimada</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of gestionesVisibles; track item.gestion.id) {
+              <tr
+                [class.management-row--nested]="item.profundidad > 0"
+                [class.management-row--deep]="item.profundidad > 1"
+              >
+                <td>
+                  <div
+                    class="management-level-cell"
+                    [style.padding-left.px]="item.profundidad * 28"
+                  >
+                    @if (item.gestion.gestionesHijas.length) {
+                    <button
+                      type="button"
+                      class="tree-toggle"
+                      [attr.aria-expanded]="item.gestion.expandida"
+                      [attr.aria-label]="
+                        (item.gestion.expandida ? 'Ocultar' : 'Mostrar') +
+                        ' gestiones dependientes de ' +
+                        item.gestion.gestion
+                      "
+                      (click)="alternarGestionInferior(item.gestion)"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          [attr.d]="
+                            item.gestion.expandida
+                              ? 'm6 9 6 6 6-6'
+                              : 'm9 6 6 6-6 6'
+                          "
+                        ></path>
+                      </svg>
+                    </button>
+                    } @else {
+                    <span
+                      class="tree-toggle-placeholder"
+                      aria-hidden="true"
+                    ></span>
+                    }
+                    <span class="level-badge">{{ item.gestion.nivel }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="management-code">{{ item.gestion.codigo }}</span>
+                </td>
+                <td class="management-description">
+                  <strong>{{ item.gestion.gestion }}</strong>
+                  <span>{{ item.gestion.dependencia }}</span>
+                </td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.gestion.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.gestion.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.gestion.responsable }}</td>
+                <td>{{ item.gestion.fechaEstimada }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Antecedentes requeridos"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+      >
+        <!-- <div class="concept-note concept-note--required">
+          <span class="concept-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 3.5h7l3 3v14H7z"></path>
+              <path d="M14 3.5v4h4M9.5 12h5M9.5 15.5h5"></path>
+            </svg>
+          </span>
+          <div>
+            <strong>Definidos para {{ tramite.tipoTramite }}</strong>
+            <p>
+              Estos documentos y requisitos se configuraron automáticamente al
+              seleccionar el tipo de trámite durante su creación.
+            </p>
+          </div>
+        </div> -->
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Antecedente</th>
+                <th>Condición</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Fecha de carga</th>
+                <th>Archivo</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of antecedentesRequeridos">
+                <td>{{ item.antecedente }}</td>
+                <td>{{ item.obligatorio ? "Obligatorio" : "Opcional" }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaCarga }}</td>
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Antecedentes adicionales y documentos"
+        styleClass="detail-panel table-panel documents-panel"
+        [toggleable]="true"
+      >
+        <!-- <div class="concept-note concept-note--documents">
+          <span class="concept-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 3.5h7l3 3v14H7z"></path>
+              <path d="M14 3.5v4h4M9 13h6M12 10v6"></path>
+            </svg>
+          </span>
+          <div>
+            <strong>La evidencia y el contexto quedan vinculados</strong>
+            <p>
+              El archivo se incorpora como evidencia del trámite. Su recepción y
+              la acción realizada se agregan también a la bitácora para
+              conservar el contexto.
+            </p>
+          </div>
+        </div> -->
+
+        <!-- Incorporación de antecedentes adicionales deshabilitada temporalmente.
+        <form
+          class="document-composer"
+          (ngSubmit)="adjuntarAntecedente()"
+          novalidate
+        >
+          <div class="document-composer__heading">
+            <div>
+              <h4>Incorporar un antecedente adicional</h4>
+              <p>Selecciona el tipo de documento y luego adjunta el archivo.</p>
+            </div>
+            <span>PDF, Word, Excel o imagen · Máx. 10 MB</span>
+          </div>
+
+          <div class="document-fields">
+            <div class="field-group">
+              <label for="tipo-antecedente-adicional"
+                >Tipo de antecedente</label
+              >
+              <p-select
+                inputId="tipo-antecedente-adicional"
+                name="tipoAntecedenteAdicional"
+                [(ngModel)]="tipoAntecedenteNuevo"
+                (ngModelChange)="limpiarMensajeDocumento()"
+                [options]="tiposAntecedenteAdicional"
+                placeholder="Selecciona un tipo"
+                appendTo="body"
+                styleClass="w-100"
+              />
+            </div>
+
+            <div class="field-group">
+              <label for="archivo-antecedente-adicional">Archivo</label>
+              <div class="file-picker">
+                <input
+                  #archivoInput
+                  id="archivo-antecedente-adicional"
+                  class="file-picker__input"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                  (change)="seleccionarArchivo($event)"
+                />
+                <label
+                  class="file-picker__button"
+                  for="archivo-antecedente-adicional"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 17V4M7 9l5-5 5 5"></path>
+                    <path d="M5 14v5h14v-5"></path>
+                  </svg>
+                  <span
+                    >{{ archivoAntecedenteNuevo?.name || "Seleccionar archivo"
+                    }}</span
+                  >
+                </label>
+              </div>
+            </div>
+
+            <div class="field-group field-group--context">
+              <label for="contexto-documento">
+                Contexto o acción realizada
+                <span>(opcional)</span>
+              </label>
+              <textarea
+                pTextarea
+                id="contexto-documento"
+                name="contextoDocumento"
+                [(ngModel)]="contextoDocumentoNuevo"
+                (ngModelChange)="limpiarMensajeDocumento()"
+                [autoResize]="true"
+                maxlength="500"
+                rows="2"
+                placeholder="Ej.: La municipalidad entregó el informe; se coordinó la subsanación con la oficina técnica."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="document-composer__actions">
+            @if (mensajeDocumento) {
+            <span
+              class="success-message"
+              [class.success-message--error]="mensajeDocumentoEsError"
+              role="status"
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="m8 12 2.5 2.5L16 9"></path>
+              </svg>
+              {{ mensajeDocumento }}
+            </span>
+            } @else {
+            <span></span>
+            }
+            <button
+              pButton
+              type="submit"
+              [disabled]="!puedeAdjuntarAntecedente"
+            >
+              Incorporar documento
+            </button>
+          </div>
+        </form>
+        -->
+
+        <!-- <div class="document-list-heading">
+          <div>
+            <h4>Documentos incorporados durante la gestión</h4>
+            <p>Disponibles también en la sección de archivos adjuntos.</p>
+          </div>
+          <span>{{ antecedentesComplementarios.length }} documentos</span>
+        </div> -->
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Tipo de documento</th>
+                <th>Solicitado por</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Fecha de carga</th>
+                <th>Archivo</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of antecedentesComplementarios">
+                <td>{{ item.tipoDocumento }}</td>
+                <td>{{ item.solicitadoPor }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaCarga }}</td>
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      [disabled]="!tieneArchivo(item.archivo)"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <p-panel
+        header="Hitos y etapas del trámite"
+        styleClass="detail-panel table-panel milestones-panel"
+        [toggleable]="true"
+      >
+        <!-- <div class="concept-note concept-note--milestones">
+          <span class="concept-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 4v16M5 6h11l-2 3 2 3H5"></path>
+            </svg>
+          </span>
+          <div>
+            <strong>Pasos esperables del proceso</strong>
+            <p>
+              Representan el avance planificado del trámite y no se registran
+              manualmente como comentarios de bitácora.
+            </p>
+          </div>
+        </div> -->
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 milestones-table">
+            <thead>
+              <tr>
+                <th>Hito o etapa</th>
+                <th>Estado</th>
+                <th>Fecha estimada</th>
+                <th>Fecha real</th>
+                <th>Responsable</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of hitosGestion">
+                <td class="milestone-name">{{ item.hito }}</td>
+                <td>
+                  <p-tag
+                    [severity]="obtenerSeveridadEstado(item.estado)"
+                    [rounded]="true"
+                  >
+                    {{ item.estado }}
+                  </p-tag>
+                </td>
+                <td>{{ item.fechaEstimada }}</td>
+                <td>{{ item.fechaReal }}</td>
+                <td>{{ item.responsable }}</td>
+                <td>{{ item.observacion }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+
+      <ng-template #bitacoraPanel>
+        <p-panel
+          header="Bitácora del trámite"
+          styleClass="detail-panel log-panel"
+          [toggleable]="true"
+        >
+          <!-- <div class="concept-note concept-note--log">
+            <span class="concept-note__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 5.5h14v13H5zM8 9h8M8 12h8M8 15h5"></path>
+              </svg>
+            </span>
+            <div>
+              <strong>Novedades y acontecimientos</strong>
+              <p>
+                Registra situaciones ocurridas durante la ejecución, como
+                contactos, retrasos, solicitudes adicionales o excepciones. No
+                reemplaza la hoja de ruta ni los hitos definidos.
+              </p>
+            </div>
+          </div> -->
+
+          <form class="log-composer" (ngSubmit)="registrarNovedad()" novalidate>
+            <div class="log-composer__heading">
+              <!-- <div>
+                <h4>Agregar una novedad</h4>
+                <p>La fecha, hora y usuario se registrarán automáticamente.</p>
+              </div> -->
+              <span class="log-composer__author">
+                {{ userSession.currentUser().fullName }}
+              </span>
+            </div>
+
+            <div class="log-fields">
+              <div class="field-group field-group--title">
+                <label for="titulo-novedad">Título</label>
+                <input
+                  pInputText
+                  id="titulo-novedad"
+                  name="tituloNovedad"
+                  type="text"
+                  [(ngModel)]="tituloNuevaEntrada"
+                  (ngModelChange)="limpiarMensajeBitacora()"
+                  maxlength="80"
+                  placeholder="Ej.: Retraso por cierre de la institución"
+                />
+              </div>
+              <div class="field-group field-group--comment">
+                <label for="comentario-novedad">Comentario o descripción</label>
+                <textarea
+                  pTextarea
+                  id="comentario-novedad"
+                  name="comentarioNovedad"
+                  [(ngModel)]="comentarioNuevaEntrada"
+                  (ngModelChange)="limpiarMensajeBitacora()"
+                  [autoResize]="true"
+                  maxlength="1000"
+                  rows="2"
+                  placeholder="Describe la situación y su contexto"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="log-composer__actions">
+              @if (mensajeBitacora) {
+              <span class="success-message" role="status">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="m8 12 2.5 2.5L16 9"></path>
+                </svg>
+                {{ mensajeBitacora }}
+              </span>
+              } @else {
+              <span></span>
+              }
+              <button pButton type="submit" [disabled]="!puedeRegistrarNovedad">
+                Agregar a la bitácora
+              </button>
+            </div>
+          </form>
+
+          <div class="log-history-header">
+            <div>
+              <h4>Historial de la bitácora</h4>
+              <p>Registros ordenados desde el más reciente.</p>
+            </div>
+            <span>{{ bitacora.length }} registros</span>
+          </div>
+
+          <p-timeline [value]="bitacora" styleClass="activity-timeline">
+            <ng-template #opposite let-entrada>
+              <time
+                class="activity-date"
+                [attr.datetime]="entrada.fechaIso + 'T' + entrada.hora"
+              >
+                <strong>{{ entrada.fecha }}</strong>
+                <span>{{ entrada.hora }}</span>
+              </time>
+            </ng-template>
+
+            <ng-template #marker>
+              <span class="activity-marker" aria-hidden="true"></span>
+            </ng-template>
+
+            <ng-template #content let-entrada>
+              <article
+                class="activity-content"
+                [class.activity-content--automatic]="entrada.automatica"
+              >
+                <div class="activity-author">
+                  <span class="avatar">{{ entrada.iniciales }}</span>
+                  <span>
+                    <small>Registrado por</small>
+                    <strong>{{ entrada.usuario }}</strong>
+                  </span>
+                  @if (entrada.automatica) {
+                  <span class="automatic-badge">Automático</span>
+                  }
+                </div>
+                <h5>{{ entrada.titulo }}</h5>
+                <p>{{ entrada.comentario }}</p>
+              </article>
+            </ng-template>
+          </p-timeline>
+        </p-panel>
+      </ng-template>
+
+      <p-panel
+        header="Archivos adjuntos"
+        styleClass="detail-panel table-panel"
+        [toggleable]="true"
+        [collapsed]="true"
+      >
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Archivo</th>
+                <th>Categoría</th>
+                <th>Documento asociado</th>
+                <th>Fecha de carga</th>
+                <th>Cargado por</th>
+                <th>Opciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of archivosAdjuntos">
+                <td class="file-name">{{ item.archivo }}</td>
+                <td>{{ item.categoria }}</td>
+                <td>{{ item.documento }}</td>
+                <td>{{ item.fechaCarga }}</td>
+                <td>{{ item.cargadoPor }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                    >
+                      Descargar
+                    </button>
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                    >
+                      Revisar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </p-panel>
+    </div>
+  </article>
+  } @else {
+  <div class="not-found" role="status">
+    <span aria-hidden="true">!</span>
+    <div>
+      <h3>Trámite no encontrado</h3>
+      <p>No existe un trámite registrado con el ID {{ tramiteId }}.</p>
+    </div>
+  </div>
+  }
+
+  <ng-template #footer>
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      (click)="cerrar()"
+    >
+      Cerrar
+    </button>
+  </ng-template>
+</p-dialog>

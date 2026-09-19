@@ -1,3 +1,4 @@
+import { ActivatedRoute } from "@angular/router";
 import { TodasGestiones } from "./todas-gestiones";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
@@ -19,6 +20,15 @@ class TramitesMockVolumen extends TramitesMock {
 }
 
 describe("TodasGestiones", () => {
+  const crearRuta = (parametros: Record<string, string>): ActivatedRoute =>
+    ({
+      snapshot: {
+        queryParamMap: {
+          get: (clave: string) => parametros[clave] ?? null,
+        },
+      },
+    }) as unknown as ActivatedRoute;
+
   it("incluye solamente los tres responsables del equipo interno", () => {
     const componente = new TodasGestiones(new TramitesMock());
     const responsables = [
@@ -44,5 +54,15 @@ describe("TodasGestiones", () => {
     expect(componente.gestiones[0].rutRazonSocial).toContain("76.000.");
     expect(componente.gestiones[0].tieneDetalle).toBe(true);
     expect(componente.gestiones.at(-1)?.tieneDetalle).toBe(false);
+  });
+
+  it("recibe enlaces directos al detalle y filtros por estación", () => {
+    const componente = new TodasGestiones(
+      new TramitesMock(),
+      crearRuta({ detalle: "1001", estacion: "60001" }),
+    );
+
+    expect(componente.tramiteDetalleInicialId).toBe(1001);
+    expect(componente.idEstacionInicial).toBe("60001");
   });
 });

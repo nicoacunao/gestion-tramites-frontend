@@ -37,10 +37,8 @@ export const routes: Routes = [
       },
       {
         path: "tramites",
-        loadComponent: () =>
-          import("./features/tramites/pages/tramites-listado/tramites-listado").then(
-            (m) => m.TramitesListado,
-          ),
+        redirectTo: "todas-las-gestiones",
+        pathMatch: "full",
       },
       {
         path: "tramites/nuevo",
@@ -65,10 +63,8 @@ export const routes: Routes = [
       },
       {
         path: "tramites/:id",
-        loadComponent: () =>
-          import("./features/tramites/pages/tramite-detalle/tramite-detalle").then(
-            (m) => m.TramiteDetalle,
-          ),
+        redirectTo: ({ params }) =>
+          `/todas-las-gestiones?detalle=${params["id"]}`,
       },
       //   {
       //     path: 'tramites/:id/seguimiento',

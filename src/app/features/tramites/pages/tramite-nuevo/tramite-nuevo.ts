@@ -100,7 +100,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   readonly segundosRedireccion = 6;
   readonly breadcrumbs = [
-    { label: "Módulo de Gestión de Trámites", route: "/tramites" },
+    { label: "Todas las gestiones", route: "/todas-las-gestiones" },
     { label: "Nuevo Trámite" },
   ];
   readonly modalidadesCreacion = [
@@ -284,13 +284,15 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   cancelar(): void {
-    void this.router.navigate(["/tramites"]);
+    void this.router.navigate(["/todas-las-gestiones"]);
   }
 
   irAlDetalleCreado(): void {
     this.detenerTemporizadorRedireccion();
     this.mensajeCreacionVisible = false;
-    void this.router.navigate(["/tramites", this.tramiteCreadoId]);
+    void this.router.navigate(["/todas-las-gestiones"], {
+      queryParams: { detalle: this.tramiteCreadoId },
+    });
   }
 
   get progresoRedireccion(): number {

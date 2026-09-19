@@ -78,4 +78,22 @@ describe("GestionListado", () => {
       GESTION_BASE.codigo,
     );
   });
+
+  it("abre el detalle del trámite como modal", () => {
+    componente.abrirDetalle(GESTION_BASE);
+
+    expect(componente.detalleTramiteVisible).toBe(true);
+    expect(componente.tramiteDetalleId).toBe(GESTION_BASE.id);
+  });
+
+  it("aplica el detalle y la estación recibidos desde un enlace directo", () => {
+    componente.idEstacionInicial = GESTION_BASE.idEstacion;
+    componente.detalleInicialId = GESTION_BASE.id;
+
+    expect(componente.filtrosPendientes.idEstacion).toEqual([
+      GESTION_BASE.idEstacion,
+    ]);
+    expect(componente.detalleTramiteVisible).toBe(true);
+    expect(componente.tramiteDetalleId).toBe(GESTION_BASE.id);
+  });
 });

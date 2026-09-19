@@ -353,14 +353,12 @@
       <ng-template #body let-gestion>
         <tr>
           <td class="col-id">
-            <a
+            <button
+              type="button"
               class="tramite-link"
               [class.is-disabled]="gestion.tieneDetalle === false"
-              [routerLink]="
-                gestion.tieneDetalle !== false
-                  ? ['/tramites', gestion.id]
-                  : null
-              "
+              [disabled]="gestion.tieneDetalle === false"
+              (click)="abrirDetalle(gestion)"
               [pTooltip]="
                 gestion.tieneDetalle !== false
                   ? 'Ver detalle del trámite'
@@ -369,7 +367,7 @@
               tooltipPosition="top"
             >
               {{ gestion.codigo }}
-            </a>
+            </button>
           </td>
           <td class="col-station">
             <strong>{{ gestion.idEstacion }}</strong>
@@ -500,4 +498,9 @@
   [(visible)]="bitacoraVisible"
   [usarUsuarioActualComoAutor]="bitacoraPersonal"
   [gestion]="gestionBitacoraSeleccionada"
+/>
+
+<app-tramite-detalle
+  [(visible)]="detalleTramiteVisible"
+  [tramiteId]="tramiteDetalleId"
 />

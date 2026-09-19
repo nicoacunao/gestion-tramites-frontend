@@ -163,10 +163,10 @@ export class TramiteModificacion {
     }
 
     this.breadcrumbs = [
-      { label: "Módulo de Gestión de Trámites", route: "/tramites" },
+      { label: "Todas las gestiones", route: "/todas-las-gestiones" },
       {
         label: `Trámite ${this.tramiteId}`,
-        route: `/tramites/${this.tramiteId}`,
+        route: `/todas-las-gestiones?detalle=${this.tramiteId}`,
       },
       { label: "Modificar" },
     ];
@@ -189,7 +189,8 @@ export class TramiteModificacion {
       });
     }
 
-    void this.router.navigate(["/tramites", this.tramiteId], {
+    void this.router.navigate(["/todas-las-gestiones"], {
+      queryParams: { detalle: this.tramiteId },
       state: { tramiteActualizado: true },
     });
   }
