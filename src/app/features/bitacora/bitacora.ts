@@ -1,6 +1,12 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { DialogModule } from "primeng/dialog";
+import { TimelineModule } from "primeng/timeline";
+import {
+  ConnectedUser,
+  UserSessionService,
+} from "../../shared/services/user-session";
 
 export type EstadoSemaforoBitacora = "al-dia" | "proximo-vencer" | "atrasado";
 
@@ -23,216 +29,150 @@ export interface GestionBitacora {
   responsableInterno: string;
 }
 
-interface AntecedenteBitacora {
+export interface EntradaBitacora {
   id: string;
-  nivel: `N${number}`;
-  idGestionTramite: string;
-  descripcion: string;
-  requisito: boolean;
-  completado: boolean;
-  archivoAdjunto: string | null;
-  observacion: string;
-  fechaSolicitada: string;
-  fechaEntrega: string | null;
-  padreId: string | null;
+  fecha: string;
+  fechaIso: string;
+  hora: string;
+  usuario: string;
+  iniciales: string;
+  tipo: "inicio" | "novedad" | "seguimiento" | "contacto";
+  titulo: string;
+  comentario: string;
+  automatica: boolean;
 }
 
 @Component({
   selector: "app-bitacora",
   standalone: true,
-  imports: [CommonModule, DialogModule],
+  imports: [CommonModule, DialogModule, FormsModule, TimelineModule],
   templateUrl: "./bitacora.html",
   styleUrl: "./bitacora.scss",
 })
 export class Bitacora {
-  @Input() gestion: GestionBitacora | null = null;
+  private gestionSeleccionada: GestionBitacora | null = null;
+  private readonly entradasPorGestion = new Map<number, EntradaBitacora[]>();
+
+  @Input()
+  set gestion(gestion: GestionBitacora | null) {
+    this.gestionSeleccionada = gestion;
+    this.tituloNuevo = "";
+    this.comentarioNuevo = "";
+    this.mensajeValidacion = "";
+    this.mensajeConfirmacion = "";
+  }
+
+  get gestion(): GestionBitacora | null {
+    return this.gestionSeleccionada;
+  }
+
   @Input() visible = false;
+  @Input() usarUsuarioActualComoAutor = false;
   @Output() readonly visibleChange = new EventEmitter<boolean>();
 
-  nivelesExpandidos = new Set<string>();
+  readonly maximoCaracteres = 1000;
+  readonly maximoCaracteresTitulo = 80;
+  tituloNuevo = "";
+  comentarioNuevo = "";
+  mensajeValidacion = "";
+  mensajeConfirmacion = "";
 
-  get antecedentes(): AntecedenteBitacora[] {
+  constructor(
+    private readonly userSession: UserSessionService = new UserSessionService(),
+  ) {}
+
+  get usuarioActual(): ConnectedUser {
+    return this.userSession.currentUser();
+  }
+
+  get entradas(): EntradaBitacora[] {
     if (!this.gestion) {
       return [];
     }
 
-    return [
-      {
-        id: `ANT-${this.sufijoCodigo(1)}`,
-        nivel: this.obtenerNivelDependiente(1),
-        idGestionTramite: `${this.obtenerNivelDependiente(1)}-SAN-${this.sufijoCodigo(1)}`,
-        descripcion: "Informe sanitario del establecimiento",
-        requisito: true,
-        completado: false,
-        archivoAdjunto: "informe-sanitario.pdf",
-        observacion: "Documento ingresado; pendiente validación técnica.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 1),
-        fechaEntrega: this.sumarDias(this.gestion.fechaInicio, 6),
-        padreId: null,
-      },
-      {
-        id: `ANT-${this.sufijoCodigo(2)}`,
-        nivel: this.obtenerNivelDependiente(2),
-        idGestionTramite: `${this.obtenerNivelDependiente(2)}-MUN-${this.sufijoCodigo(2)}`,
-        descripcion: "Certificado de número municipal",
-        requisito: true,
-        completado: true,
-        archivoAdjunto: "certificado-numero.pdf",
-        observacion: "Antecedente completo y vigente.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 2),
-        fechaEntrega: this.sumarDias(this.gestion.fechaInicio, 4),
-        padreId: `ANT-${this.sufijoCodigo(1)}`,
-      },
-      {
-        id: `ANT-${this.sufijoCodigo(3)}`,
-        nivel: this.obtenerNivelDependiente(2),
-        idGestionTramite: `${this.obtenerNivelDependiente(2)}-OTR-${this.sufijoCodigo(3)}`,
-        descripcion: "Formulario de ingreso y planos de respaldo",
-        requisito: true,
-        completado: false,
-        archivoAdjunto: null,
-        observacion: "A la espera de documentación del concesionario.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 3),
-        fechaEntrega: null,
-        padreId: `ANT-${this.sufijoCodigo(1)}`,
-      },
-      {
-        id: `ANT-${this.sufijoCodigo(4)}`,
-        nivel: this.obtenerNivelDependiente(3),
-        idGestionTramite: `${this.obtenerNivelDependiente(3)}-DOC-${this.sufijoCodigo(4)}`,
-        descripcion: "Declaración simple del concesionario",
-        requisito: false,
-        completado: false,
-        archivoAdjunto: null,
-        observacion: "Se solicitará únicamente si existen observaciones.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 3),
-        fechaEntrega: null,
-        padreId: `ANT-${this.sufijoCodigo(3)}`,
-      },
-      {
-        id: `ANT-${this.sufijoCodigo(5)}`,
-        nivel: this.obtenerNivelDependiente(1),
-        idGestionTramite: `${this.obtenerNivelDependiente(1)}-MUN-${this.sufijoCodigo(5)}`,
-        descripcion: "Certificado de informaciones previas",
-        requisito: true,
-        completado: true,
-        archivoAdjunto: "informaciones-previas.pdf",
-        observacion: "Documento aprobado y asociado a la gestión.",
-        fechaSolicitada: this.gestion.fechaInicio,
-        fechaEntrega: this.sumarDias(this.gestion.fechaInicio, 3),
-        padreId: null,
-      },
-    ];
+    let entradas = this.entradasPorGestion.get(this.gestion.id);
+
+    if (!entradas) {
+      entradas = this.crearEntradasIniciales(this.gestion);
+      this.entradasPorGestion.set(this.gestion.id, entradas);
+    }
+
+    return entradas;
   }
 
-  get antecedentesVisibles(): AntecedenteBitacora[] {
-    return this.antecedentes.filter((antecedente) =>
-      this.estaRamaVisible(antecedente),
+  get caracteresRestantes(): number {
+    return this.maximoCaracteres - this.comentarioNuevo.length;
+  }
+
+  get caracteresRestantesTitulo(): number {
+    return this.maximoCaracteresTitulo - this.tituloNuevo.length;
+  }
+
+  get puedeRegistrar(): boolean {
+    return (
+      this.tituloNuevo.trim().length > 0 &&
+      this.comentarioNuevo.trim().length > 0
     );
   }
 
-  get otrosAntecedentesGestiones(): AntecedenteBitacora[] {
+  registrarEntrada(): void {
+    const titulo = this.tituloNuevo.trim();
+    const comentario = this.comentarioNuevo.trim();
+
+    this.mensajeConfirmacion = "";
+
+    if (!titulo) {
+      this.mensajeValidacion =
+        "Escribe un título que identifique la novedad de la bitácora.";
+      return;
+    }
+
+    if (!comentario) {
+      this.mensajeValidacion =
+        "Escribe un comentario antes de agregarlo a la bitácora.";
+      return;
+    }
+
     if (!this.gestion) {
-      return [];
+      return;
     }
 
-    return [
-      {
-        id: `ASO-${this.sufijoCodigo(10)}`,
-        nivel: this.obtenerNivelDependiente(1),
-        idGestionTramite: `${this.obtenerNivelDependiente(1)}-LEG-${this.sufijoCodigo(10)}`,
-        descripcion: "Certificado de matrimonio del representante legal",
-        requisito: false,
-        completado: true,
-        archivoAdjunto: "certificado-matrimonio.pdf",
-        observacion:
-          "Documento recibido y asociado como antecedente complementario.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 1),
-        fechaEntrega: this.sumarDias(this.gestion.fechaInicio, 2),
-        padreId: null,
-      },
-      {
-        id: `ASO-${this.sufijoCodigo(11)}`,
-        nivel: this.obtenerNivelDependiente(2),
-        idGestionTramite: `${this.obtenerNivelDependiente(2)}-LEG-${this.sufijoCodigo(11)}`,
-        descripcion: "Validación de vigencia del certificado",
-        requisito: false,
-        completado: false,
-        archivoAdjunto: null,
-        observacion:
-          "Pendiente de confirmación por parte del organismo emisor.",
-        fechaSolicitada: this.sumarDias(this.gestion.fechaInicio, 2),
-        fechaEntrega: null,
-        padreId: `ASO-${this.sufijoCodigo(10)}`,
-      },
-      {
-        id: `ASO-${this.sufijoCodigo(12)}`,
-        nivel: this.obtenerNivelDependiente(1),
-        idGestionTramite: `${this.obtenerNivelDependiente(1)}-LEG-${this.sufijoCodigo(12)}`,
-        descripcion: "Copia autorizada de escritura social",
-        requisito: false,
-        completado: true,
-        archivoAdjunto: "escritura-social.pdf",
-        observacion: "Copia autorizada vigente y disponible para consulta.",
-        fechaSolicitada: this.gestion.fechaInicio,
-        fechaEntrega: this.sumarDias(this.gestion.fechaInicio, 3),
-        padreId: null,
-      },
-    ];
+    const ahora = new Date();
+    const usuario = this.usuarioActual;
+    const entrada: EntradaBitacora = {
+      id: `BIT-${this.gestion.id}-${ahora.getTime()}`,
+      fecha: this.formatearFecha(ahora),
+      fechaIso: this.formatearFechaIso(ahora),
+      hora: this.formatearHora(ahora),
+      usuario: usuario.fullName,
+      iniciales: usuario.initials,
+      tipo: "novedad",
+      titulo,
+      comentario,
+      automatica: false,
+    };
+
+    this.entradasPorGestion.set(this.gestion.id, [entrada, ...this.entradas]);
+    this.tituloNuevo = "";
+    this.comentarioNuevo = "";
+    this.mensajeValidacion = "";
+    this.mensajeConfirmacion = "La novedad se agregó correctamente.";
   }
 
-  get otrosAntecedentesGestionesVisibles(): AntecedenteBitacora[] {
-    return this.otrosAntecedentesGestiones.filter((elemento) =>
-      this.estaRamaVisible(elemento),
-    );
-  }
-
-  alternarNivelesInferiores(antecedenteId: string): void {
-    const nivelesExpandidos = new Set(this.nivelesExpandidos);
-
-    if (nivelesExpandidos.has(antecedenteId)) {
-      nivelesExpandidos.delete(antecedenteId);
-
-      this.obtenerDescendientes(antecedenteId).forEach((id) =>
-        nivelesExpandidos.delete(id),
-      );
-    } else {
-      nivelesExpandidos.add(antecedenteId);
-    }
-
-    this.nivelesExpandidos = nivelesExpandidos;
-  }
-
-  estaExpandido(antecedenteId: string): boolean {
-    return this.nivelesExpandidos.has(antecedenteId);
-  }
-
-  tieneNivelesInferiores(antecedenteId: string): boolean {
-    return this.elementosJerarquicos.some(
-      ({ padreId }) => padreId === antecedenteId,
-    );
-  }
-
-  cantidadNivelesInferiores(antecedenteId: string): number {
-    return this.elementosJerarquicos.filter(
-      ({ padreId }) => padreId === antecedenteId,
-    ).length;
-  }
-
-  etiquetaNivelesInferiores(antecedenteId: string): string {
-    const cantidad = this.cantidadNivelesInferiores(antecedenteId);
-    return `${cantidad} ${cantidad === 1 ? "nivel inferior" : "niveles inferiores"}`;
-  }
-
-  obtenerSangria(nivel: `N${number}`): number {
-    const nivelGestion = Number(this.gestion?.nivel.slice(1)) || 1;
-    const nivelAntecedente = Number(nivel.slice(1)) || nivelGestion + 1;
-
-    return Math.max(0, nivelAntecedente - nivelGestion - 1) * 18;
+  limpiarMensajes(): void {
+    this.mensajeValidacion = "";
+    this.mensajeConfirmacion = "";
   }
 
   actualizarVisibilidad(visible: boolean): void {
     this.visible = visible;
+
+    if (!visible) {
+      this.tituloNuevo = "";
+      this.comentarioNuevo = "";
+      this.limpiarMensajes();
+    }
+
     this.visibleChange.emit(visible);
   }
 
@@ -240,42 +180,65 @@ export class Bitacora {
     this.actualizarVisibilidad(false);
   }
 
-  private estaRamaVisible(antecedente: AntecedenteBitacora): boolean {
-    let padreId = antecedente.padreId;
+  private crearEntradasIniciales(gestion: GestionBitacora): EntradaBitacora[] {
+    const autor = this.usarUsuarioActualComoAutor
+      ? this.usuarioActual.fullName
+      : gestion.responsableInterno;
+    const iniciales = this.usarUsuarioActualComoAutor
+      ? this.usuarioActual.initials
+      : this.obtenerIniciales(autor);
+    const fechaSeguimiento = this.sumarDias(gestion.fechaInicio, 6);
+    const fechaContacto = this.sumarDias(gestion.fechaInicio, 3);
 
-    while (padreId) {
-      if (!this.nivelesExpandidos.has(padreId)) {
-        return false;
-      }
-
-      padreId =
-        this.elementosJerarquicos.find(({ id }) => id === padreId)?.padreId ??
-        null;
-    }
-
-    return true;
+    return [
+      {
+        id: `BIT-${gestion.id}-seguimiento`,
+        fecha: fechaSeguimiento,
+        fechaIso: this.convertirFechaAIso(fechaSeguimiento),
+        hora: "16:40",
+        usuario: autor,
+        iniciales,
+        tipo: "seguimiento",
+        titulo: "Gestión de seguimiento",
+        comentario:
+          "Se solicitó una actualización a la institución sobre el estado de la revisión. La respuesta continúa pendiente.",
+        automatica: false,
+      },
+      {
+        id: `BIT-${gestion.id}-contacto`,
+        fecha: fechaContacto,
+        fechaIso: this.convertirFechaAIso(fechaContacto),
+        hora: "11:25",
+        usuario: autor,
+        iniciales,
+        tipo: "contacto",
+        titulo: "Contacto con la institución",
+        comentario:
+          "Se tomó contacto para confirmar la recepción de los antecedentes y consultar si existen solicitudes adicionales.",
+        automatica: false,
+      },
+      {
+        id: `BIT-${gestion.id}-inicio`,
+        fecha: gestion.fechaInicio,
+        fechaIso: this.convertirFechaAIso(gestion.fechaInicio),
+        hora: "09:00",
+        usuario: autor,
+        iniciales,
+        tipo: "inicio",
+        titulo: "Inicio del trámite",
+        comentario: `El trámite ${gestion.codigo} fue creado e ingresado al sistema.`,
+        automatica: true,
+      },
+    ];
   }
 
-  private obtenerDescendientes(antecedenteId: string): string[] {
-    const hijos = this.elementosJerarquicos.filter(
-      ({ padreId }) => padreId === antecedenteId,
-    );
-
-    return hijos.flatMap(({ id }) => [id, ...this.obtenerDescendientes(id)]);
-  }
-
-  private get elementosJerarquicos(): AntecedenteBitacora[] {
-    return [...this.antecedentes, ...this.otrosAntecedentesGestiones];
-  }
-
-  private obtenerNivelDependiente(salto: number): `N${number}` {
-    const nivelActual = Number(this.gestion?.nivel.slice(1)) || 1;
-    return `N${Math.min(nivelActual + salto, 4)}`;
-  }
-
-  private sufijoCodigo(incremento: number): string {
-    const base = (this.gestion?.id ?? 0) % 1000;
-    return String(base + incremento).padStart(3, "0");
+  private obtenerIniciales(nombre: string): string {
+    return nombre
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte.charAt(0).toLocaleUpperCase("es-CL"))
+      .join("");
   }
 
   private sumarDias(fecha: string, cantidad: number): string {
@@ -290,5 +253,43 @@ export class Bitacora {
     })
       .format(fechaCalculada)
       .replaceAll("/", "-");
+  }
+
+  private convertirFechaAIso(fecha: string): string {
+    const [dia, mes, anio] = fecha.split("-");
+    return `${anio}-${mes}-${dia}`;
+  }
+
+  private formatearFecha(fecha: Date): string {
+    return new Intl.DateTimeFormat("es-CL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "America/Santiago",
+    })
+      .format(fecha)
+      .replaceAll("/", "-");
+  }
+
+  private formatearFechaIso(fecha: Date): string {
+    const partes = new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "America/Santiago",
+    }).formatToParts(fecha);
+    const valor = (tipo: Intl.DateTimeFormatPartTypes) =>
+      partes.find(({ type }) => type === tipo)?.value ?? "";
+
+    return `${valor("year")}-${valor("month")}-${valor("day")}`;
+  }
+
+  private formatearHora(fecha: Date): string {
+    return new Intl.DateTimeFormat("es-CL", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "America/Santiago",
+    }).format(fecha);
   }
 }

@@ -58,6 +58,7 @@ export class GestionListado {
   @Input() ariaLabelTabla = "Tabla de gestiones";
   @Input() mostrarCantidadResultados = false;
   @Input() mostrarResponsableInterno = false;
+  @Input() bitacoraPersonal = false;
 
   private _gestiones: GestionListadoItem[] = [];
 
