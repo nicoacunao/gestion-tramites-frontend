@@ -13,7 +13,7 @@ export const routes: Routes = [
     children: [
       {
         path: "",
-        redirectTo: "escritorio",
+        redirectTo: "home",
         pathMatch: "full",
       },
       {

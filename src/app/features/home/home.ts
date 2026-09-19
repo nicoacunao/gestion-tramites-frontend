@@ -17,14 +17,16 @@ import { MessageService } from "primeng/api";
 import { AvatarModule } from "primeng/avatar";
 import { ButtonDirective } from "primeng/button";
 import { CardModule } from "primeng/card";
+import { DataViewModule } from "primeng/dataview";
 import { InputTextModule } from "primeng/inputtext";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { UserSessionService } from "../../shared/services/user-session";
 
-type ActivityTone = "success" | "info" | "warn";
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
+type TaskSeverity = "success" | "warn" | "danger";
+type TrafficLightStatus = "al-dia" | "proximo-vencer" | "atrasado";
 
 interface QuickAccess {
   id: QuickAccessId;
@@ -33,12 +35,18 @@ interface QuickAccess {
   status?: string;
 }
 
-interface RecentActivity {
+interface HomeTask {
+  id: number;
+  code: string;
+  stationId: string;
   title: string;
   detail: string;
-  time: string;
-  tone: ActivityTone;
+  updatedAt: string;
+  trafficStatus: TrafficLightStatus;
+  trafficLabel: string;
+  severity: TaskSeverity;
   route: string;
+  queryParams: { detalle: number };
 }
 
 @Component({
@@ -48,6 +56,7 @@ interface RecentActivity {
     AvatarModule,
     ButtonDirective,
     CardModule,
+    DataViewModule,
     InputTextModule,
     ReactiveFormsModule,
     RouterLink,
@@ -123,27 +132,45 @@ export class Home {
     },
   ];
 
-  readonly recentActivity: RecentActivity[] = [
+  readonly tasks: HomeTask[] = [
     {
-      title: "Trámite RM-2026-084 actualizado",
+      id: 1001,
+      code: "N1-MUN-001",
+      stationId: "60001",
+      title: "Solicitud de patente EDS",
       detail: "Se incorporaron nuevos antecedentes a la solicitud.",
-      time: "Hace 18 min",
-      tone: "success",
-      route: "/todas-las-gestiones?detalle=1001",
-    },
-    {
-      title: "Estación 60003 requiere atención",
-      detail: "Mantiene tres gestiones pendientes y prioridad alta.",
-      time: "Hace 1 h",
-      tone: "warn",
-      route: "/tramites/estado-estaciones",
-    },
-    {
-      title: "Listado de gestiones sincronizado",
-      detail: "La información de las gestiones está actualizada.",
-      time: "Hoy, 08:45",
-      tone: "info",
+      updatedAt: "Actualizado hace 18 min",
+      trafficStatus: "al-dia",
+      trafficLabel: "Al día",
+      severity: "success",
       route: "/todas-las-gestiones",
+      queryParams: { detalle: 1001 },
+    },
+    {
+      id: 1002,
+      code: "N1-SAN-002",
+      stationId: "60002",
+      title: "Resolución sanitaria de alimentos",
+      detail: "La fecha estimada de término se encuentra próxima.",
+      updatedAt: "Actualizado hoy, 09:20",
+      trafficStatus: "proximo-vencer",
+      trafficLabel: "Próximo a vencer",
+      severity: "warn",
+      route: "/todas-las-gestiones",
+      queryParams: { detalle: 1002 },
+    },
+    {
+      id: 1003,
+      code: "N1-SAN-003",
+      stationId: "60003",
+      title: "Informe sanitario de establecimiento",
+      detail: "Mantiene observaciones pendientes que requieren atención.",
+      updatedAt: "Actualizado hace 1 h",
+      trafficStatus: "atrasado",
+      trafficLabel: "Requiere atención",
+      severity: "danger",
+      route: "/todas-las-gestiones",
+      queryParams: { detalle: 1003 },
     },
   ];
 

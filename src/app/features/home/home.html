@@ -159,7 +159,7 @@
             (ngSubmit)="saveUserData()"
             novalidate
           >
-            <div class="profile-field profile-field--wide">
+            <div class="profile-field">
               <label for="profile-full-name">Nombre completo</label>
               <input
                 pInputText
@@ -347,15 +347,18 @@
           </div>
         </p-card>
         } @case ("tareas") {
-        <p-card styleClass="activity-card tab-content-card">
-          <div class="activity-heading">
+        <p-card styleClass="tasks-card tab-content-card">
+          <div class="tasks-heading">
             <div>
               <p class="section-kicker">Seguimiento</p>
               <h2 class="content-title">Mis tareas</h2>
+              <span class="tasks-summary"
+                >{{ tasks.length }} gestiones asignadas</span
+              >
             </div>
             <a
               pButton
-              routerLink="/todas-las-gestiones"
+              routerLink="/escritorio"
               severity="secondary"
               [text]="true"
               size="small"
@@ -364,30 +367,65 @@
             </a>
           </div>
 
-          <ul class="activity-list">
-            @for (activity of recentActivity; track activity.title) {
-            <li>
-              <span
-                class="activity-dot activity-dot--{{ activity.tone }}"
-                aria-hidden="true"
-              ></span>
-              <div class="activity-copy">
-                <strong>{{ activity.title }}</strong>
-                <span>{{ activity.detail }}</span>
+          <p-dataview
+            [value]="tasks"
+            layout="list"
+            styleClass="task-data-view"
+          >
+            <ng-template #list let-items>
+              <div class="task-list">
+                @for (task of items; track task.id) {
+                <article
+                  class="task-item task-item--{{ task.trafficStatus }}"
+                  [attr.aria-label]="task.code + ', ' + task.trafficLabel"
+                >
+                  <div class="task-copy">
+                    <div class="task-meta">
+                      <span class="task-code">{{ task.code }}</span>
+                      <span>Estación {{ task.stationId }}</span>
+                    </div>
+                    <h3>{{ task.title }}</h3>
+                    <p>{{ task.detail }}</p>
+                  </div>
+
+                  <div class="task-side">
+                    <div class="task-status">
+                      <span
+                        class="task-status-dot task-status-dot--{{
+                          task.trafficStatus
+                        }}"
+                        aria-hidden="true"
+                      ></span>
+                      <p-tag
+                        class="task-status-tag task-status-tag--{{
+                          task.trafficStatus
+                        }}"
+                        [value]="task.trafficLabel"
+                        [severity]="task.severity"
+                      />
+                    </div>
+                    <time>{{ task.updatedAt }}</time>
+                    <a
+                      pButton
+                      [routerLink]="task.route"
+                      [queryParams]="task.queryParams"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      class="task-link"
+                      [attr.aria-label]="'Abrir gestión ' + task.code"
+                    >
+                      <span>Ver gestión</span>
+                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M4 10h11M11 6l4 4-4 4"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </article>
+                }
               </div>
-              <time>{{ activity.time }}</time>
-              <a
-                [routerLink]="activity.route"
-                class="activity-link"
-                [attr.aria-label]="'Abrir ' + activity.title"
-              >
-                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M4 10h11M11 6l4 4-4 4"></path>
-                </svg>
-              </a>
-            </li>
-            }
-          </ul>
+            </ng-template>
+          </p-dataview>
         </p-card>
         } @case ("reporte") {
         <p-card styleClass="tab-content-card">
