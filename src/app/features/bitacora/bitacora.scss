@@ -1,4 +1,9 @@
 :host {
+  --log-modal-ink: #192736;
+  --log-modal-muted: #647486;
+  --log-modal-border: #d6dee6;
+  --log-modal-section: #173a59;
+  --log-modal-soft: #f2f5f7;
   display: contents;
 }
 
@@ -68,10 +73,10 @@
   min-height: 22px;
   padding: 0 8px;
   align-items: center;
-  border: 1px solid #c8d7e8;
-  border-radius: 5px;
-  background: #f5f8fc;
-  color: #35516f;
+  border: 1px solid #c9dce1;
+  border-radius: 999px;
+  background: #e8f3f5;
+  color: #0c6579;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -90,31 +95,35 @@
 .bitacora {
   display: flex;
   min-height: 100%;
-  padding: 18px 22px 28px;
+  padding: 14px 16px 22px;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .context-strip {
-  display: flex;
-  min-height: 48px;
-  padding: 8px 14px;
-  align-items: center;
-  border: 1px solid #dce6f0;
-  border-radius: 9px;
-  background: #f7fafe;
-  gap: 18px;
+  display: grid;
+  overflow: hidden;
+  min-height: 54px;
+  padding-top: 4px;
+  border: 1px solid var(--log-modal-border);
+  border-radius: 8px;
+  background: var(--log-modal-section);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
 }
 
 .context-strip__item {
   display: flex;
   min-width: 0;
-  align-items: baseline;
-  gap: 7px;
+  padding: 10px 14px;
+  align-items: flex-start;
+  flex-direction: column;
+  background: #fff;
+  gap: 3px;
 
   span {
-    color: #758397;
-    font-size: 14px;
+    color: #6e7d8d;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.035em;
     text-transform: uppercase;
@@ -122,33 +131,38 @@
 
   strong {
     overflow: hidden;
-    color: #35465b;
-    font-size: 15px;
+    color: #26384a;
+    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
 .context-strip__divider {
-  width: 1px;
-  height: 22px;
-  flex: 0 0 auto;
-  background: #dce3ec;
+  display: none;
+}
+
+.bitacora-panel--compact {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--log-modal-border);
+  border-radius: 8px;
+  background: #fff;
 }
 
 .secondary-button {
   display: inline-flex;
-  min-height: 38px;
-  padding: 0 15px;
+  min-height: 34px;
+  padding: 0 14px;
   align-items: center;
   justify-content: center;
   border: 1px solid #bdc9d6;
-  border-radius: 7px;
+  border-radius: 6px;
   background: #fff;
   color: #405269;
   cursor: pointer;
   font: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 750;
 
   &:hover {
@@ -172,25 +186,19 @@
   }
 
   .context-strip {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .context-strip__divider {
-    width: 100%;
-    height: 1px;
+    grid-template-columns: 1fr;
   }
 }
 
 :host ::ng-deep .bitacora-dialog {
   max-height: 98vh;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 10px;
 
   .p-dialog-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #dfe5ec;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--log-modal-border);
+    background: #fff;
   }
 
   .p-dialog-content {
@@ -198,12 +206,12 @@
     flex: 1 1 auto;
     padding: 0;
     overflow: auto;
-    background: #f4f7fa;
+    background: #eef2f5;
   }
 
   .p-dialog-footer {
     padding: 11px 20px;
-    border-top: 1px solid #dfe5ec;
+    border-top: 1px solid var(--log-modal-border);
     background: #fff;
   }
 

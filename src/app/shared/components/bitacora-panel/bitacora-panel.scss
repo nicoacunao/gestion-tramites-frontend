@@ -278,9 +278,10 @@ textarea {
   border: 1px solid var(--log-line);
   border-radius: 10px;
   background: #fff;
+  box-shadow: 0 2px 8px rgb(27 53 83 / 5%);
 
   > p {
-    margin: 9px 0 0;
+    margin: 7px 0 0;
     color: #3e4d61;
     font-size: 15px;
     line-height: 1.55;
@@ -292,75 +293,23 @@ textarea {
 }
 
 .entry-author {
-  display: flex;
+  display: block;
   min-width: 0;
-  padding-bottom: 11px;
-  margin-bottom: 11px;
-  align-items: center;
-  border-bottom: 1px solid #e5eaf0;
-  gap: 8px;
-
-  > span:last-child {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-  }
-
-  small {
-    color: #8290a2;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.045em;
-    text-transform: uppercase;
-  }
-
-  strong {
-    overflow: hidden;
-    color: #46566b;
-    font-size: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.avatar {
-  display: grid;
-  width: 27px;
-  height: 27px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: #e7eff8;
-  color: #285f97;
-  font-size: 12px;
-  font-weight: 800;
+  overflow: hidden;
+  margin: 0 0 7px;
+  color: #59697d;
+  font-size: 13px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .entry-type {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 7px;
-
-  > span {
-    color: #263449;
-    font-size: 15px;
-    font-weight: 800;
-  }
-
-  small {
-    display: inline-flex;
-    min-height: 19px;
-    padding: 0 6px;
-    align-items: center;
-    border-radius: 4px;
-    background: #e8f1fb;
-    color: #2a6198;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.045em;
-    text-transform: uppercase;
-  }
+  margin: 0;
+  color: #263449;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 :host ::ng-deep .bitacora-timeline {
@@ -425,5 +374,241 @@ textarea {
     strong {
       font-size: 13px;
     }
+  }
+}
+
+/* Variante visual compacta compartida por el detalle y el modal de bitácora. */
+:host(.bitacora-panel--compact) {
+  .bitacora-panel {
+    gap: 0;
+  }
+
+  .composer-card {
+    padding: 14px;
+    border: 0;
+    border-bottom: 1px solid #dce3e9;
+    border-radius: 0;
+    background: #f2f5f7;
+    box-shadow: none;
+  }
+
+  .section-heading {
+    gap: 8px;
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+
+  .section-heading__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #e2f0f3;
+    color: #0c6b80;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  form {
+    display: grid;
+    margin-top: 12px;
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 10px;
+  }
+
+  .field-group {
+    min-width: 0;
+
+    > label {
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+
+    + .field-group {
+      margin-top: 0;
+    }
+  }
+
+  input[type="text"],
+  textarea {
+    min-height: 40px;
+    height: 40px;
+    padding: 9px 10px;
+    border-radius: 5px;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .composer-meta {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .form-message {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .composer-actions {
+    grid-column: 1 / -1;
+    margin: 0;
+    justify-content: flex-end;
+  }
+
+  .primary-button {
+    min-height: 40px;
+    padding: 0 12px;
+    border-color: #0a5f73;
+    border-radius: 5px;
+    background: #0c6b80;
+    font-size: 12px;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      border-color: #084f60;
+      background: #09596b;
+    }
+  }
+
+  .history {
+    padding: 0;
+  }
+
+  .history-heading {
+    min-height: 44px;
+    padding: 10px 14px;
+    margin: 0;
+    border-bottom: 1px solid #dce3e9;
+    background: #fff;
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+
+  .history-count {
+    min-height: 23px;
+    border-radius: 999px;
+    background: #f2f5f7;
+    font-size: 11px;
+  }
+
+  .entry-card {
+    display: block;
+    padding: 14px 16px;
+    border: 1px solid #d8e1e9;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(27 53 83 / 5%);
+
+    > p {
+      margin: 7px 0 0;
+      color: #46566b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  }
+
+  .entry-card--automatic {
+    background: #f8fbfc;
+  }
+
+  .entry-author {
+    margin-bottom: 7px;
+    color: #59697d;
+    font-size: 12px;
+  }
+
+  .entry-type {
+    font-size: 14px;
+  }
+}
+
+:host(.bitacora-panel--compact) ::ng-deep .bitacora-timeline {
+  padding-top: 12px;
+
+  .p-timeline-event {
+    min-height: 122px;
+    background: transparent;
+  }
+
+  .p-timeline-event-opposite {
+    flex: 0 0 118px;
+    padding: 12px 14px 18px 0;
+  }
+
+  .p-timeline-event-separator {
+    flex: 0 0 24px;
+  }
+
+  .p-timeline-event-marker {
+    margin-top: 14px;
+  }
+
+  .p-timeline-event-connector {
+    background: #cfdbe5;
+  }
+
+  .p-timeline-event-content {
+    min-width: 0;
+    padding: 0 0 18px 14px;
+  }
+
+  .p-timeline-event:last-child {
+    min-height: auto;
+
+    .p-timeline-event-content,
+    .p-timeline-event-opposite {
+      padding-bottom: 0;
+    }
+  }
+}
+
+:host(.bitacora-panel--compact) .timeline-date {
+  padding-top: 0;
+  font-size: 11px;
+
+  strong {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 960px) {
+  :host(.bitacora-panel--compact) {
+    form {
+      grid-template-columns: 1fr;
+    }
+
+    .composer-actions {
+      margin: 0;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  :host(.bitacora-panel--compact) ::ng-deep .bitacora-timeline {
+    .p-timeline-event-opposite {
+      flex-basis: 78px;
+      padding-right: 8px;
+    }
+
+    .p-timeline-event-content {
+      padding-left: 8px;
+    }
+  }
+
+  :host(.bitacora-panel--compact) .entry-card {
+    padding: 12px;
   }
 }

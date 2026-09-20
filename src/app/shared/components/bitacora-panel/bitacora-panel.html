@@ -130,21 +130,8 @@
           class="entry-card"
           [class.entry-card--automatic]="entrada.automatica"
         >
-          <div class="entry-author">
-            <span class="avatar">{{ entrada.iniciales }}</span>
-            <span>
-              <small>Registrado por</small>
-              <strong>{{ entrada.usuario }}</strong>
-            </span>
-          </div>
-
-          <div class="entry-type">
-            <span>{{ entrada.titulo }}</span>
-            @if (entrada.automatica) {
-            <small>Automático</small>
-            }
-          </div>
-
+          <strong class="entry-author">{{ entrada.usuario }}</strong>
+          <h4 class="entry-type">{{ entrada.titulo }}</h4>
           <p>{{ entrada.comentario }}</p>
         </article>
       </ng-template>

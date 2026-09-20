@@ -48,9 +48,20 @@
   >
     <section class="general-card" aria-labelledby="general-title">
       <header class="general-card__header">
-        <div>
-          <span class="section-kicker">Información de origen</span>
+        <div class="general-card__title">
+          <span class="general-card__title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M8 3.5h8a2 2 0 0 1 2 2v15H6v-15a2 2 0 0 1 2-2Z"></path>
+              <path d="M9 8h6M9 12h6M9 16h4"></path>
+            </svg>
+          </span>
           <h3 id="general-title">Datos generales del trámite</h3>
+        </div>
+        <span class="section-kicker">Información de origen</span>
+      </header>
+
+      <div class="general-card__intro">
+        <div>
           <p>
             Información registrada al momento de crear el trámite. Estos datos
             se muestran solo para consulta.
@@ -64,7 +75,7 @@
           </svg>
           Solo lectura
         </span>
-      </header>
+      </div>
 
       <dl class="general-grid">
         <div class="general-item general-item--featured">
@@ -107,7 +118,7 @@
           <dt>Responsable interno</dt>
           <dd>{{ tramite.responsableInterno }}</dd>
         </div>
-        <div class="general-item">
+        <div class="general-item general-item--wide">
           <dt>Solicitante Copec</dt>
           <dd>{{ tramite.solicitanteCopec }}</dd>
         </div>
@@ -563,6 +574,7 @@
           [toggleable]="true"
         >
           <app-bitacora-panel
+            class="bitacora-panel--compact"
             [entradas]="bitacora"
             [contextoId]="tramite.id"
             idBase="bitacora-detalle"
