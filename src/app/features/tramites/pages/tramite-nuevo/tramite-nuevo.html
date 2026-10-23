@@ -64,6 +64,7 @@
           [filter]="true"
           filterBy="nombre"
           filterPlaceholder="Buscar tipo de trámite"
+          [showClear]="!!form.tipoTramite"
           styleClass="w-100"
           (ngModelChange)="onTipoTramiteChange($event)"
         />
@@ -89,6 +90,7 @@
               class="creation-choice-grid"
               role="radiogroup"
               aria-labelledby="modalidadCreacionLabel"
+              aria-required="true"
             >
               <button
                 *ngFor="let modalidad of modalidadesCreacion"
@@ -126,6 +128,7 @@
               class="second-level-options"
               role="radiogroup"
               aria-labelledby="tramiteEspecificoLabel"
+              aria-required="true"
             >
               <button
                 *ngFor="let opcion of tramitesEspecificos"
@@ -150,7 +153,10 @@
             </small>
           </div>
 
-          <div *ngIf="!requiereSeleccionSegundoNivel" class="related-processes">
+          <div
+            *ngIf="modalidadCreacion === 'principal' && configuracionLista"
+            class="related-processes"
+          >
             <span>Subtrámites y gestiones incluidos automáticamente</span>
             <ul>
               <li *ngFor="let item of tramitesEspecificos">
@@ -175,7 +181,14 @@
             </span>
           </div>
 
-          <p *ngIf="!configuracionLista" class="configuration-pending">
+          <p *ngIf="!modalidadCreacion" class="configuration-pending">
+            Selecciona qué deseas gestionar para continuar con la configuración.
+          </p>
+
+          <p
+            *ngIf="modalidadCreacion === 'subtramite' && !configuracionLista"
+            class="configuration-pending"
+          >
             Selecciona una alternativa específica para mostrar sus antecedentes
             e hitos asociados.
           </p>

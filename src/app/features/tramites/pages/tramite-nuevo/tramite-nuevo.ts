@@ -126,7 +126,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   tiposTramite: TipoTramite[] = [];
   tramitesEspecificos: TramiteEspecifico[] = [];
 
-  modalidadCreacion: ModalidadCreacion = "principal";
+  modalidadCreacion: ModalidadCreacion | null = null;
   catalogosError = "";
   tramiteCreadoId = 1006;
   segundosRestantes = this.segundosRedireccion;
@@ -166,27 +166,43 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   get requiereSeleccionSegundoNivel(): boolean {
-    return (
-      this.modalidadCreacion === "subtramite" ||
-      this.tipoSeleccionado?.requiereSeleccionSegundoNivelParaPrincipal === true
+    return Boolean(
+      this.tipoSeleccionado && this.modalidadCreacion === "subtramite",
     );
   }
 
   get configuracionLista(): boolean {
-    return Boolean(
-      this.tipoSeleccionado &&
-      (!this.requiereSeleccionSegundoNivel || this.form.tramiteEspecifico),
+    const tipo = this.tipoSeleccionado;
+
+    if (!tipo || !this.modalidadCreacion) {
+      return false;
+    }
+
+    if (this.modalidadCreacion === "principal") {
+      return !this.form.tramiteEspecifico;
+    }
+
+    return tipo.tramitesEspecificos.some(
+      (item) => item.id === this.form.tramiteEspecifico,
     );
   }
 
-  onTipoTramiteChange(tipoTramiteId: string): void {
-    this.form.tipoTramite = tipoTramiteId;
+  onTipoTramiteChange(tipoTramiteId: string | null): void {
+    this.form.tipoTramite = tipoTramiteId ?? "";
+    this.modalidadCreacion = null;
     this.form.tramiteEspecifico = "";
     this.tramitesEspecificos = this.tipoSeleccionado?.tramitesEspecificos ?? [];
     this.reconfigurarFormulario();
   }
 
   onModalidadChange(modalidad: ModalidadCreacion): void {
+    if (!this.tipoSeleccionado) {
+      this.modalidadCreacion = null;
+      this.form.tramiteEspecifico = "";
+      this.reconfigurarFormulario();
+      return;
+    }
+
     if (this.modalidadCreacion === modalidad) {
       return;
     }
@@ -197,11 +213,18 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   onTramiteEspecificoChange(tramiteEspecificoId: string): void {
-    if (this.form.tramiteEspecifico === tramiteEspecificoId) {
+    const tramiteEspecificoValido =
+      this.modalidadCreacion === "subtramite" &&
+      this.tramitesEspecificos.some((item) => item.id === tramiteEspecificoId);
+    const nuevoTramiteEspecifico = tramiteEspecificoValido
+      ? tramiteEspecificoId
+      : "";
+
+    if (this.form.tramiteEspecifico === nuevoTramiteEspecifico) {
       return;
     }
 
-    this.form.tramiteEspecifico = tramiteEspecificoId;
+    this.form.tramiteEspecifico = nuevoTramiteEspecifico;
     this.reconfigurarFormulario();
   }
 
@@ -306,12 +329,14 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private reconfigurarFormulario(): void {
     const tipo = this.tipoSeleccionado;
 
-    if (!tipo) {
-      this.antecedentesDisponibles = [];
-      this.antecedentesRequeridos = [];
-      this.antecedentesSeleccionadosBorrador = [];
-      this.selectorAntecedentesVisible = false;
-      this.hitosGestion = [];
+    this.antecedentesDisponibles = [];
+    this.antecedentesRequeridos = [];
+    this.antecedentesSeleccionadosBorrador = [];
+    this.selectorAntecedentesVisible = false;
+    this.antecedentesComplementarios = [this.crearAntecedenteComplementario()];
+    this.hitosGestion = [];
+
+    if (!tipo || !this.modalidadCreacion) {
       return;
     }
 
@@ -330,12 +355,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       ...new Set(subtramites.flatMap((item) => item.antecedentes)),
     ];
     this.antecedentesDisponibles = antecedentes;
-    this.antecedentesRequeridos = [];
-    this.antecedentesSeleccionadosBorrador = [];
-    this.selectorAntecedentesVisible = false;
 
     if (!subtramites.length) {
-      this.hitosGestion = [];
       return;
     }
 
@@ -388,17 +409,21 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private guardarTramite(): void {
-    if (this.mensajeCreacionVisible || !this.configuracionLista) {
+    if (
+      this.mensajeCreacionVisible ||
+      !this.configuracionLista ||
+      !this.modalidadCreacion
+    ) {
       return;
     }
 
-    this.registrarTramiteCreado();
+    this.registrarTramiteCreado(this.modalidadCreacion);
     this.segundosRestantes = this.segundosRedireccion;
     this.mensajeCreacionVisible = true;
     this.iniciarRedireccionAutomatica();
   }
 
-  private registrarTramiteCreado(): void {
+  private registrarTramiteCreado(modalidadCreacion: ModalidadCreacion): void {
     const estacion = this.estacionesServicio.find(
       (item) => item.codigo === this.form.estacionServicio,
     );
@@ -422,16 +447,16 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       tipoTramite: tipo?.nombre || "Sin especificar",
       tramiteEspecifico:
         subtramite?.nombre ||
-        (this.modalidadCreacion === "principal"
+        (modalidadCreacion === "principal"
           ? "Trámite principal completo"
           : "Sin especificar"),
       solicitanteCopec: this.form.solicitanteCopec || "Sin especificar",
-      modalidadCreacion: this.modalidadCreacion,
+      modalidadCreacion,
       datosAdicionales: {
         nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
       },
       subtramitesAsociados:
-        this.modalidadCreacion === "principal" && !subtramite
+        modalidadCreacion === "principal" && !subtramite
           ? this.tramitesEspecificos.map((item) => item.nombre)
           : subtramite
             ? [subtramite.nombre]
