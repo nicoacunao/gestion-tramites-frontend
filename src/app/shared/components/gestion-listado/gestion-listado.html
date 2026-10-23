@@ -1,7 +1,32 @@
 <section class="management-panel" aria-labelledby="gestion-listado-title">
   <div class="panel-heading">
     <div class="panel-title">
-      <h2 id="gestion-listado-title">{{ titulo }}</h2>
+      <div class="panel-title__heading">
+        <h2 id="gestion-listado-title">{{ titulo }}</h2>
+        <button
+          pButton
+          type="button"
+          class="panel-info-button"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          aria-label="Información sobre Escritorio y Todas las gestiones"
+          aria-haspopup="dialog"
+          (click)="alcanceInfo.toggle($event)"
+        >
+          <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+        </button>
+        <p-popover
+          #alcanceInfo
+          appendTo="body"
+          styleClass="management-help-popover"
+        >
+          <div class="management-help-content">
+            <strong>Diferencia entre las vistas</strong>
+            <p>{{ informacionAlcance }}</p>
+          </div>
+        </p-popover>
+      </div>
       @if (mostrarCantidadResultados) {
       <p aria-live="polite">
         {{ cantidadResultados }} {{ cantidadResultados === 1 ? "resultado" :

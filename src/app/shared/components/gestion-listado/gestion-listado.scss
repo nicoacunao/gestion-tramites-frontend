@@ -59,6 +59,44 @@
   grid-area: title;
 }
 
+.panel-title__heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-info-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  flex: 0 0 auto;
+  color: #64748b;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.management-help-content {
+  max-width: min(340px, calc(100vw - 48px));
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #1f2937;
+    font-size: 14px;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
 .filters-toolbar {
   display: flex;
   min-width: 0;
@@ -181,14 +219,14 @@
 :host ::ng-deep .management-table {
   --col-id: 10%;
   --col-station: 12%;
-  --col-address: 14%;
-  --col-town: 9%;
-  --col-rut: 12%;
-  --col-business: 15%;
+  --col-address: 12%;
+  --col-town: 10%;
+  --col-rut: 11%;
+  --col-business: 13%;
   --col-owner: 11%;
-  --col-date: 11%;
-  --col-traffic: 9%;
-  --col-options: 8%;
+  --col-date: 10%;
+  --col-traffic: 10%;
+  --col-options: 12%;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -196,7 +234,7 @@
   .p-datatable-table-container {
     width: 100%;
     min-height: 0;
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     overflow-y: auto !important;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
@@ -216,7 +254,7 @@
   }
 
   th {
-    padding: 11px 8px;
+    padding: 11px 6px;
     background: #eaf0f8;
     color: #25364d;
     font-size: 14px;
@@ -326,19 +364,20 @@
 
   .col-options {
     width: var(--col-options);
+    min-width: 120px;
   }
 
   &.management-table--global {
     --col-id: 9%;
-    --col-station: 11%;
-    --col-address: 12%;
-    --col-town: 8%;
-    --col-rut: 10%;
-    --col-business: 11%;
+    --col-station: 10%;
+    --col-address: 10%;
+    --col-town: 9%;
+    --col-rut: 9%;
+    --col-business: 9%;
     --col-owner: 12%;
     --col-date: 10%;
-    --col-traffic: 9%;
-    --col-options: 8%;
+    --col-traffic: 10%;
+    --col-options: 12%;
   }
 
   td.col-id,

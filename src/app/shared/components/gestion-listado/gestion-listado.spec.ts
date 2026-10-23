@@ -70,6 +70,15 @@ describe("GestionListado", () => {
     expect(componente.direccionOrdenInicial).toBe(-1);
   });
 
+  it("explica el alcance del escritorio y del listado global", () => {
+    expect(componente.informacionAlcance).toContain(
+      "Escritorio muestra solo las gestiones que tienes asignadas",
+    );
+    expect(componente.informacionAlcance).toContain(
+      "Todas las gestiones muestra las de todos los responsables",
+    );
+  });
+
   it("abre la bitácora con la gestión seleccionada", () => {
     componente.abrirBitacora(GESTION_BASE);
 
