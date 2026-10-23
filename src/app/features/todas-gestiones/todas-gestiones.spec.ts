@@ -45,6 +45,12 @@ describe("TodasGestiones", () => {
       "Claudio Henríquez",
       "José Luis Rosa",
     ]);
+    expect(componente.tituloInformacionAlcance).toBe(
+      "¿Qué es la vista Todas las Gestiones?",
+    );
+    expect(componente.informacionAlcance).toBe(
+      "En esta vista, ves todas las gestiones del sistema, de todos los responsables.",
+    );
   });
 
   it("acepta más de cien registros aunque no estén en los datos asociados", () => {

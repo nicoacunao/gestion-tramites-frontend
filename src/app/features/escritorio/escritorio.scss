@@ -42,6 +42,13 @@ app-gestion-listado {
   }
 }
 
+.page-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
 .heading-summary {
   display: grid;
   min-width: 148px;

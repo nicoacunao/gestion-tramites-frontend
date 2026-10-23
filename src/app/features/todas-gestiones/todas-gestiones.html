@@ -4,7 +4,14 @@
   <header class="page-heading">
     <div>
       <span class="scope-label">Vista global</span>
-      <h1 id="all-managements-title">Todas las gestiones</h1>
+      <div class="page-title-row">
+        <h1 id="all-managements-title">Todas las gestiones</h1>
+        <app-gestion-alcance-info
+          [titulo]="tituloInformacionAlcance"
+          [texto]="informacionAlcance"
+          ariaLabel="Información sobre todas las gestiones"
+        />
+      </div>
     </div>
   </header>
 

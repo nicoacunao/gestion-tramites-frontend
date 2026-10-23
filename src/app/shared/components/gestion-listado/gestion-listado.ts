@@ -2,11 +2,8 @@ import { CommonModule } from "@angular/common";
 import { Component, Input, ViewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { FilterMetadata } from "primeng/api";
-import { ButtonDirective } from "primeng/button";
-import { InfoCircleIcon } from "primeng/icons/infocircle";
 import { InputTextModule } from "primeng/inputtext";
 import { ListboxModule } from "primeng/listbox";
-import { PopoverModule } from "primeng/popover";
 import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TooltipModule } from "primeng/tooltip";
 import { Bitacora, GestionBitacora } from "../../../features/bitacora/bitacora";
@@ -42,13 +39,10 @@ const VALOR_TODOS = "__todos__";
   standalone: true,
   imports: [
     Bitacora,
-    ButtonDirective,
     CommonModule,
     FormsModule,
-    InfoCircleIcon,
     InputTextModule,
     ListboxModule,
-    PopoverModule,
     TableModule,
     TramiteDetalle,
     TooltipModule,
@@ -109,8 +103,6 @@ export class GestionListado {
   readonly opcionesFilasPorPagina = [10, 25, 50, 100];
   readonly campoOrdenInicial = "fechaIngresoOrden";
   readonly direccionOrdenInicial = -1;
-  readonly informacionAlcance =
-    "Escritorio muestra solo las gestiones que tienes asignadas como responsable. Todas las gestiones muestra las de todos los responsables.";
   gestionBitacoraSeleccionada: GestionBitacora | null = null;
   bitacoraVisible = false;
   tramiteDetalleId: number | null = null;

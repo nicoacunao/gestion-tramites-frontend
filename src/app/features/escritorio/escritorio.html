@@ -3,7 +3,14 @@
 
   <header class="page-heading">
     <div>
-      <h1 id="escritorio-title">Escritorio</h1>
+      <div class="page-title-row">
+        <h1 id="escritorio-title">Escritorio</h1>
+        <app-gestion-alcance-info
+          [titulo]="tituloInformacionAlcance"
+          [texto]="informacionAlcance"
+          ariaLabel="Información sobre las gestiones de tu escritorio"
+        />
+      </div>
     </div>
 
     <div class="heading-summary" aria-label="Resumen del escritorio">

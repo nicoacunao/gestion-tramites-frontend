@@ -59,44 +59,6 @@
   grid-area: title;
 }
 
-.panel-title__heading {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 6px;
-}
-
-.panel-info-button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  flex: 0 0 auto;
-  color: #64748b;
-
-  svg {
-    width: 17px;
-    height: 17px;
-  }
-}
-
-.management-help-content {
-  max-width: min(340px, calc(100vw - 48px));
-
-  strong {
-    display: block;
-    margin-bottom: 6px;
-    color: #1f2937;
-    font-size: 14px;
-  }
-
-  p {
-    margin: 0;
-    color: #64748b;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-}
-
 .filters-toolbar {
   display: flex;
   min-width: 0;

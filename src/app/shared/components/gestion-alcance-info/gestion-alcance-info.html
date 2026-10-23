@@ -1,0 +1,20 @@
+<button
+  pButton
+  type="button"
+  class="panel-info-button"
+  severity="secondary"
+  [text]="true"
+  [rounded]="true"
+  [attr.aria-label]="ariaLabel"
+  aria-haspopup="dialog"
+  (click)="alcanceInfo.toggle($event)"
+>
+  <svg data-p-icon="info-circle" aria-hidden="true"></svg>
+</button>
+
+<p-popover #alcanceInfo appendTo="body" styleClass="management-help-popover">
+  <div class="management-help-content">
+    <strong>{{ titulo }}</strong>
+    <p>{{ texto }}</p>
+  </div>
+</p-popover>

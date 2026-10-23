@@ -1,6 +1,7 @@
 import { Component } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
+import { GestionAlcanceInfo } from "../../shared/components/gestion-alcance-info/gestion-alcance-info";
 import {
   GestionListado,
   GestionListadoItem,
@@ -146,11 +147,15 @@ const GESTIONES_GLOBALES_ADICIONALES: Tramite[] = [
 @Component({
   selector: "app-todas-gestiones",
   standalone: true,
-  imports: [Breadcrumbs, GestionListado],
+  imports: [Breadcrumbs, GestionAlcanceInfo, GestionListado],
   templateUrl: "./todas-gestiones.html",
   styleUrl: "./todas-gestiones.scss",
 })
 export class TodasGestiones {
+  readonly tituloInformacionAlcance = "¿Qué es la vista Todas las Gestiones?";
+  readonly informacionAlcance =
+    "En esta vista, ves todas las gestiones del sistema, de todos los responsables.";
+
   readonly breadcrumbs = [
     { label: "Módulo de Gestión de Trámites", route: "/home" },
     { label: "Todas las gestiones" },

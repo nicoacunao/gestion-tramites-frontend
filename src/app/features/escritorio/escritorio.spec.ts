@@ -24,6 +24,12 @@ describe("Escritorio", () => {
 
     expect(componente.gestiones).toHaveLength(5);
     expect(componente.gestiones[0].codigo).toMatch(/^N\d-/);
+    expect(componente.tituloInformacionAlcance).toBe(
+      "¿Qué es la vista Escritorio?",
+    );
+    expect(componente.informacionAlcance).toBe(
+      "En esta vista, ves las gestiones en las que tú eres el responsable.",
+    );
   });
 
   it("admite listados de más de cien registros", () => {
