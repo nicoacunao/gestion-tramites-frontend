@@ -18,6 +18,7 @@ describe("TramiteDetalle", () => {
       id: 1001,
       estacionServicio: "Copec Concón",
       tipoTramite: "Patente comercial",
+      fechaUltimaActualizacion: "08-07-2026",
     });
   });
 

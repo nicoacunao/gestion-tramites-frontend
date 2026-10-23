@@ -21,6 +21,7 @@ export class TramitesMock {
       solicitanteCopec: "Claudio Doñas",
       fechaApertura: "02-07-2026",
       fechaEstimadaTermino: "12-07-2026",
+      fechaUltimaActualizacion: "08-07-2026",
     },
     {
       id: 1002,
@@ -38,6 +39,7 @@ export class TramitesMock {
       solicitanteCopec: "José L. Rosas",
       fechaApertura: "01-07-2026",
       fechaEstimadaTermino: "10-07-2026",
+      fechaUltimaActualizacion: "07-07-2026",
     },
     {
       id: 1003,
@@ -54,6 +56,7 @@ export class TramitesMock {
       solicitanteCopec: "Claudio Doñas",
       fechaApertura: "28-06-2026",
       fechaEstimadaTermino: "08-07-2026",
+      fechaUltimaActualizacion: "05-07-2026",
     },
     {
       id: 1004,
@@ -70,6 +73,7 @@ export class TramitesMock {
       solicitanteCopec: "Claudio Henríquez",
       fechaApertura: "25-06-2026",
       fechaEstimadaTermino: "05-07-2026",
+      fechaUltimaActualizacion: "05-07-2026",
     },
     {
       id: 1005,
@@ -86,6 +90,7 @@ export class TramitesMock {
       solicitanteCopec: "José L. Rosas",
       fechaApertura: "20-06-2026",
       fechaEstimadaTermino: "30-06-2026",
+      fechaUltimaActualizacion: null,
     },
   ];
 

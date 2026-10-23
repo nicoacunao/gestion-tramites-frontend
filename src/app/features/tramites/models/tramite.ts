@@ -9,6 +9,7 @@ export interface Tramite {
   estado: string;
   fechaApertura: string;
   fechaEstimadaTermino: string;
+  fechaUltimaActualizacion?: string | null;
   prioridad: string;
   responsableInterno: string;
   tramiteEspecifico: string;
