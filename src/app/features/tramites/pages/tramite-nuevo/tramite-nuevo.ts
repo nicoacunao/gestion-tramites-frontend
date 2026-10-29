@@ -459,6 +459,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       antecedentesConfigurados: this.antecedentesRequeridos.map(
         (item) => item.antecedente,
       ),
+      antecedentesComplementariosConfigurados: this.antecedentesComplementarios
+        .map((item) => item.antecedente.trim())
+        .filter(Boolean),
       etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
       fechaApertura: this.normalizarFechaListado(this.form.fechaApertura),
       fechaEstimadaTermino: this.normalizarFechaListado(

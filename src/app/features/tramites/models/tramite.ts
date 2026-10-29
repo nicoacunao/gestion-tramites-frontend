@@ -18,5 +18,6 @@ export interface Tramite {
   datosAdicionales?: Record<string, string>;
   subtramitesAsociados?: string[];
   antecedentesConfigurados?: string[];
+  antecedentesComplementariosConfigurados?: string[];
   etapasConfiguradas?: string[];
 }

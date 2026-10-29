@@ -2,6 +2,8 @@ import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { TestBed } from "@angular/core/testing";
 import { of } from "rxjs";
+import { UserSessionService } from "../../../../shared/services/user-session";
+import { TramiteDetalle } from "../../../tramite-detalle/tramite-detalle";
 import { TramitesMock } from "../../services/tramites-mock";
 import { TramiteNuevo } from "./tramite-nuevo";
 
@@ -149,6 +151,27 @@ describe("TramiteNuevo", () => {
     expect(componente.etapasGestion).toHaveLength(7);
   });
 
+  it("mantiene la estructura común de etapas para todos los tipos de trámite", () => {
+    const etapasEsperadas = [
+      "Consulta y definición de antecedentes",
+      "Recolección de antecedentes y preparación del expediente",
+      "Ingreso del expediente",
+      "Revisión del expediente y emisión de observaciones",
+      "Respuesta a las observaciones",
+      "Aprobación del expediente",
+      "Emisión o entrega del documento definitivo",
+    ];
+
+    for (const tipo of ["tipo-a", "tipo-b"]) {
+      componente.onTipoTramiteChange(tipo);
+      componente.onModalidadChange("principal");
+
+      expect(componente.etapasGestion.map(({ etapa }) => etapa)).toEqual(
+        etapasEsperadas,
+      );
+    }
+  });
+
   it("impide crear el trámite con una selección incompleta", () => {
     const guardar = vi.spyOn(tramitesMock, "guardar");
     componente.onTipoTramiteChange("tipo-a");
@@ -158,5 +181,39 @@ describe("TramiteNuevo", () => {
 
     expect(guardar).not.toHaveBeenCalled();
     expect(componente.mensajeCreacionVisible).toBe(false);
+  });
+
+  it("crea el trámite con antecedentes, etapas estándar y bitácora inicial", () => {
+    componente.onTipoTramiteChange("tipo-a");
+    componente.onModalidadChange("principal");
+    componente.antecedentesSeleccionadosBorrador = ["Documento A1"];
+    componente.guardarSeleccionAntecedentes();
+    componente.antecedentesComplementarios[0].antecedente =
+      "Certificado extraordinario";
+    componente.form.responsableInterno = "Claudio Doñas";
+    componente.form.solicitanteCopec = "Jefatura de zona";
+    componente.form.fechaApertura = "15/10/2026";
+
+    componente.crearTramite();
+    componente.ngOnDestroy();
+
+    const tramiteCreado = tramitesMock.obtenerPorId(componente.tramiteCreadoId);
+
+    expect(tramiteCreado).toMatchObject({
+      antecedentesConfigurados: ["Documento A1"],
+      antecedentesComplementariosConfigurados: ["Certificado extraordinario"],
+      etapasConfiguradas: componente.etapasGestion.map(({ etapa }) => etapa),
+    });
+
+    const detalle = new TramiteDetalle(tramitesMock, new UserSessionService());
+    detalle.tramiteId = componente.tramiteCreadoId;
+
+    expect(detalle.bitacora.find(({ automatica }) => automatica)).toMatchObject(
+      {
+        fecha: "15-10-2026",
+        usuario: "Jefatura de zona",
+        titulo: "Inicio del trámite",
+      },
+    );
   });
 });
