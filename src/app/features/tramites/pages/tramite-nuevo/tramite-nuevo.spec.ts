@@ -96,6 +96,11 @@ describe("TramiteNuevo", () => {
     expect(
       componente.etapasGestion.map(({ porcentaje }) => porcentaje),
     ).toEqual([10, 20, 30, 40, 50, 80, 100]);
+    expect(componente.etapasGestion[0]).toMatchObject({
+      responsable: "",
+      fechaEstimada: "",
+      observacion: "",
+    });
 
     componente.antecedentesComplementarios[0].antecedente =
       "Documento complementario anterior";

@@ -128,6 +128,7 @@ export class TramiteModificacion {
     fechaEstimada: "",
     fechaReal: "",
     responsable: "",
+    observacion: "",
   }));
 
   get porcentajeAvance(): number {

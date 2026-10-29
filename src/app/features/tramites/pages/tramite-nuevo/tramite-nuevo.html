@@ -760,6 +760,7 @@
               <th class="responsable-hito-column" scope="col">Responsable</th>
               <th class="fecha-hito-column" scope="col">Fecha estimada</th>
               <th class="fecha-hito-column" scope="col">Fecha real</th>
+              <th class="observacion-hito-column" scope="col">Observaciones</th>
             </tr>
           </ng-template>
 
@@ -840,6 +841,22 @@
                   styleClass="w-100"
                   inputStyleClass="w-100"
                 />
+              </td>
+
+              <td class="observacion-hito-column">
+                <label class="visually-hidden" [for]="'observacionEtapa' + i">
+                  Observaciones de {{ item.etapa }}
+                </label>
+                <textarea
+                  pTextarea
+                  [id]="'observacionEtapa' + i"
+                  [name]="'observacionEtapa' + i"
+                  [(ngModel)]="item.observacion"
+                  placeholder="Agregar observación breve"
+                  maxlength="300"
+                  [autoResize]="true"
+                  rows="1"
+                ></textarea>
               </td>
             </tr>
           </ng-template>

@@ -399,6 +399,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       fechaEstimada: "",
       fechaReal: "",
       responsable: "",
+      observacion: "",
     };
   }
 

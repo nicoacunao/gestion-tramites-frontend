@@ -138,6 +138,11 @@ describe("TramiteDetalle", () => {
     expect(
       componente.etapasGestion.map(({ porcentaje }) => porcentaje),
     ).toEqual([10, 20, 30, 40, 50, 80, 100]);
+    expect(componente.etapasGestion[3]).toMatchObject({
+      responsable: "María González",
+      fechaEstimada: "15-07-2026",
+      observacion: "Funcionario informó un plazo estimado de 15 días.",
+    });
     expect(componente.porcentajeAvance).toBe(40);
   });
 
