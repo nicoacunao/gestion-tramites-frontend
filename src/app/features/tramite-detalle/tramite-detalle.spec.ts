@@ -4,10 +4,12 @@ import { TramiteDetalle } from "./tramite-detalle";
 
 describe("TramiteDetalle", () => {
   let componente: TramiteDetalle;
+  let tramitesMock: TramitesMock;
 
   beforeEach(() => {
+    tramitesMock = new TramitesMock();
     componente = new TramiteDetalle(
-      new TramitesMock(),
+      tramitesMock,
       new UserSessionService(),
     );
     componente.tramiteId = 1001;
@@ -18,8 +20,26 @@ describe("TramiteDetalle", () => {
       id: 1001,
       estacionServicio: "Copec Concón",
       tipoTramite: "Patente comercial",
-      fechaUltimaActualizacion: "08-07-2026",
+      fechaUltimaRevision: "08-07-2026",
     });
+  });
+
+  it("actualiza la fecha de última revisión al visualizar el detalle", () => {
+    const fechaEsperada = new Intl.DateTimeFormat("es-CL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "America/Santiago",
+    })
+      .format(new Date())
+      .replaceAll("/", "-");
+
+    componente.visible = true;
+
+    expect(componente.tramite?.fechaUltimaRevision).toBe(fechaEsperada);
+    expect(
+      tramitesMock.obtenerPorId(1001)?.fechaUltimaRevision,
+    ).toBe(fechaEsperada);
   });
 
   it("incluye una primera entrada automática de inicio con fecha y usuario", () => {

@@ -80,8 +80,23 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
 export class TramiteDetalle {
   private readonly entradasPorTramite = new Map<number, EntradaBitacora[]>();
   private _tramiteId: number | null = null;
+  private _visible = false;
 
-  @Input() visible = false;
+  @Input()
+  set visible(visible: boolean) {
+    const seAbreDetalle = visible && !this._visible;
+
+    this._visible = visible;
+
+    if (seAbreDetalle) {
+      this.registrarUltimaRevision();
+    }
+  }
+
+  get visible(): boolean {
+    return this._visible;
+  }
+
   @Output() readonly visibleChange = new EventEmitter<boolean>();
   @ViewChild("archivoInput") archivoInput?: ElementRef<HTMLInputElement>;
 
@@ -91,6 +106,11 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
+
+    if (this.visible) {
+      this.registrarUltimaRevision();
+    }
+
     this.limpiarFormularioDocumento();
     this.restablecerJerarquiaAntecedentes();
   }
@@ -554,6 +574,18 @@ export class TramiteDetalle {
       .slice(0, 2)
       .map((parte) => parte.charAt(0).toLocaleUpperCase("es-CL"))
       .join("");
+  }
+
+  private registrarUltimaRevision(): void {
+    if (!this.tramite) {
+      return;
+    }
+
+    this.tramite = {
+      ...this.tramite,
+      fechaUltimaRevision: this.formatearFecha(new Date()),
+    };
+    this.tramitesMock.guardar(this.tramite);
   }
 
   private convertirFechaAIso(fecha: string): string {
