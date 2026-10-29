@@ -12,6 +12,7 @@ import { ButtonDirective } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { InputTextModule } from "primeng/inputtext";
 import { PanelModule } from "primeng/panel";
+import { ProgressBarModule } from "primeng/progressbar";
 import { SelectModule } from "primeng/select";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
@@ -116,6 +117,7 @@ const DATOS_ETAPAS_DETALLE = [
     FormsModule,
     InputTextModule,
     PanelModule,
+    ProgressBarModule,
     SelectModule,
     TagModule,
     TextareaModule,
@@ -248,7 +250,8 @@ export class TramiteDetalle {
   ];
 
   readonly etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
-    etapa,
+    etapa: etapa.nombre,
+    porcentaje: etapa.porcentaje,
     ...DATOS_ETAPAS_DETALLE[indice],
   }));
 
@@ -298,6 +301,16 @@ export class TramiteDetalle {
 
   get puedeAdjuntarAntecedente(): boolean {
     return Boolean(this.tipoAntecedenteNuevo && this.archivoAntecedenteNuevo);
+  }
+
+  get porcentajeAvance(): number {
+    return this.etapasGestion.reduce(
+      (porcentaje, etapa) =>
+        etapa.estado !== "Pendiente"
+          ? Math.max(porcentaje, etapa.porcentaje)
+          : porcentaje,
+      0,
+    );
   }
 
   get antecedentesRequeridosVisibles(): AntecedenteVisible<AntecedenteRequerido>[] {

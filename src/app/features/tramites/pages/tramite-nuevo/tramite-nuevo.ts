@@ -362,7 +362,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       return;
     }
 
-    this.etapasGestion = ETAPAS_ESTANDAR.map((etapa) => this.crearEtapa(etapa));
+    this.etapasGestion = ETAPAS_ESTANDAR.map(({ nombre, porcentaje }) =>
+      this.crearEtapa(nombre, porcentaje),
+    );
   }
 
   private crearAntecedente(antecedente: string) {
@@ -389,9 +391,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     };
   }
 
-  private crearEtapa(etapa: string) {
+  private crearEtapa(etapa: string, porcentaje: number) {
     return {
       etapa,
+      porcentaje,
       estado: "Pendiente",
       fechaEstimada: "",
       fechaReal: "",

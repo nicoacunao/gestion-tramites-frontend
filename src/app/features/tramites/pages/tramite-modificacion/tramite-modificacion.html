@@ -448,6 +448,18 @@
     </p-panel>
 
     <p-panel header="Etapas del trámite" styleClass="modification-panel">
+      <div class="stage-progress">
+        <div class="stage-progress__heading">
+          <span>Avance actual del trámite</span>
+          <strong>{{ porcentajeAvance }}%</strong>
+        </div>
+        <p-progressbar
+          [value]="porcentajeAvance"
+          [showValue]="false"
+          [attr.aria-label]="'Avance actual del trámite: ' + porcentajeAvance + '%'"
+        />
+      </div>
+
       <div class="modification-table-scroll">
         <p-table
           [value]="etapasGestion"
@@ -458,6 +470,7 @@
           <ng-template #header>
             <tr>
               <th class="item-column" scope="col">Etapa</th>
+              <th class="avance-column" scope="col">Avance</th>
               <th class="estado-column" scope="col">Estado</th>
               <th class="responsable-column" scope="col">Responsable</th>
               <th class="fecha-column" scope="col">Fecha estimada</th>
@@ -469,6 +482,10 @@
             <tr>
               <td class="item-column">
                 <strong class="hito-name">{{ i + 1 }}. {{ item.etapa }}</strong>
+              </td>
+
+              <td class="avance-column">
+                <strong>{{ item.porcentaje }}%</strong>
               </td>
 
               <td class="estado-column">

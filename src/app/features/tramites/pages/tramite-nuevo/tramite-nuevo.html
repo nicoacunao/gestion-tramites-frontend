@@ -755,6 +755,7 @@
           <ng-template #header>
             <tr>
               <th class="hito-column" scope="col">Etapa</th>
+              <th class="avance-hito-column" scope="col">Avance</th>
               <th class="estado-hito-column" scope="col">Estado</th>
               <th class="responsable-hito-column" scope="col">Responsable</th>
               <th class="fecha-hito-column" scope="col">Fecha estimada</th>
@@ -766,6 +767,10 @@
             <tr>
               <td class="hito-column">
                 <strong class="hito-name">{{ i + 1 }}. {{ item.etapa }}</strong>
+              </td>
+
+              <td class="avance-hito-column">
+                <strong>{{ item.porcentaje }}%</strong>
               </td>
 
               <td class="estado-hito-column">

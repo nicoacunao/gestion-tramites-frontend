@@ -11,6 +11,7 @@ import { UploadIcon } from "primeng/icons/upload";
 import { InputTextModule } from "primeng/inputtext";
 import { PanelModule } from "primeng/panel";
 import { PopoverModule } from "primeng/popover";
+import { ProgressBarModule } from "primeng/progressbar";
 import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TagModule } from "primeng/tag";
@@ -42,6 +43,7 @@ import { TramitesMock } from "../../services/tramites-mock";
     InputTextModule,
     PanelModule,
     PopoverModule,
+    ProgressBarModule,
     PlusIcon,
     RouterLink,
     SelectModule,
@@ -120,12 +122,23 @@ export class TramiteModificacion {
   ];
 
   etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
-    etapa,
+    etapa: etapa.nombre,
+    porcentaje: etapa.porcentaje,
     estado: indice < 3 ? "Completado" : indice === 3 ? "En curso" : "Pendiente",
     fechaEstimada: "",
     fechaReal: "",
     responsable: "",
   }));
+
+  get porcentajeAvance(): number {
+    return this.etapasGestion.reduce(
+      (porcentaje, etapa) =>
+        etapa.estado !== "Pendiente"
+          ? Math.max(porcentaje, etapa.porcentaje)
+          : porcentaje,
+      0,
+    );
+  }
 
   constructor(
     route: ActivatedRoute,

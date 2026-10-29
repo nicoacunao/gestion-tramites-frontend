@@ -93,6 +93,9 @@ describe("TramiteNuevo", () => {
     expect(componente.configuracionLista).toBe(true);
     expect(componente.antecedentesDisponibles).toEqual(["Documento A1"]);
     expect(componente.etapasGestion).toHaveLength(7);
+    expect(
+      componente.etapasGestion.map(({ porcentaje }) => porcentaje),
+    ).toEqual([10, 20, 30, 40, 50, 80, 100]);
 
     componente.antecedentesComplementarios[0].antecedente =
       "Documento complementario anterior";

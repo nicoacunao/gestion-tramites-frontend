@@ -538,11 +538,24 @@
           </div>
         </div> -->
 
+        <div class="stage-progress">
+          <div class="stage-progress__heading">
+            <span>Avance actual del trámite</span>
+            <strong>{{ porcentajeAvance }}%</strong>
+          </div>
+          <p-progressbar
+            [value]="porcentajeAvance"
+            [showValue]="false"
+            [attr.aria-label]="'Avance actual del trámite: ' + porcentajeAvance + '%'"
+          />
+        </div>
+
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0 milestones-table">
             <thead>
               <tr>
                 <th>Etapa</th>
+                <th>Avance</th>
                 <th>Estado</th>
                 <th>Fecha estimada</th>
                 <th>Fecha real</th>
@@ -552,6 +565,7 @@
             <tbody>
               <tr *ngFor="let item of etapasGestion">
                 <td class="milestone-name">{{ item.etapa }}</td>
+                <td class="stage-percentage">{{ item.porcentaje }}%</td>
                 <td>
                   <p-tag
                     [severity]="obtenerSeveridadEstado(item.estado)"

@@ -663,6 +663,33 @@
   }
 }
 
+.stage-progress {
+  padding: 14px;
+  border-bottom: 1px solid var(--detail-border);
+  background: #f8fafc;
+}
+
+.stage-progress__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 650;
+
+  strong {
+    color: var(--detail-section);
+    font-size: 16px;
+  }
+}
+
+.stage-percentage {
+  color: var(--detail-section);
+  font-weight: 750;
+}
+
 :host ::ng-deep {
   .tramite-detail-dialog {
     max-height: 94vh;
@@ -801,6 +828,15 @@
   .documents-panel {
     .p-select {
       width: 100%;
+    }
+  }
+
+  .stage-progress .p-progressbar {
+    height: 10px;
+    border-radius: 999px;
+
+    .p-progressbar-value {
+      background: #0c6b80;
     }
   }
 }

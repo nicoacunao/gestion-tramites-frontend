@@ -135,5 +135,15 @@ describe("TramiteDetalle", () => {
       "Aprobación del expediente",
       "Emisión o entrega del documento definitivo",
     ]);
+    expect(
+      componente.etapasGestion.map(({ porcentaje }) => porcentaje),
+    ).toEqual([10, 20, 30, 40, 50, 80, 100]);
+    expect(componente.porcentajeAvance).toBe(40);
+  });
+
+  it("calcula el avance desde la etapa más avanzada aunque se salten etapas", () => {
+    componente.etapasGestion[5].estado = "En curso";
+
+    expect(componente.porcentajeAvance).toBe(80);
   });
 });
