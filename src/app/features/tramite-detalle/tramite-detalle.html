@@ -271,7 +271,7 @@
       </p-panel>
 
       <p-panel
-        header="Antecedentes adicionales y documentos"
+        header="Antecedentes complementarios"
         styleClass="detail-panel table-panel documents-panel"
         [toggleable]="true"
       >
@@ -588,58 +588,6 @@
         </p-panel>
       </ng-template>
 
-      <p-panel
-        header="Archivos adjuntos"
-        styleClass="detail-panel table-panel"
-        [toggleable]="true"
-        [collapsed]="true"
-      >
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Archivo</th>
-                <th>Categoría</th>
-                <th>Documento asociado</th>
-                <th>Fecha de carga</th>
-                <th>Cargado por</th>
-                <th>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of archivosAdjuntos">
-                <td class="file-name">{{ item.archivo }}</td>
-                <td>{{ item.categoria }}</td>
-                <td>{{ item.documento }}</td>
-                <td>{{ item.fechaCarga }}</td>
-                <td>{{ item.cargadoPor }}</td>
-                <td>
-                  <div class="table-actions">
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                    >
-                      Descargar
-                    </button>
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                    >
-                      Revisar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </p-panel>
     </div>
   </article>
   } @else {
