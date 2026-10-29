@@ -26,7 +26,11 @@ import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
-import { ESTADOS_ANTECEDENTE, ESTADOS_HITO } from "../../models/estado-tramite";
+import {
+  ESTADOS_ANTECEDENTE,
+  ESTADOS_ETAPA,
+  ETAPAS_ESTANDAR,
+} from "../../models/estado-tramite";
 import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { TramitesMock } from "../../services/tramites-mock";
 
@@ -43,7 +47,6 @@ interface TramiteEspecifico {
   id: string;
   nombre: string;
   antecedentes: string[];
-  hitosGestion?: string[];
 }
 
 interface TipoTramite {
@@ -51,7 +54,6 @@ interface TipoTramite {
   nombre: string;
   segundoNivelLabel: string;
   requiereSeleccionSegundoNivelParaPrincipal: boolean;
-  hitosGestion: string[];
   tramitesEspecificos: TramiteEspecifico[];
 }
 
@@ -117,7 +119,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   ];
   readonly estadosIniciales = ["Borrador", "Pendiente", "Ingresado"];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
-  readonly estadosHito = [...ESTADOS_HITO];
+  readonly estadosEtapa = [...ESTADOS_ETAPA];
   readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
 
   estacionesServicio: EstacionServicio[] = [];
@@ -151,7 +153,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   antecedentesSeleccionadosBorrador: string[] = [];
   selectorAntecedentesVisible = false;
   antecedentesComplementarios = [this.crearAntecedenteComplementario()];
-  hitosGestion: Array<ReturnType<typeof this.crearHito>> = [];
+  etapasGestion: Array<ReturnType<typeof this.crearEtapa>> = [];
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -334,7 +336,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.antecedentesSeleccionadosBorrador = [];
     this.selectorAntecedentesVisible = false;
     this.antecedentesComplementarios = [this.crearAntecedenteComplementario()];
-    this.hitosGestion = [];
+    this.etapasGestion = [];
 
     if (!tipo || !this.modalidadCreacion) {
       return;
@@ -360,17 +362,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       return;
     }
 
-    const hitos =
-      this.modalidadCreacion === "subtramite"
-        ? [
-            "Ingreso del subtrámite",
-            "Revisión de antecedentes",
-            "Gestión ante la institución",
-            "Observaciones y subsanación",
-            "Finalización",
-          ]
-        : tipo.hitosGestion;
-    this.hitosGestion = hitos.map((hito) => this.crearHito(hito));
+    this.etapasGestion = ETAPAS_ESTANDAR.map((etapa) => this.crearEtapa(etapa));
   }
 
   private crearAntecedente(antecedente: string) {
@@ -397,14 +389,13 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     };
   }
 
-  private crearHito(hito: string) {
+  private crearEtapa(etapa: string) {
     return {
-      hito,
+      etapa,
       estado: "Pendiente",
       fechaEstimada: "",
       fechaReal: "",
       responsable: "",
-      observacion: "",
     };
   }
 
@@ -464,7 +455,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       antecedentesConfigurados: this.antecedentesRequeridos.map(
         (item) => item.antecedente,
       ),
-      hitosConfigurados: this.hitosGestion.map((item) => item.hito),
+      etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
       fechaApertura: this.normalizarFechaListado(this.form.fechaApertura),
       fechaEstimadaTermino: this.normalizarFechaListado(
         this.form.fechaEstimadaTermino,

@@ -8,10 +8,7 @@ describe("TramiteDetalle", () => {
 
   beforeEach(() => {
     tramitesMock = new TramitesMock();
-    componente = new TramiteDetalle(
-      tramitesMock,
-      new UserSessionService(),
-    );
+    componente = new TramiteDetalle(tramitesMock, new UserSessionService());
     componente.tramiteId = 1001;
   });
 
@@ -37,9 +34,9 @@ describe("TramiteDetalle", () => {
     componente.visible = true;
 
     expect(componente.tramite?.fechaUltimaRevision).toBe(fechaEsperada);
-    expect(
-      tramitesMock.obtenerPorId(1001)?.fechaUltimaRevision,
-    ).toBe(fechaEsperada);
+    expect(tramitesMock.obtenerPorId(1001)?.fechaUltimaRevision).toBe(
+      fechaEsperada,
+    );
   });
 
   it("incluye una primera entrada automática de inicio con fecha y usuario", () => {
@@ -106,7 +103,7 @@ describe("TramiteDetalle", () => {
     });
   });
 
-  it("registra novedades sin convertir los hitos en comentarios", () => {
+  it("mantiene las novedades separadas de las etapas", () => {
     componente.agregarEntradaBitacora({
       id: "BIT-1001-novedad",
       fecha: "19-09-2026",
@@ -126,5 +123,17 @@ describe("TramiteDetalle", () => {
       comentario: "La visita no pudo realizarse y se coordinó una nueva fecha.",
       automatica: false,
     });
+  });
+
+  it("utiliza las siete etapas estándar del trámite", () => {
+    expect(componente.etapasGestion.map(({ etapa }) => etapa)).toEqual([
+      "Consulta y definición de antecedentes",
+      "Recolección de antecedentes y preparación del expediente",
+      "Ingreso del expediente",
+      "Revisión del expediente y emisión de observaciones",
+      "Respuesta a las observaciones",
+      "Aprobación del expediente",
+      "Emisión o entrega del documento definitivo",
+    ]);
   });
 });

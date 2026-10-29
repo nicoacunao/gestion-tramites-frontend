@@ -19,7 +19,17 @@ export const ESTADOS_ANTECEDENTE = [
   "Recibido conforme",
 ] as const;
 
-export const ESTADOS_HITO = ["Pendiente", "En curso", "Completado"] as const;
+export const ESTADOS_ETAPA = ["Pendiente", "En curso", "Completado"] as const;
+
+export const ETAPAS_ESTANDAR = [
+  "Consulta y definición de antecedentes",
+  "Recolección de antecedentes y preparación del expediente",
+  "Ingreso del expediente",
+  "Revisión del expediente y emisión de observaciones",
+  "Respuesta a las observaciones",
+  "Aprobación del expediente",
+  "Emisión o entrega del documento definitivo",
+] as const;
 
 const SEVERIDADES_ESTADO: Record<string, TagSeverity> = {
   Borrador: "secondary",

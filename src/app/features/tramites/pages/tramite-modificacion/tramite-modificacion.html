@@ -7,7 +7,7 @@
     <div>
       <h2 class="h4 mb-1">Modificar trámite #{{ tramiteId }}</h2>
       <p class="text-body-secondary mb-0">
-        Actualiza los antecedentes y los hitos de gestión.
+        Actualiza los antecedentes y las etapas del trámite.
       </p>
     </div>
     <p-tag [severity]="obtenerSeveridadEstado(tramite.estado)" [rounded]="true">
@@ -447,40 +447,39 @@
       </div>
     </p-panel>
 
-    <p-panel header="Hitos de gestión" styleClass="modification-panel">
+    <p-panel header="Etapas del trámite" styleClass="modification-panel">
       <div class="modification-table-scroll">
         <p-table
-          [value]="hitosGestion"
+          [value]="etapasGestion"
           styleClass="modification-table hitos-table"
           stripedRows
           showGridlines
         >
           <ng-template #header>
             <tr>
-              <th class="item-column" scope="col">Hito</th>
+              <th class="item-column" scope="col">Etapa</th>
               <th class="estado-column" scope="col">Estado</th>
               <th class="responsable-column" scope="col">Responsable</th>
               <th class="fecha-column" scope="col">Fecha estimada</th>
               <th class="fecha-column" scope="col">Fecha real</th>
-              <th class="observaciones-column" scope="col">Observaciones</th>
             </tr>
           </ng-template>
 
           <ng-template #body let-item let-i="rowIndex">
             <tr>
               <td class="item-column">
-                <strong class="hito-name">{{ i + 1 }}. {{ item.hito }}</strong>
+                <strong class="hito-name">{{ i + 1 }}. {{ item.etapa }}</strong>
               </td>
 
               <td class="estado-column">
-                <label class="visually-hidden" [for]="'estadoHito' + i">
-                  Estado de {{ item.hito }}
+                <label class="visually-hidden" [for]="'estadoEtapa' + i">
+                  Estado de {{ item.etapa }}
                 </label>
                 <p-select
-                  [inputId]="'estadoHito' + i"
-                  [name]="'estadoHito' + i"
+                  [inputId]="'estadoEtapa' + i"
+                  [name]="'estadoEtapa' + i"
                   [(ngModel)]="item.estado"
-                  [options]="estadosHito"
+                  [options]="estadosEtapa"
                   placeholder="Seleccione estado"
                   appendTo="body"
                   styleClass="w-100"
@@ -488,12 +487,12 @@
               </td>
 
               <td class="responsable-column">
-                <label class="visually-hidden" [for]="'responsableHito' + i">
-                  Responsable de {{ item.hito }}
+                <label class="visually-hidden" [for]="'responsableEtapa' + i">
+                  Responsable de {{ item.etapa }}
                 </label>
                 <p-select
-                  [inputId]="'responsableHito' + i"
-                  [name]="'responsableHito' + i"
+                  [inputId]="'responsableEtapa' + i"
+                  [name]="'responsableEtapa' + i"
                   [(ngModel)]="item.responsable"
                   [options]="responsables"
                   placeholder="Seleccione responsable"
@@ -506,7 +505,7 @@
 
               <td class="fecha-column">
                 <label class="visually-hidden" [for]="'fechaEstimada' + i">
-                  Fecha estimada de {{ item.hito }}
+                  Fecha estimada de {{ item.etapa }}
                 </label>
                 <p-datepicker
                   [inputId]="'fechaEstimada' + i"
@@ -527,7 +526,7 @@
 
               <td class="fecha-column">
                 <label class="visually-hidden" [for]="'fechaReal' + i">
-                  Fecha real de {{ item.hito }}
+                  Fecha real de {{ item.etapa }}
                 </label>
                 <p-datepicker
                   [inputId]="'fechaReal' + i"
@@ -544,21 +543,6 @@
                   styleClass="w-100"
                   inputStyleClass="w-100"
                 />
-              </td>
-
-              <td class="observaciones-column">
-                <label class="visually-hidden" [for]="'observacionHito' + i">
-                  Observaciones de {{ item.hito }}
-                </label>
-                <textarea
-                  pTextarea
-                  [id]="'observacionHito' + i"
-                  [name]="'observacionHito' + i"
-                  [(ngModel)]="item.observacion"
-                  placeholder="Agregar observación"
-                  [autoResize]="true"
-                  rows="1"
-                ></textarea>
               </td>
             </tr>
           </ng-template>

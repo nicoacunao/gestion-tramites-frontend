@@ -45,16 +45,6 @@
       "nombre": "Patente comercial",
       "segundoNivelLabel": "Subtrámite o gestión asociada",
       "requiereSeleccionSegundoNivelParaPrincipal": false,
-      "hitosGestion": [
-        "Ingreso de la solicitud",
-        "Revisión de la ficha",
-        "Preparación del expediente",
-        "Ingreso ante la municipalidad",
-        "Revisión de la institución",
-        "Observaciones y subsanación",
-        "Reingreso",
-        "Finalización"
-      ],
       "datosAdicionales": [
         {
           "id": "municipalidadCompetente",
@@ -139,17 +129,6 @@
       "nombre": "Resolución sanitaria de alimentos",
       "segundoNivelLabel": "Tipo de instalación o actividad",
       "requiereSeleccionSegundoNivelParaPrincipal": true,
-      "hitosGestion": [
-        "Ingreso de la solicitud",
-        "Definición del tipo de instalación",
-        "Revisión de antecedentes",
-        "Preparación del expediente sanitario",
-        "Ingreso ante la Seremi de Salud",
-        "Revisión de la institución",
-        "Observaciones y subsanación",
-        "Reingreso",
-        "Resolución y finalización"
-      ],
       "datosAdicionales": [
         {
           "id": "seremiCompetente",
@@ -232,15 +211,6 @@
       "nombre": "Informe sanitario de establecimientos industriales y/o comerciales",
       "segundoNivelLabel": "Gestión o subtrámite asociado",
       "requiereSeleccionSegundoNivelParaPrincipal": false,
-      "hitosGestion": [
-        "Ingreso de la solicitud",
-        "Revisión de antecedentes técnicos",
-        "Preparación del expediente",
-        "Ingreso ante la Seremi de Salud",
-        "Revisión de la institución",
-        "Observaciones y subsanación",
-        "Finalización"
-      ],
       "datosAdicionales": [
         {
           "id": "actividadEconomica",
@@ -269,16 +239,6 @@
       "nombre": "Regularización de obras",
       "segundoNivelLabel": "Gestión ante la DOM",
       "requiereSeleccionSegundoNivelParaPrincipal": false,
-      "hitosGestion": [
-        "Ingreso de la solicitud",
-        "Revisión técnica",
-        "Preparación del expediente",
-        "Ingreso ante la Dirección de Obras Municipales",
-        "Revisión de la institución",
-        "Observaciones y subsanación",
-        "Reingreso",
-        "Recepción y finalización"
-      ],
       "datosAdicionales": [
         {
           "id": "domCompetente",

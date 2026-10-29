@@ -34,8 +34,8 @@
                 <strong>Selección del trámite</strong>
                 <p>
                   Comienza por el tipo de trámite. La opción seleccionada
-                  determina los antecedentes disponibles y los hitos o gestiones
-                  asociadas.
+                  determina los antecedentes disponibles. Las etapas son
+                  estándar para todas las gestiones.
                 </p>
               </div>
             </p-popover>
@@ -176,8 +176,8 @@
               antecedentes disponibles
             </span>
             <span>
-              <strong>{{ hitosGestion.length }}</strong>
-              hitos o gestiones asociadas
+              <strong>{{ etapasGestion.length }}</strong>
+              etapas estándar
             </span>
           </div>
 
@@ -190,7 +190,7 @@
             class="configuration-pending"
           >
             Selecciona una alternativa específica para mostrar sus antecedentes
-            e hitos asociados.
+            y sus antecedentes asociados.
           </p>
         </div>
       </ng-container>
@@ -708,7 +708,7 @@
       <div class="section-heading">
         <div>
           <div class="section-title">
-            <h2>Hitos de gestión</h2>
+            <h2>Etapas del trámite</h2>
             <button
               pButton
               type="button"
@@ -716,7 +716,7 @@
               severity="secondary"
               [text]="true"
               [rounded]="true"
-              aria-label="Información sobre los hitos de gestión"
+              aria-label="Información sobre las etapas del trámite"
               aria-haspopup="dialog"
               (click)="hitosInfo.toggle($event)"
             >
@@ -724,72 +724,71 @@
             </button>
             <p-popover #hitosInfo styleClass="section-help-popover">
               <div class="section-help-content">
-                <strong>Hitos de gestión</strong>
+                <strong>Etapas del trámite</strong>
                 <p>
-                  Las etapas se generan según el proceso principal o el
-                  subtrámite independiente seleccionado.
+                  Todas las gestiones utilizan las mismas etapas para indicar el
+                  avance general del trámite.
                 </p>
               </div>
             </p-popover>
           </div>
         </div>
         <span *ngIf="configuracionLista" class="count-badge">
-          {{ hitosGestion.length }} hitos
+          {{ etapasGestion.length }} etapas
         </span>
       </div>
 
       <p *ngIf="!configuracionLista" class="empty-configuration">
-        Completa la selección del trámite para cargar los hitos.
+        Completa la selección del trámite para cargar las etapas.
       </p>
 
       <div
-        *ngIf="configuracionLista && hitosGestion.length"
+        *ngIf="configuracionLista && etapasGestion.length"
         class="antecedentes-table-scroll"
       >
         <p-table
-          [value]="hitosGestion"
+          [value]="etapasGestion"
           styleClass="antecedentes-table hitos-table"
           stripedRows
           showGridlines
         >
           <ng-template #header>
             <tr>
-              <th class="hito-column" scope="col">Hito</th>
+              <th class="hito-column" scope="col">Etapa</th>
               <th class="estado-hito-column" scope="col">Estado</th>
               <th class="responsable-hito-column" scope="col">Responsable</th>
               <th class="fecha-hito-column" scope="col">Fecha estimada</th>
               <th class="fecha-hito-column" scope="col">Fecha real</th>
-              <th class="observacion-hito-column" scope="col">Observaciones</th>
             </tr>
           </ng-template>
 
           <ng-template #body let-item let-i="rowIndex">
             <tr>
               <td class="hito-column">
-                <strong class="hito-name">{{ i + 1 }}. {{ item.hito }}</strong>
+                <strong class="hito-name">{{ i + 1 }}. {{ item.etapa }}</strong>
               </td>
 
               <td class="estado-hito-column">
-                <label class="visually-hidden" [for]="'estadoHito' + i">
-                  Estado de {{ item.hito }}
+                <label class="visually-hidden" [for]="'estadoEtapa' + i">
+                  Estado de {{ item.etapa }}
                 </label>
                 <p-select
-                  [inputId]="'estadoHito' + i"
-                  [name]="'estadoHito' + i"
+                  [inputId]="'estadoEtapa' + i"
+                  [name]="'estadoEtapa' + i"
                   [(ngModel)]="item.estado"
-                  [options]="estadosHito"
+                  [options]="estadosEtapa"
                   appendTo="body"
                   styleClass="w-100"
                 />
               </td>
 
               <td class="responsable-hito-column">
-                <label class="visually-hidden" [for]="'responsableHito' + i">
-                  Responsable de {{ item.hito }}
+                <label class="visually-hidden" [for]="'responsableEtapa' + i">
+                  Responsable de {{ item.etapa }}
                 </label>
                 <p-select
-                  [inputId]="'responsableHito' + i"
-                  [name]="'responsableHito' + i"
+                  [inputId]="'responsableEtapa' + i"
+                  [name]="'responsableEtapa' + i"
                   [(ngModel)]="item.responsable"
                   [options]="responsables"
                   placeholder="Seleccione responsable"
@@ -801,12 +800,12 @@
               </td>
 
               <td class="fecha-hito-column">
-                <label class="visually-hidden" [for]="'fechaEstimadaHito' + i">
-                  Fecha estimada de {{ item.hito }}
+                <label class="visually-hidden" [for]="'fechaEstimadaEtapa' + i">
+                  Fecha estimada de {{ item.etapa }}
                 </label>
                 <p-datepicker
-                  [inputId]="'fechaEstimadaHito' + i"
-                  [name]="'fechaEstimadaHito' + i"
+                  [inputId]="'fechaEstimadaEtapa' + i"
+                  [name]="'fechaEstimadaEtapa' + i"
                   [(ngModel)]="item.fechaEstimada"
                   dataType="string"
                   dateFormat="dd/mm/yy"
@@ -820,12 +819,12 @@
               </td>
 
               <td class="fecha-hito-column">
-                <label class="visually-hidden" [for]="'fechaRealHito' + i">
-                  Fecha real de {{ item.hito }}
+                <label class="visually-hidden" [for]="'fechaRealEtapa' + i">
+                  Fecha real de {{ item.etapa }}
                 </label>
                 <p-datepicker
-                  [inputId]="'fechaRealHito' + i"
-                  [name]="'fechaRealHito' + i"
+                  [inputId]="'fechaRealEtapa' + i"
+                  [name]="'fechaRealEtapa' + i"
                   [(ngModel)]="item.fechaReal"
                   dataType="string"
                   dateFormat="dd/mm/yy"
@@ -836,21 +835,6 @@
                   styleClass="w-100"
                   inputStyleClass="w-100"
                 />
-              </td>
-
-              <td class="observacion-hito-column">
-                <label class="visually-hidden" [for]="'observacionHito' + i">
-                  Observaciones de {{ item.hito }}
-                </label>
-                <textarea
-                  pTextarea
-                  [id]="'observacionHito' + i"
-                  [name]="'observacionHito' + i"
-                  [(ngModel)]="item.observacion"
-                  placeholder="Agregar observación"
-                  [autoResize]="true"
-                  rows="1"
-                ></textarea>
               </td>
             </tr>
           </ng-template>

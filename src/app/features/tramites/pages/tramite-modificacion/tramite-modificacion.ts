@@ -19,8 +19,9 @@ import { ToggleSwitchModule } from "primeng/toggleswitch";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
   ESTADOS_ANTECEDENTE,
-  ESTADOS_HITO,
+  ESTADOS_ETAPA,
   ESTADOS_TRAMITE,
+  ETAPAS_ESTANDAR,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../../models/estado-tramite";
@@ -57,7 +58,7 @@ export class TramiteModificacion {
   readonly tramiteId: string;
   readonly estadosTramite = [...ESTADOS_TRAMITE];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
-  readonly estadosHito = [...ESTADOS_HITO];
+  readonly estadosEtapa = [...ESTADOS_ETAPA];
   readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
   readonly responsables = [
     "José L. Rosas",
@@ -118,24 +119,13 @@ export class TramiteModificacion {
     },
   ];
 
-  hitosGestion = [
-    {
-      hito: "Ingreso de solicitud",
-      estado: "Completado",
-      fechaEstimada: "02/07/2026",
-      fechaReal: "02/07/2026",
-      responsable: "Carlos Ramírez",
-      observacion: "Solicitud ingresada correctamente.",
-    },
-    {
-      hito: "Revisión técnica",
-      estado: "En curso",
-      fechaEstimada: "08/07/2026",
-      fechaReal: "",
-      responsable: "María González",
-      observacion: "Revisión documental y técnica en proceso.",
-    },
-  ];
+  etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
+    etapa,
+    estado: indice < 3 ? "Completado" : indice === 3 ? "En curso" : "Pendiente",
+    fechaEstimada: "",
+    fechaReal: "",
+    responsable: "",
+  }));
 
   constructor(
     route: ActivatedRoute,

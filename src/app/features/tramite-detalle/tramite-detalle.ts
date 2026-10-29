@@ -21,6 +21,7 @@ import {
 } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
 import {
+  ETAPAS_ESTANDAR,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../tramites/models/estado-tramite";
@@ -58,6 +59,51 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
   antecedente: T;
   profundidad: number;
 }
+
+const DATOS_ETAPAS_DETALLE = [
+  {
+    estado: "Completado",
+    fechaEstimada: "02-07-2026",
+    fechaReal: "02-07-2026",
+    responsable: "Carlos Ramírez",
+  },
+  {
+    estado: "Completado",
+    fechaEstimada: "06-07-2026",
+    fechaReal: "06-07-2026",
+    responsable: "Oficina técnica",
+  },
+  {
+    estado: "Completado",
+    fechaEstimada: "07-07-2026",
+    fechaReal: "07-07-2026",
+    responsable: "Carlos Ramírez",
+  },
+  {
+    estado: "En curso",
+    fechaEstimada: "15-07-2026",
+    fechaReal: "—",
+    responsable: "María González",
+  },
+  {
+    estado: "Pendiente",
+    fechaEstimada: "18-07-2026",
+    fechaReal: "—",
+    responsable: "Oficina técnica",
+  },
+  {
+    estado: "Pendiente",
+    fechaEstimada: "25-07-2026",
+    fechaReal: "—",
+    responsable: "María González",
+  },
+  {
+    estado: "Pendiente",
+    fechaEstimada: "—",
+    fechaReal: "—",
+    responsable: "María González",
+  },
+];
 
 @Component({
   selector: "app-tramite-detalle",
@@ -201,56 +247,10 @@ export class TramiteDetalle {
     },
   ];
 
-  readonly hitosGestion = [
-    {
-      hito: "Preparación del expediente",
-      estado: "Completado",
-      fechaEstimada: "06-07-2026",
-      fechaReal: "06-07-2026",
-      responsable: "Oficina técnica",
-      observacion: "Expediente consolidado para ingreso.",
-    },
-    {
-      hito: "Ingreso ante la institución",
-      estado: "Completado",
-      fechaEstimada: "07-07-2026",
-      fechaReal: "07-07-2026",
-      responsable: "Carlos Ramírez",
-      observacion: "Folio de ingreso DOM-2841.",
-    },
-    {
-      hito: "Revisión institucional",
-      estado: "En curso",
-      fechaEstimada: "15-07-2026",
-      fechaReal: "—",
-      responsable: "María González",
-      observacion: "En revisión por la Dirección de Obras Municipales.",
-    },
-    {
-      hito: "Recepción de observaciones",
-      estado: "Pendiente",
-      fechaEstimada: "17-07-2026",
-      fechaReal: "—",
-      responsable: "María González",
-      observacion: "A la espera del pronunciamiento institucional.",
-    },
-    {
-      hito: "Reingreso de antecedentes",
-      estado: "Pendiente",
-      fechaEstimada: "18-07-2026",
-      fechaReal: "—",
-      responsable: "Oficina técnica",
-      observacion: "Sujeto a la subsanación de observaciones.",
-    },
-    {
-      hito: "Recepción o aprobación final",
-      estado: "Pendiente",
-      fechaEstimada: "25-07-2026",
-      fechaReal: "—",
-      responsable: "María González",
-      observacion: "Pendiente del pronunciamiento de la institución.",
-    },
-  ];
+  readonly etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
+    etapa,
+    ...DATOS_ETAPAS_DETALLE[indice],
+  }));
 
   readonly archivosAdjuntos = [
     {

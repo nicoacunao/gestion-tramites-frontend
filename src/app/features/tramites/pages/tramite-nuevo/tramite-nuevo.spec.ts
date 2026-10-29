@@ -28,7 +28,6 @@ describe("TramiteNuevo", () => {
         nombre: "Tipo A",
         segundoNivelLabel: "Gestión específica",
         requiereSeleccionSegundoNivelParaPrincipal: false,
-        hitosGestion: ["Hito principal A"],
         tramitesEspecificos: [
           {
             id: "gestion-a1",
@@ -47,7 +46,6 @@ describe("TramiteNuevo", () => {
         nombre: "Tipo B",
         segundoNivelLabel: "Gestión específica",
         requiereSeleccionSegundoNivelParaPrincipal: false,
-        hitosGestion: ["Hito principal B"],
         tramitesEspecificos: [
           {
             id: "gestion-b1",
@@ -65,7 +63,7 @@ describe("TramiteNuevo", () => {
     expect(componente.requiereSeleccionSegundoNivel).toBe(false);
     expect(componente.configuracionLista).toBe(false);
     expect(componente.antecedentesDisponibles).toEqual([]);
-    expect(componente.hitosGestion).toEqual([]);
+    expect(componente.etapasGestion).toEqual([]);
   });
 
   it("exige seleccionar la modalidad después de seleccionar el tipo", () => {
@@ -94,7 +92,7 @@ describe("TramiteNuevo", () => {
 
     expect(componente.configuracionLista).toBe(true);
     expect(componente.antecedentesDisponibles).toEqual(["Documento A1"]);
-    expect(componente.hitosGestion).toHaveLength(5);
+    expect(componente.etapasGestion).toHaveLength(7);
 
     componente.antecedentesComplementarios[0].antecedente =
       "Documento complementario anterior";
@@ -140,7 +138,7 @@ describe("TramiteNuevo", () => {
       "Documento A1",
       "Documento A2",
     ]);
-    expect(componente.hitosGestion).toHaveLength(1);
+    expect(componente.etapasGestion).toHaveLength(7);
   });
 
   it("impide crear el trámite con una selección incompleta", () => {
