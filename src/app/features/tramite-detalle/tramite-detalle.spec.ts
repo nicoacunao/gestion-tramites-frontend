@@ -140,15 +140,67 @@ describe("TramiteDetalle", () => {
     ).toEqual([10, 20, 30, 40, 50, 80, 100]);
     expect(componente.etapasGestion[3]).toMatchObject({
       responsable: "María González",
-      fechaEstimada: "15-07-2026",
+      fechaEstimada: "15/07/2026",
       observacion: "Funcionario informó un plazo estimado de 15 días.",
     });
     expect(componente.porcentajeAvance).toBe(40);
   });
 
-  it("calcula el avance desde la etapa más avanzada aunque se salten etapas", () => {
-    componente.etapasGestion[5].estado = "En curso";
+  it("habilita las etapas de forma consecutiva", () => {
+    expect(componente.etapasGestion).toHaveLength(7);
+    expect(componente.puedeEditarEtapa(3)).toBe(true);
+    expect(componente.puedeEditarEtapa(4)).toBe(false);
 
-    expect(componente.porcentajeAvance).toBe(80);
+    componente.actualizarEstadoEtapa(4, "En curso");
+
+    expect(componente.etapasGestion[4].estado).toBe("Pendiente");
+
+    componente.actualizarEstadoEtapa(3, "Completado");
+
+    expect(componente.puedeEditarEtapa(4)).toBe(true);
+    expect(componente.porcentajeAvance).toBe(40);
+
+    componente.actualizarEstadoEtapa(1, "En curso");
+
+    expect(componente.etapasGestion).toHaveLength(7);
+    expect(componente.puedeEditarEtapa(2)).toBe(false);
+    expect(componente.etapasGestion[2].estado).toBe("Pendiente");
+    expect(componente.porcentajeAvance).toBe(20);
+  });
+
+  it("genera la fecha de carga al subir un archivo pendiente", () => {
+    const antecedente = componente.antecedentesRequeridos[2];
+    const archivo = new File(["contenido"], "formulario-ingreso.pdf", {
+      type: "application/pdf",
+    });
+    const input = {
+      files: { item: () => archivo },
+      value: "archivo-seleccionado",
+    };
+
+    componente.cargarArchivoAntecedente(
+      { target: input } as unknown as Event,
+      antecedente,
+    );
+
+    expect(antecedente.archivo).toBe("formulario-ingreso.pdf");
+    expect(antecedente.fechaCarga).not.toBe("—");
+    expect(input.value).toBe("");
+  });
+
+  it("guarda los cambios editables del detalle", () => {
+    componente.antecedentesRequeridos[0].estado = "Pendiente";
+    componente.etapasGestion[3].observacion = "Revisión a cargo de DOM.";
+
+    componente.guardarCambios();
+
+    const tramiteGuardado = tramitesMock.obtenerPorId(1001);
+
+    expect(
+      tramiteGuardado?.detalleEditable?.antecedentesRequeridos[0].estado,
+    ).toBe("Pendiente");
+    expect(tramiteGuardado?.detalleEditable?.etapas[3].observacion).toBe(
+      "Revisión a cargo de DOM.",
+    );
   });
 });

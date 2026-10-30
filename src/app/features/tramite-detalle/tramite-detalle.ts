@@ -9,6 +9,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ButtonDirective } from "primeng/button";
+import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
 import { InputTextModule } from "primeng/inputtext";
 import { PanelModule } from "primeng/panel";
@@ -22,11 +23,19 @@ import {
 } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
 import {
+  ESTADOS_ANTECEDENTE,
+  ESTADOS_ETAPA,
   ETAPAS_ESTANDAR,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../tramites/models/estado-tramite";
-import { Tramite } from "../tramites/models/tramite";
+import {
+  AntecedenteComplementarioDetalle,
+  AntecedenteRequeridoDetalle,
+  DetalleEditableTramite,
+  EtapaDetalle,
+  Tramite,
+} from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
@@ -38,24 +47,6 @@ interface AntecedenteConNivel {
   expandido: boolean;
 }
 
-interface AntecedenteRequerido extends AntecedenteConNivel {
-  antecedente: string;
-  obligatorio: boolean;
-  responsable: string;
-  estado: string;
-  fechaCarga: string;
-  archivo: string;
-}
-
-interface AntecedenteComplementario extends AntecedenteConNivel {
-  tipoDocumento: string;
-  solicitadoPor: string;
-  responsable: string;
-  estado: string;
-  fechaCarga: string;
-  archivo: string;
-}
-
 interface AntecedenteVisible<T extends AntecedenteConNivel> {
   antecedente: T;
   profundidad: number;
@@ -64,42 +55,42 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
 const DATOS_ETAPAS_DETALLE = [
   {
     estado: "Completado",
-    fechaEstimada: "02-07-2026",
-    fechaReal: "02-07-2026",
+    fechaEstimada: "02/07/2026",
+    fechaReal: "02/07/2026",
     responsable: "Carlos Ramírez",
     observacion: "Antecedentes necesarios confirmados.",
   },
   {
     estado: "Completado",
-    fechaEstimada: "06-07-2026",
-    fechaReal: "06-07-2026",
+    fechaEstimada: "06/07/2026",
+    fechaReal: "06/07/2026",
     responsable: "Oficina técnica",
     observacion: "Expediente preparado con los documentos recibidos.",
   },
   {
     estado: "Completado",
-    fechaEstimada: "07-07-2026",
-    fechaReal: "07-07-2026",
+    fechaEstimada: "07/07/2026",
+    fechaReal: "07/07/2026",
     responsable: "Carlos Ramírez",
     observacion: "Expediente ingresado bajo folio DOM-2841.",
   },
   {
     estado: "En curso",
-    fechaEstimada: "15-07-2026",
+    fechaEstimada: "15/07/2026",
     fechaReal: "—",
     responsable: "María González",
     observacion: "Funcionario informó un plazo estimado de 15 días.",
   },
   {
     estado: "Pendiente",
-    fechaEstimada: "18-07-2026",
+    fechaEstimada: "18/07/2026",
     fechaReal: "—",
     responsable: "Oficina técnica",
     observacion: "—",
   },
   {
     estado: "Pendiente",
-    fechaEstimada: "25-07-2026",
+    fechaEstimada: "25/07/2026",
     fechaReal: "—",
     responsable: "María González",
     observacion: "—",
@@ -120,6 +111,7 @@ const DATOS_ETAPAS_DETALLE = [
     BitacoraPanel,
     ButtonDirective,
     CommonModule,
+    DatePickerModule,
     DialogModule,
     FormsModule,
     InputTextModule,
@@ -144,6 +136,7 @@ export class TramiteDetalle {
     this._visible = visible;
 
     if (seAbreDetalle) {
+      this.cargarDatosEditables();
       this.registrarUltimaRevision();
     }
   }
@@ -161,6 +154,7 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
+    this.cargarDatosEditables();
 
     if (this.visible) {
       this.registrarUltimaRevision();
@@ -180,6 +174,8 @@ export class TramiteDetalle {
   contextoDocumentoNuevo = "";
   mensajeDocumento = "";
   mensajeDocumentoEsError = false;
+  readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
+  readonly estadosEtapa = [...ESTADOS_ETAPA];
 
   readonly tiposAntecedenteAdicional = [
     "Formulario de ingreso de solicitud",
@@ -190,7 +186,7 @@ export class TramiteDetalle {
     "Otro documento",
   ];
 
-  readonly antecedentesRequeridos: AntecedenteRequerido[] = [
+  antecedentesRequeridos: AntecedenteRequeridoDetalle[] = [
     {
       id: "antecedente-dominio",
       nivel: "N2",
@@ -229,7 +225,7 @@ export class TramiteDetalle {
     },
   ];
 
-  readonly antecedentesComplementarios: AntecedenteComplementario[] = [
+  antecedentesComplementarios: AntecedenteComplementarioDetalle[] = [
     {
       id: "antecedente-seguridad",
       nivel: "N2",
@@ -256,7 +252,7 @@ export class TramiteDetalle {
     },
   ];
 
-  readonly etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
+  etapasGestion: EtapaDetalle[] = ETAPAS_ESTANDAR.map((etapa, indice) => ({
     etapa: etapa.nombre,
     porcentaje: etapa.porcentaje,
     ...DATOS_ETAPAS_DETALLE[indice],
@@ -285,6 +281,12 @@ export class TramiteDetalle {
       cargadoPor: "Prevención de riesgos",
     },
   ];
+
+  private readonly datosEditablesIniciales = this.clonarDatosEditables({
+    antecedentesRequeridos: this.antecedentesRequeridos,
+    antecedentesComplementarios: this.antecedentesComplementarios,
+    etapas: this.etapasGestion,
+  });
 
   constructor(
     private readonly tramitesMock: TramitesMock,
@@ -320,11 +322,11 @@ export class TramiteDetalle {
     );
   }
 
-  get antecedentesRequeridosVisibles(): AntecedenteVisible<AntecedenteRequerido>[] {
+  get antecedentesRequeridosVisibles(): AntecedenteVisible<AntecedenteRequeridoDetalle>[] {
     return this.obtenerAntecedentesVisibles(this.antecedentesRequeridos);
   }
 
-  get antecedentesComplementariosVisibles(): AntecedenteVisible<AntecedenteComplementario>[] {
+  get antecedentesComplementariosVisibles(): AntecedenteVisible<AntecedenteComplementarioDetalle>[] {
     return this.obtenerAntecedentesVisibles(this.antecedentesComplementarios);
   }
 
@@ -365,6 +367,64 @@ export class TramiteDetalle {
     this.archivoAntecedenteNuevo = archivo;
     this.mensajeDocumento = "";
     this.mensajeDocumentoEsError = false;
+  }
+
+  cargarArchivoAntecedente(
+    event: Event,
+    antecedente: AntecedenteRequeridoDetalle | AntecedenteComplementarioDetalle,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.item(0) ?? null;
+
+    if (!archivo || archivo.size > 10_000_000) {
+      input.value = "";
+      return;
+    }
+
+    antecedente.archivo = archivo.name;
+    antecedente.fechaCarga = this.formatearFecha(new Date());
+    input.value = "";
+  }
+
+  actualizarEstadoEtapa(indice: number, estado: string): void {
+    if (!this.puedeEditarEtapa(indice)) {
+      return;
+    }
+
+    this.etapasGestion[indice].estado = estado;
+
+    if (estado === "Completado") {
+      return;
+    }
+
+    this.etapasGestion.slice(indice + 1).forEach((etapa) => {
+      etapa.estado = "Pendiente";
+    });
+  }
+
+  puedeEditarEtapa(indice: number): boolean {
+    return (
+      indice === 0 || this.etapasGestion[indice - 1].estado === "Completado"
+    );
+  }
+
+  guardarCambios(): void {
+    if (!this.tramite) {
+      return;
+    }
+
+    const tramiteActualizado: Tramite = {
+      ...this.tramite,
+      detalleEditable: this.clonarDatosEditables({
+        antecedentesRequeridos: this.antecedentesRequeridos,
+        antecedentesComplementarios: this.antecedentesComplementarios,
+        etapas: this.etapasGestion,
+      }),
+    };
+
+    this.tramitesMock.guardar(tramiteActualizado);
+    this.tramite = tramiteActualizado;
+    this.actualizarVisibilidad(false);
   }
 
   adjuntarAntecedente(): void {
@@ -523,6 +583,29 @@ export class TramiteDetalle {
     this.mensajeDocumento = "";
     this.mensajeDocumentoEsError = false;
     this.limpiarArchivoSeleccionado();
+  }
+
+  private cargarDatosEditables(): void {
+    const datos = this.tramite?.detalleEditable ?? this.datosEditablesIniciales;
+    const copia = this.clonarDatosEditables(datos);
+
+    this.antecedentesRequeridos = copia.antecedentesRequeridos;
+    this.antecedentesComplementarios = copia.antecedentesComplementarios;
+    this.etapasGestion = copia.etapas;
+  }
+
+  private clonarDatosEditables(
+    datos: DetalleEditableTramite,
+  ): DetalleEditableTramite {
+    return {
+      antecedentesRequeridos: datos.antecedentesRequeridos.map(
+        (antecedente) => ({ ...antecedente }),
+      ),
+      antecedentesComplementarios: datos.antecedentesComplementarios.map(
+        (antecedente) => ({ ...antecedente }),
+      ),
+      etapas: datos.etapas.map((etapa) => ({ ...etapa })),
+    };
   }
 
   private limpiarArchivoSeleccionado(): void {

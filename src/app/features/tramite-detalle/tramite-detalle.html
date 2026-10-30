@@ -198,17 +198,76 @@
                 </td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
-                  <p-tag
-                    [severity]="
-                      obtenerSeveridadEstado(fila.antecedente.estado)
-                    "
-                    [rounded]="true"
-                  >
-                    {{ fila.antecedente.estado }}
-                  </p-tag>
+                  <p-select
+                    [inputId]="'estado-requerido-' + fila.antecedente.id"
+                    [name]="'estadoRequerido' + fila.antecedente.id"
+                    [(ngModel)]="fila.antecedente.estado"
+                    [options]="estadosAntecedente"
+                    appendTo="body"
+                    styleClass="antecedent-status-select"
+                    panelStyleClass="detail-status-select-panel"
+                  />
                 </td>
                 <td>{{ fila.antecedente.fechaCarga }}</td>
-                <td class="file-name">{{ fila.antecedente.archivo }}</td>
+                <td>
+                  @if (tieneArchivo(fila.antecedente.archivo)) {
+                  <div class="file-cell">
+                    <span class="file-name"
+                      >{{ fila.antecedente.archivo }}</span
+                    >
+                    <div class="file-actions">
+                      <button
+                        type="button"
+                        class="file-action-button"
+                        title="Descargar archivo"
+                        [attr.aria-label]="
+                          'Descargar ' + fila.antecedente.archivo
+                        "
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M12 3v12M7 10l5 5 5-5M5 20h14"></path>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="file-action-button"
+                        title="Visualizar archivo"
+                        [attr.aria-label]="
+                          'Visualizar ' + fila.antecedente.archivo
+                        "
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                          ></path>
+                          <circle cx="12" cy="12" r="2.5"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  } @else {
+                  <div class="file-upload-control">
+                    <input
+                      class="file-picker__input"
+                      type="file"
+                      [id]="'archivo-requerido-' + fila.antecedente.id"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                      (change)="
+                        cargarArchivoAntecedente($event, fila.antecedente)
+                      "
+                    />
+                    <label
+                      class="file-upload-button"
+                      [for]="'archivo-requerido-' + fila.antecedente.id"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 17V4M7 9l5-5 5 5M5 20h14"></path>
+                      </svg>
+                      Subir archivo
+                    </label>
+                  </div>
+                  }
+                </td>
                 <td>
                   <div class="table-actions">
                     @if (cantidadAntecedentesHijos(fila.antecedente,
@@ -230,37 +289,17 @@
                       "
                     >
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
-                        ></path>
-                        <circle cx="12" cy="12" r="2.5"></circle>
                         @if (fila.antecedente.expandido) {
-                        <path d="m4 4 16 16"></path>
+                        <path d="m7 14 5-5 5 5"></path>
+                        } @else {
+                        <path d="m7 10 5 5 5-5"></path>
                         }
                       </svg>
                       <span>{{ cantidad }}</span>
                     </button>
+                    } @else {
+                    <span class="empty-action">—</span>
                     }
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
-                    >
-                      Descargar
-                    </button>
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
-                    >
-                      Revisar
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -446,17 +485,76 @@
                 <td>{{ fila.antecedente.solicitadoPor }}</td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
-                  <p-tag
-                    [severity]="
-                      obtenerSeveridadEstado(fila.antecedente.estado)
-                    "
-                    [rounded]="true"
-                  >
-                    {{ fila.antecedente.estado }}
-                  </p-tag>
+                  <p-select
+                    [inputId]="'estado-complementario-' + fila.antecedente.id"
+                    [name]="'estadoComplementario' + fila.antecedente.id"
+                    [(ngModel)]="fila.antecedente.estado"
+                    [options]="estadosAntecedente"
+                    appendTo="body"
+                    styleClass="antecedent-status-select"
+                    panelStyleClass="detail-status-select-panel"
+                  />
                 </td>
                 <td>{{ fila.antecedente.fechaCarga }}</td>
-                <td class="file-name">{{ fila.antecedente.archivo }}</td>
+                <td>
+                  @if (tieneArchivo(fila.antecedente.archivo)) {
+                  <div class="file-cell">
+                    <span class="file-name"
+                      >{{ fila.antecedente.archivo }}</span
+                    >
+                    <div class="file-actions">
+                      <button
+                        type="button"
+                        class="file-action-button"
+                        title="Descargar archivo"
+                        [attr.aria-label]="
+                          'Descargar ' + fila.antecedente.archivo
+                        "
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M12 3v12M7 10l5 5 5-5M5 20h14"></path>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="file-action-button"
+                        title="Visualizar archivo"
+                        [attr.aria-label]="
+                          'Visualizar ' + fila.antecedente.archivo
+                        "
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                          ></path>
+                          <circle cx="12" cy="12" r="2.5"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  } @else {
+                  <div class="file-upload-control">
+                    <input
+                      class="file-picker__input"
+                      type="file"
+                      [id]="'archivo-complementario-' + fila.antecedente.id"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                      (change)="
+                        cargarArchivoAntecedente($event, fila.antecedente)
+                      "
+                    />
+                    <label
+                      class="file-upload-button"
+                      [for]="'archivo-complementario-' + fila.antecedente.id"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 17V4M7 9l5-5 5 5M5 20h14"></path>
+                      </svg>
+                      Subir archivo
+                    </label>
+                  </div>
+                  }
+                </td>
                 <td>
                   <div class="table-actions">
                     @if (cantidadAntecedentesHijos(fila.antecedente,
@@ -478,37 +576,17 @@
                       "
                     >
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
-                        ></path>
-                        <circle cx="12" cy="12" r="2.5"></circle>
                         @if (fila.antecedente.expandido) {
-                        <path d="m4 4 16 16"></path>
+                        <path d="m7 14 5-5 5 5"></path>
+                        } @else {
+                        <path d="m7 10 5 5 5-5"></path>
                         }
                       </svg>
                       <span>{{ cantidad }}</span>
                     </button>
+                    } @else {
+                    <span class="empty-action">—</span>
                     }
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
-                    >
-                      Descargar
-                    </button>
-                    <button
-                      pButton
-                      type="button"
-                      severity="secondary"
-                      [text]="true"
-                      size="small"
-                      [disabled]="!tieneArchivo(fila.antecedente.archivo)"
-                    >
-                      Revisar
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -564,21 +642,67 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of etapasGestion">
+              <tr
+                *ngFor="let item of etapasGestion; let i = index"
+                [class.stage-row--disabled]="!puedeEditarEtapa(i)"
+              >
                 <td class="milestone-name">{{ item.etapa }}</td>
                 <td class="stage-percentage">{{ item.porcentaje }}%</td>
                 <td>
-                  <p-tag
-                    [severity]="obtenerSeveridadEstado(item.estado)"
-                    [rounded]="true"
-                  >
-                    {{ item.estado }}
-                  </p-tag>
+                  <p-select
+                    [inputId]="'estado-etapa-' + i"
+                    [name]="'estadoEtapa' + i"
+                    [(ngModel)]="item.estado"
+                    (ngModelChange)="actualizarEstadoEtapa(i, $event)"
+                    [options]="estadosEtapa"
+                    [disabled]="!puedeEditarEtapa(i)"
+                    appendTo="body"
+                    styleClass="stage-status-select"
+                    panelStyleClass="detail-status-select-panel"
+                  />
                 </td>
-                <td>{{ item.fechaEstimada }}</td>
+                <td>
+                  <p-datepicker
+                    [inputId]="'fecha-estimada-etapa-' + i"
+                    [name]="'fechaEstimadaEtapa' + i"
+                    [(ngModel)]="item.fechaEstimada"
+                    dataType="string"
+                    dateFormat="dd/mm/yy"
+                    placeholder="dd/mm/yyyy"
+                    [showIcon]="true"
+                    [disabled]="!puedeEditarEtapa(i)"
+                    iconDisplay="input"
+                    appendTo="body"
+                    styleClass="stage-date-input"
+                    inputStyleClass="stage-date-input"
+                  />
+                </td>
                 <td>{{ item.fechaReal }}</td>
-                <td>{{ item.responsable }}</td>
-                <td>{{ item.observacion }}</td>
+                <td>
+                  <input
+                    pInputText
+                    [id]="'responsable-etapa-' + i"
+                    [name]="'responsableEtapa' + i"
+                    [(ngModel)]="item.responsable"
+                    [disabled]="!puedeEditarEtapa(i)"
+                    maxlength="150"
+                    class="stage-owner-input"
+                  />
+                </td>
+                <td>
+                  <textarea
+                    pTextarea
+                    [id]="'observacion-etapa-' + i"
+                    [name]="'observacionEtapa' + i"
+                    [(ngModel)]="item.observacion"
+                    [disabled]="!puedeEditarEtapa(i)"
+                    maxlength="300"
+                    rows="1"
+                    [autoResize]="true"
+                    class="stage-observation-input"
+                    placeholder="Agregar observación breve"
+                  ></textarea>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -614,14 +738,8 @@
   }
 
   <ng-template #footer>
-    <button
-      pButton
-      type="button"
-      severity="secondary"
-      [outlined]="true"
-      (click)="cerrar()"
-    >
-      Cerrar
+    <button pButton type="button" (click)="guardarCambios()">
+      Guardar cambios
     </button>
   </ng-template>
 </p-dialog>
