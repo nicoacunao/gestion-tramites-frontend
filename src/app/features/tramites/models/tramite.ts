@@ -42,6 +42,7 @@ export interface DetalleEditableTramite {
 
 export interface Tramite {
   id: number;
+  apiId?: string;
   idEstacion: string;
   tipoTramite: string;
   estacionServicio: string;

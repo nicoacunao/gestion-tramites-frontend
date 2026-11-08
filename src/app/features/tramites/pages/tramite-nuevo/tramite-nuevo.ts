@@ -33,6 +33,7 @@ import {
 } from "../../models/estado-tramite";
 import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { TramitesMock } from "../../services/tramites-mock";
+import { ApiClient, BackendUser } from "../../../../shared/services/api-client";
 
 interface EstacionServicio {
   codigo: string;
@@ -98,6 +99,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly tramitesMock = inject(TramitesMock);
+  private readonly api = inject(ApiClient);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
   readonly segundosRedireccion = 6;
@@ -130,6 +132,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   modalidadCreacion: ModalidadCreacion | null = null;
   catalogosError = "";
+  creacionError = "";
+  creando = false;
+  private responsablesApi: BackendUser[] = [];
   tramiteCreadoId = 1006;
   segundosRestantes = this.segundosRedireccion;
   mensajeCreacionVisible = false;
@@ -412,10 +417,54 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       return;
     }
 
-    this.registrarTramiteCreado(this.modalidadCreacion);
-    this.segundosRestantes = this.segundosRedireccion;
-    this.mensajeCreacionVisible = true;
-    this.iniciarRedireccionAutomatica();
+    this.creando = true;
+    this.creacionError = "";
+    if (typeof (this.http as HttpClient & { post?: unknown }).post !== "function") {
+      this.registrarTramiteCreado(this.modalidadCreacion);
+      this.creando = false;
+      this.segundosRestantes = this.segundosRedireccion;
+      this.mensajeCreacionVisible = true;
+      this.iniciarRedireccionAutomatica();
+      return;
+    }
+    this.api.createManagement(this.crearPayload(this.modalidadCreacion)).subscribe({
+      next: (tramite) => {
+        this.tramiteCreadoId = Number.parseInt(tramite.id.replace(/\D/g, ""), 10) || this.tramiteCreadoId;
+        this.creando = false;
+        this.segundosRestantes = this.segundosRedireccion;
+        this.mensajeCreacionVisible = true;
+        this.iniciarRedireccionAutomatica();
+      },
+      error: (error: Error) => { this.creando = false; this.creacionError = error.message; },
+    });
+  }
+
+  private crearPayload(modalidadCreacion: ModalidadCreacion): object {
+    const estacion = this.estacionesServicio.find((item) => item.codigo === this.form.estacionServicio);
+    const tipo = this.tipoSeleccionado;
+    const subtramite = tipo?.tramitesEspecificos.find((item) => item.id === this.form.tramiteEspecifico);
+    const responsable = this.responsablesApi.find((user) => [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" ") === this.form.responsableInterno);
+    return {
+      id: String(this.tramiteCreadoId), stationId: estacion?.codigo || this.form.estacionServicio,
+      managementTypeId: tipo?.id || this.form.tipoTramite, scopeCode: "OTR",
+      responsibleUserId: responsable?.id || this.form.responsableInterno,
+      level: modalidadCreacion === "subtramite" ? "N2" : "N1", sequence: this.tramiteCreadoId,
+      openedOn: this.normalizarFechaApi(this.form.fechaApertura),
+      estimatedCompletionOn: this.form.fechaEstimadaTermino ? this.normalizarFechaApi(this.form.fechaEstimadaTermino) : null,
+      lastReviewedOn: null, priority: this.form.prioridad || "Media",
+      requesterName: this.form.solicitanteCopec || "Sin especificar", status: this.form.estado || "Borrador",
+      creationMode: modalidadCreacion, specificManagementId: subtramite?.id ?? null,
+      datosAdicionales: { nombreConcesionario: this.form.nombreConcesionario || "Sin especificar" },
+      subtramitesAsociados: modalidadCreacion === "principal" && !subtramite ? this.tramitesEspecificos.map((item) => item.id) : subtramite ? [subtramite.id] : [],
+      antecedentesConfigurados: this.antecedentesRequeridos.map((item) => item.antecedente),
+      antecedentesComplementariosConfigurados: this.antecedentesComplementarios.map((item) => item.antecedente.trim()).filter(Boolean),
+      etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
+    };
+  }
+
+  private normalizarFechaApi(fecha: string): string {
+    const [dia, mes, anio] = fecha.replaceAll("/", "-").split("-");
+    return `${anio}-${mes}-${dia}`;
   }
 
   private registrarTramiteCreado(modalidadCreacion: ModalidadCreacion): void {
@@ -487,6 +536,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.tiposTramite = catalogos.tiposTramite;
         this.catalogosError = "";
         this.changeDetectorRef.markForCheck();
+        this.api.users().subscribe({
+          next: (users) => { this.responsablesApi = users; },
+          error: () => undefined,
+        });
       },
       error: () => {
         this.catalogosError =

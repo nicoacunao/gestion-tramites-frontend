@@ -161,7 +161,9 @@ export class TodasGestiones {
     { label: "Todas las gestiones" },
   ];
 
-  readonly gestiones: GestionGlobal[];
+  gestiones: GestionGlobal[] = [];
+  loading = true;
+  errorMessage = "";
   readonly tramiteDetalleInicialId: number | null;
   readonly idEstacionInicial: string | null;
 
@@ -173,16 +175,16 @@ export class TodasGestiones {
     this.idEstacionInicial =
       route?.snapshot.queryParamMap.get("estacion") ?? null;
 
-    const tramitesConDetalle = tramitesMock.obtenerTodos();
-    const idsConDetalle = new Set(tramitesConDetalle.map(({ id }) => id));
-    const tramitesGlobales = [
-      ...tramitesConDetalle,
-      ...GESTIONES_GLOBALES_ADICIONALES,
-    ];
-
-    this.gestiones = tramitesGlobales.map((tramite) =>
-      this.crearGestionGlobal(tramite, idsConDetalle.has(tramite.id)),
-    );
+    tramitesMock.cargarTodos().subscribe({
+      next: (tramites) => {
+        const adicionales = tramitesMock.usaApi ? [] : GESTIONES_GLOBALES_ADICIONALES;
+        const todos = [...tramites, ...adicionales];
+        const idsConDetalle = new Set(tramites.map(({ id }) => id));
+        this.gestiones = todos.map((tramite) => this.crearGestionGlobal(tramite, idsConDetalle.has(tramite.id)));
+        this.loading = false;
+      },
+      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+    });
   }
 
   private crearGestionGlobal(

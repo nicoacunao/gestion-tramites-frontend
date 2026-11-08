@@ -10,6 +10,9 @@
       [text]="catalogosError"
       styleClass="w-100"
     />
+      @if (creacionError) {
+      <p-message severity="error" [text]="creacionError" />
+      }
 
     <section class="card border-0 shadow-sm p-3 p-md-4 configuration-card">
       <div class="section-heading">
@@ -879,9 +882,9 @@
         pButton
         type="button"
         (click)="crearTramite()"
-        [disabled]="mensajeCreacionVisible || !configuracionLista"
+        [disabled]="mensajeCreacionVisible || !configuracionLista || creando"
       >
-        Crear trámite
+        {{ creando ? "Creando…" : "Crear trámite" }}
       </button>
     </div>
   </form>

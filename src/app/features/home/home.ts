@@ -23,6 +23,7 @@ import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { UserSessionService } from "../../shared/services/user-session";
+import { ApiClient, BackendManagement } from "../../shared/services/api-client";
 
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
 type TaskSeverity = "success" | "warn" | "danger";
@@ -132,7 +133,11 @@ export class Home {
     },
   ];
 
-  readonly tasks: HomeTask[] = [
+  tasks: HomeTask[] = [];
+  loadingTasks = true;
+  tasksError = "";
+
+  private readonly fallbackTasks: HomeTask[] = [
     {
       id: 1001,
       code: "N1-MUN-001",
@@ -173,6 +178,19 @@ export class Home {
       queryParams: { detalle: 1003 },
     },
   ];
+
+  constructor(private readonly api: ApiClient) {
+    this.api.managements().subscribe({
+      next: (items) => { this.tasks = items.slice(0, 3).map((item) => this.toTask(item)); this.loadingTasks = false; },
+      error: (error: Error) => { this.tasks = this.fallbackTasks; this.tasksError = error.message; this.loadingTasks = false; },
+    });
+  }
+
+  private toTask(item: BackendManagement): HomeTask {
+    const id = Number.parseInt(item.id.replace(/\D/g, ""), 10) || 0;
+    const attention = item.status === "Observado" || item.status === "Rechazado";
+    return { id, code: item.id, stationId: item.stationId, title: item.managementTypeName ?? item.managementTypeId, detail: item.status ?? "Pendiente", updatedAt: item.lastReviewedOn ?? item.openedOn, trafficStatus: attention ? "atrasado" : "al-dia", trafficLabel: attention ? "Requiere atención" : "Al día", severity: attention ? "danger" : "success", route: "/todas-las-gestiones", queryParams: { detalle: id } };
+  }
 
   selectQuickAccess(id: QuickAccessId, scrollPanel = true): void {
     this.activeAccessId = id;

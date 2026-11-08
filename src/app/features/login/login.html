@@ -31,6 +31,9 @@
       </header>
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        @if (errorMessage) {
+        <small class="field-error" role="alert">{{ errorMessage }}</small>
+        }
         <div class="field-group">
           <label for="login-rut">RUT</label>
           <div class="input-wrapper">
@@ -74,8 +77,8 @@
           }
         </div>
 
-        <button pButton type="submit" class="submit-button" [disabled]="form.invalid">
-          <span pButtonLabel>Ingresar</span>
+        <button pButton type="submit" class="submit-button" [disabled]="form.invalid || loading">
+          <span pButtonLabel>{{ loading ? "Ingresando…" : "Ingresar" }}</span>
           <svg class="button-arrow" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2">
             <path d="M5 12h13M14 7l5 5-5 5"></path>

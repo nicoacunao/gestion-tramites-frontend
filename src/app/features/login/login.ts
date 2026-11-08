@@ -12,6 +12,7 @@ import { Router } from "@angular/router";
 import { ButtonDirective, ButtonLabel } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
+import { ApiClient } from "../../shared/services/api-client";
 
 export interface LoginCredentials {
   rut: string;
@@ -78,7 +79,10 @@ export class Login {
     }),
   });
 
-  constructor(private readonly router: Router) { }
+  loading = false;
+  errorMessage = "";
+
+  constructor(private readonly router: Router, private readonly api: ApiClient) { }
 
   formatRut(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -106,12 +110,20 @@ export class Login {
     }
 
     const credentials = this.form.getRawValue();
-
-    this.submitted.emit({
-      rut: limpiarRut(credentials.rut),
-      password: credentials.password,
+    this.loading = true;
+    this.errorMessage = "";
+    this.api.login(limpiarRut(credentials.rut), credentials.password).subscribe({
+      next: ({ accessToken, user }) => {
+        localStorage.setItem("gestion-tramites.access-token", accessToken);
+        localStorage.setItem("gestion-tramites.user", JSON.stringify(user));
+        this.submitted.emit({ rut: limpiarRut(credentials.rut), password: credentials.password });
+        this.loading = false;
+        void this.router.navigate(["/home"]);
+      },
+      error: (error: Error) => {
+        this.loading = false;
+        this.errorMessage = error.message;
+      },
     });
-
-    void this.router.navigate(["/home"]);
   }
 }

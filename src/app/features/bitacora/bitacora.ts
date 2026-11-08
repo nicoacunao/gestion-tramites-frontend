@@ -6,6 +6,7 @@ import {
   EntradaBitacora,
 } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
+import { ApiClient } from "../../shared/services/api-client";
 
 export type EstadoSemaforoBitacora = "al-dia" | "proximo-vencer" | "atrasado";
 
@@ -42,6 +43,12 @@ export class Bitacora {
   @Input()
   set gestion(gestion: GestionBitacora | null) {
     this.gestionSeleccionada = gestion;
+    if (gestion) {
+      this.api?.logs(gestion.codigo).subscribe({
+        next: (entries) => this.entradasPorGestion.set(gestion.id, entries.map((entry) => this.mapEntry(entry))),
+        error: () => undefined,
+      });
+    }
   }
 
   get gestion(): GestionBitacora | null {
@@ -54,6 +61,7 @@ export class Bitacora {
 
   constructor(
     private readonly userSession: UserSessionService = new UserSessionService(),
+    private readonly api: ApiClient | null = null,
   ) {}
 
   get entradas(): EntradaBitacora[] {
@@ -77,6 +85,19 @@ export class Bitacora {
     }
 
     this.entradasPorGestion.set(this.gestion.id, [entrada, ...this.entradas]);
+    this.api?.createLog({
+      id: entrada.id,
+      managementId: this.gestion.codigo,
+      userId: this.userSession.currentUser().id ?? null,
+      registeredOn: entrada.fechaIso,
+      registeredAt: entrada.hora,
+      title: entrada.titulo,
+      comment: entrada.comentario,
+      authorName: entrada.usuario,
+      authorInitials: entrada.iniciales,
+      type: entrada.tipo ?? "novedad",
+      automatic: entrada.automatica,
+    }).subscribe({ error: () => undefined });
   }
 
   actualizarVisibilidad(visible: boolean): void {
@@ -139,6 +160,11 @@ export class Bitacora {
         automatica: true,
       },
     ];
+  }
+
+  private mapEntry(entry: { id: string; registeredOn: string; registeredAt: string; userId: string | null; title: string; comment: string; authorName?: string | null; authorInitials?: string | null; type?: EntradaBitacora["tipo"] | null; automatic?: boolean }): EntradaBitacora {
+    const [year, month, day] = entry.registeredOn.split("-");
+    return { id: entry.id, fechaIso: entry.registeredOn, fecha: `${day}-${month}-${year}`, hora: entry.registeredAt.slice(0, 5), usuario: entry.authorName ?? "Usuario del sistema", iniciales: entry.authorInitials ?? "US", tipo: entry.type ?? "novedad", titulo: entry.title, comentario: entry.comment, automatica: entry.automatic ?? false };
   }
 
   private obtenerIniciales(nombre: string): string {

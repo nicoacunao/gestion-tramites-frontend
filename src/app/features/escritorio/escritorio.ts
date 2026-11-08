@@ -159,18 +159,23 @@ export class Escritorio {
     },
   ];
 
-  readonly gestiones: GestionEscritorio[];
+  gestiones: GestionEscritorio[] = [];
+  loading = true;
+  errorMessage = "";
 
   constructor(tramitesMock: TramitesMock) {
-    const correlativosPorNivel = new Map<NivelGestion, number>();
-
-    this.gestiones = tramitesMock.obtenerTodos().map((tramite) => {
-      const nivel = this.obtenerNivel(tramite);
-      const correlativo = (correlativosPorNivel.get(nivel) ?? 0) + 1;
-
-      correlativosPorNivel.set(nivel, correlativo);
-
-      return this.crearGestion(tramite, nivel, correlativo);
+    tramitesMock.cargarTodos().subscribe({
+      next: (tramites) => {
+        const correlativosPorNivel = new Map<NivelGestion, number>();
+        this.gestiones = tramites.map((tramite) => {
+          const nivel = this.obtenerNivel(tramite);
+          const correlativo = (correlativosPorNivel.get(nivel) ?? 0) + 1;
+          correlativosPorNivel.set(nivel, correlativo);
+          return this.crearGestion(tramite, nivel, correlativo);
+        });
+        this.loading = false;
+      },
+      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
     });
   }
 

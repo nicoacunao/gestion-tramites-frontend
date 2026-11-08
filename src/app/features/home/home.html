@@ -348,6 +348,8 @@
         </p-card>
         } @case ("tareas") {
         <p-card styleClass="tasks-card tab-content-card">
+          @if (loadingTasks) { <p role="status">Cargando gestiones…</p> }
+          @if (tasksError) { <p class="field-error" role="alert">{{ tasksError }}</p> }
           <div class="tasks-heading">
             <div>
               <p class="section-kicker">Seguimiento</p>

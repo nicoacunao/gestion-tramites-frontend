@@ -19,6 +19,9 @@
     </div>
   </header>
 
+  @if (loading) { <p role="status">Cargando gestiones…</p> }
+  @if (errorMessage) { <p class="field-error" role="alert">{{ errorMessage }}</p> }
+
   <app-gestion-listado
     [gestiones]="gestiones"
     titulo="Gestiones asociadas"

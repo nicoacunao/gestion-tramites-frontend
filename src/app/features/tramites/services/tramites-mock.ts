@@ -1,5 +1,7 @@
 import { Injectable } from "@angular/core";
+import { Observable, map, tap } from "rxjs";
 import { Tramite } from "../models/tramite";
+import { ApiClient, BackendManagement } from "../../../shared/services/api-client";
 
 @Injectable({
   providedIn: "root",
@@ -94,8 +96,21 @@ export class TramitesMock {
     },
   ];
 
+  constructor(private readonly api?: ApiClient) {}
+
+  get usaApi(): boolean { return Boolean(this.api); }
+
+  cargarTodos(): Observable<Tramite[]> {
+    if (!this.api) return new Observable((subscriber) => { subscriber.next(this.obtenerTodos()); subscriber.complete(); });
+    return this.api.managements().pipe(map((items) => items.map((item) => this.fromBackend(item))), tap((items) => { this.tramites.splice(0, this.tramites.length, ...items); }));
+  }
+
   obtenerTodos(): Tramite[] {
     return this.tramites.map((tramite) => ({ ...tramite }));
+  }
+
+  cargarPorId(id: number | string): Observable<Tramite> {
+    return this.api!.management(String(id)).pipe(map((item) => this.fromBackend(item)), tap((item) => this.guardar(item)));
   }
 
   obtenerPorId(id: number): Tramite | undefined {
@@ -114,4 +129,30 @@ export class TramitesMock {
 
     this.tramites.push({ ...tramite });
   }
+
+  private fromBackend(item: BackendManagement): Tramite {
+    const numericId = Number.parseInt(item.id.replace(/\D/g, ""), 10) || this.hash(item.id);
+    return {
+      id: numericId,
+      apiId: item.id,
+      idEstacion: item.stationId,
+      tipoTramite: item.managementTypeName ?? item.managementTypeId,
+      tramiteEspecifico: item.managementTypeCode ?? item.specificManagementId ?? item.managementTypeId,
+      estacionServicio: item.stationName ?? item.stationId,
+      razonSocial: item.legalName ?? "Sin registrar",
+      comuna: "Sin registrar",
+      direccion: "Sin registrar",
+      estado: item.status ?? "Pendiente",
+      prioridad: item.priority,
+      responsableInterno: item.responsibleName ?? item.responsibleUserId,
+      solicitanteCopec: item.requesterName,
+      fechaApertura: this.toDisplayDate(item.openedOn),
+      fechaEstimadaTermino: item.estimatedCompletionOn ? this.toDisplayDate(item.estimatedCompletionOn) : "Sin especificar",
+      fechaUltimaRevision: item.lastReviewedOn ? this.toDisplayDate(item.lastReviewedOn) : null,
+      modalidadCreacion: item.creationMode,
+    };
+  }
+
+  private toDisplayDate(value: string): string { const [year, month, day] = value.split("-"); return `${day}-${month}-${year}`; }
+  private hash(value: string): number { return [...value].reduce((total, char) => (total * 31 + char.charCodeAt(0)) % 1_000_000, 0) || 1; }
 }
