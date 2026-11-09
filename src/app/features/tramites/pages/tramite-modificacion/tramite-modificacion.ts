@@ -28,6 +28,7 @@ import {
 } from "../../models/estado-tramite";
 import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { TramitesMock } from "../../services/tramites-mock";
+import { ApiClient, BackendManagement } from "../../../../shared/services/api-client";
 
 @Component({
   selector: "app-tramite-modificacion",
@@ -58,6 +59,9 @@ import { TramitesMock } from "../../services/tramites-mock";
 })
 export class TramiteModificacion {
   readonly tramiteId: string;
+  loading = true;
+  errorMessage = "";
+  private backendManagement?: BackendManagement;
   readonly estadosTramite = [...ESTADOS_TRAMITE];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
@@ -145,6 +149,7 @@ export class TramiteModificacion {
     route: ActivatedRoute,
     private readonly router: Router,
     private readonly tramitesMock: TramitesMock,
+    private readonly api: ApiClient,
   ) {
     this.tramiteId = route.snapshot.paramMap.get("id") ?? "1001";
     const tramiteRegistrado = this.tramitesMock.obtenerPorId(
@@ -165,6 +170,24 @@ export class TramiteModificacion {
         fechaEstimadaTermino: tramiteRegistrado.fechaEstimadaTermino,
       });
     }
+    this.api.management(this.tramiteId).subscribe({
+      next: (management) => {
+        this.backendManagement = management;
+        Object.assign(this.tramite, {
+          estacionServicio: management.stationName ?? management.stationId,
+          concesionario: management.legalName ?? this.tramite.concesionario,
+          prioridad: management.priority,
+          estado: management.status ?? this.tramite.estado,
+          responsableInterno: management.responsibleName ?? management.responsibleUserId,
+          tipoTramite: management.managementTypeName ?? management.managementTypeId,
+          solicitanteCopec: management.requesterName,
+          fechaApertura: this.toDisplayDate(management.openedOn),
+          fechaEstimadaTermino: management.estimatedCompletionOn ? this.toDisplayDate(management.estimatedCompletionOn) : "",
+        });
+        this.loading = false;
+      },
+      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+    });
 
     this.breadcrumbs = [
       { label: "Todas las gestiones", route: "/todas-las-gestiones" },
@@ -181,6 +204,22 @@ export class TramiteModificacion {
   }
 
   grabar(): void {
+    if (this.backendManagement) {
+      this.api.updateManagement(this.tramiteId, {
+        ...this.backendManagement,
+        priority: this.tramite.prioridad,
+        status: this.tramite.estado,
+        responsibleUserId: this.backendManagement.responsibleUserId,
+        requesterName: this.tramite.solicitanteCopec,
+        openedOn: this.backendManagement.openedOn,
+        estimatedCompletionOn: this.backendManagement.estimatedCompletionOn,
+        lastReviewedOn: this.backendManagement.lastReviewedOn,
+      }).subscribe({
+        next: () => this.navegarTrasGuardar(),
+        error: (error: Error) => { this.errorMessage = error.message; },
+      });
+      return;
+    }
     const tramiteRegistrado = this.tramitesMock.obtenerPorId(
       Number(this.tramiteId),
     );
@@ -193,11 +232,17 @@ export class TramiteModificacion {
       });
     }
 
+    this.navegarTrasGuardar();
+  }
+
+  private navegarTrasGuardar(): void {
     void this.router.navigate(["/todas-las-gestiones"], {
       queryParams: { detalle: this.tramiteId },
       state: { tramiteActualizado: true },
     });
   }
+
+  private toDisplayDate(value: string): string { const [year, month, day] = value.split("-"); return `${day}-${month}-${year}`; }
 
   obtenerSeveridadEstado(estado: string): TagSeverity {
     return resolverSeveridadEstado(estado);

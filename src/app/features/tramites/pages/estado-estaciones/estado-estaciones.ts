@@ -13,6 +13,7 @@ import { TagModule } from "primeng/tag";
 import { TooltipModule } from "primeng/tooltip";
 import { ToastModule } from "primeng/toast";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
+import { ApiClient, BackendStationSummary } from "../../../../shared/services/api-client";
 
 type TagSeverity =
   "success" | "secondary" | "info" | "warn" | "danger" | "contrast";
@@ -23,15 +24,12 @@ type EstadoGeneral =
 type IndicadorSemaforo = "Rojo" | "Amarillo" | "Verde" | "Gris";
 type FiltrosTabla = Record<string, FilterMetadata | FilterMetadata[]>;
 
-interface DatosEstacion {
+interface ResumenEstacion {
   idEstacion: string;
   tramitesActivos: number;
   tramitesPendientes: number;
   prioridad: PrioridadEstacion;
   diasSinAvance: number;
-}
-
-interface ResumenEstacion extends DatosEstacion {
   estadoGeneral: EstadoGeneral;
   indicador: IndicadorSemaforo;
 }
@@ -78,81 +76,37 @@ export class EstadoEstaciones {
     },
   ];
 
-  readonly estaciones: ResumenEstacion[];
-  readonly idsEstacion: string[];
-  readonly cantidadesTramitesActivos: number[];
-  readonly cantidadesTramitesPendientes: number[];
-  readonly estadosGenerales: EstadoGeneral[];
-  readonly prioridades: PrioridadEstacion[];
-  readonly indicadores: IndicadorSemaforo[];
+  estaciones: ResumenEstacion[] = [];
+  idsEstacion: string[] = [];
+  cantidadesTramitesActivos: number[] = [];
+  cantidadesTramitesPendientes: number[] = [];
+  estadosGenerales: EstadoGeneral[] = [];
+  prioridades: PrioridadEstacion[] = [];
+  indicadores: IndicadorSemaforo[] = [];
+  loading = true;
+  errorMessage = "";
 
   filtrosTabla: FiltrosTabla = {};
   first = 0;
   rows = 10;
 
-  constructor(private readonly messageService: MessageService) {
-    const datosEstaciones: DatosEstacion[] = [
-      {
-        idEstacion: "60001",
-        tramitesActivos: 5,
-        tramitesPendientes: 1,
-        prioridad: "Alta",
-        diasSinAvance: 3,
-      },
-      {
-        idEstacion: "60002",
-        tramitesActivos: 0,
-        tramitesPendientes: 0,
-        prioridad: "Sin prioridad",
-        diasSinAvance: 0,
-      },
-      {
-        idEstacion: "60003",
-        tramitesActivos: 4,
-        tramitesPendientes: 3,
-        prioridad: "Alta",
-        diasSinAvance: 12,
-      },
-      {
-        idEstacion: "60004",
-        tramitesActivos: 3,
-        tramitesPendientes: 1,
-        prioridad: "Media",
-        diasSinAvance: 8,
-      },
-      {
-        idEstacion: "60005",
-        tramitesActivos: 1,
-        tramitesPendientes: 0,
-        prioridad: "Baja",
-        diasSinAvance: 2,
-      },
-      {
-        idEstacion: "60006",
-        tramitesActivos: 0,
-        tramitesPendientes: 0,
-        prioridad: "Sin prioridad",
-        diasSinAvance: 0,
-      },
-      {
-        idEstacion: "60007",
-        tramitesActivos: 4,
-        tramitesPendientes: 2,
-        prioridad: "Alta",
-        diasSinAvance: 16,
-      },
-      {
-        idEstacion: "60008",
-        tramitesActivos: 2,
-        tramitesPendientes: 1,
-        prioridad: "Media",
-        diasSinAvance: 5,
-      },
-    ];
+  constructor(private readonly messageService: MessageService, private readonly api: ApiClient) {
+    this.api.stationSummary().subscribe({
+      next: (items) => { this.cargarResumen(items); this.loading = false; },
+      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+    });
+  }
 
-    this.estaciones = datosEstaciones.map((estacion) =>
-      this.construirResumen(estacion),
-    );
+  private cargarResumen(items: BackendStationSummary[]): void {
+    this.estaciones = items.map((item) => ({
+      idEstacion: item.stationId,
+      tramitesActivos: item.activeCount,
+      tramitesPendientes: item.pendingCount,
+      prioridad: item.activeCount === 0 ? "Sin prioridad" : "Media",
+      diasSinAvance: item.daysWithoutProgress,
+      estadoGeneral: this.normalizarEstado(item.overallStatus),
+      indicador: this.indicadorDeEstado(item.overallStatus),
+    }));
     this.idsEstacion = this.valoresUnicos(
       this.estaciones.map(({ idEstacion }) => idEstacion),
     ).sort((a, b) => a.localeCompare(b, "es-CL", { numeric: true }));
@@ -171,6 +125,11 @@ export class EstadoEstaciones {
     this.indicadores = this.valoresUnicos(
       this.estaciones.map(({ indicador }) => indicador),
     );
+  }
+
+  private normalizarEstado(value: string): EstadoGeneral { return value as EstadoGeneral; }
+  private indicadorDeEstado(value: string): IndicadorSemaforo {
+    return value === "Urgente" ? "Rojo" : value === "Requiere atención" ? "Amarillo" : value === "Al día" ? "Verde" : "Gris";
   }
 
   get resumenCards(): ResumenCard[] {
@@ -247,51 +206,6 @@ export class EstadoEstaciones {
 
   obtenerClaseIndicador(indicador: IndicadorSemaforo): string {
     return `semaforo--${indicador.toLocaleLowerCase("es-CL")}`;
-  }
-
-  private construirResumen(estacion: DatosEstacion): ResumenEstacion {
-    const { estadoGeneral, indicador } = this.calcularSituacion(estacion);
-
-    return {
-      ...estacion,
-      estadoGeneral,
-      indicador,
-    };
-  }
-
-  private calcularSituacion(
-    estacion: DatosEstacion,
-  ): Pick<ResumenEstacion, "estadoGeneral" | "indicador"> {
-    if (estacion.tramitesActivos === 0) {
-      return {
-        estadoGeneral: "Sin gestiones activas",
-        indicador: "Gris",
-      };
-    }
-
-    const esUrgente =
-      estacion.tramitesPendientes >= 3 ||
-      estacion.diasSinAvance >= 15 ||
-      (estacion.prioridad === "Alta" &&
-        (estacion.tramitesPendientes >= 2 || estacion.diasSinAvance >= 7));
-
-    if (esUrgente) {
-      return { estadoGeneral: "Urgente", indicador: "Rojo" };
-    }
-
-    const requiereAtencion =
-      estacion.tramitesPendientes > 0 ||
-      estacion.diasSinAvance >= 7 ||
-      estacion.prioridad === "Alta";
-
-    if (requiereAtencion) {
-      return {
-        estadoGeneral: "Requiere atención",
-        indicador: "Amarillo",
-      };
-    }
-
-    return { estadoGeneral: "Al día", indicador: "Verde" };
   }
 
   private valoresUnicos<T>(valores: T[]): T[] {

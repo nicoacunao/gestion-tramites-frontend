@@ -11,6 +11,7 @@ export interface BackendManagement { id: string; stationId: string; managementTy
 export interface BackendBackground { id: string; managementId: string; parentManagementBackgroundId: string | null; managementTypeId: string; backgroundId: string; level: "N2" | "N3" | "N4"; required: boolean; responsibleUserId: string; status: string; fileReference: string | null; uploadedAt: string | null; version: number; }
 export interface BackendStage { id: string; managementId: string; stageId: string; status: string; estimatedOn: string | null; completedOn: string | null; responsible: string | null; notes: string | null; version: number; }
 export interface BackendLogEntry { id: string; managementId: string; userId: string | null; registeredOn: string; registeredAt: string; title: string; comment: string; authorName?: string | null; authorInitials?: string | null; type?: "inicio" | "novedad" | "seguimiento" | "contacto" | null; automatic?: boolean; version: number; }
+export interface BackendStationSummary { stationId: string; activeCount: number; pendingCount: number; daysWithoutProgress: number; overallStatus: string; }
 
 @Injectable({ providedIn: "root" })
 export class ApiClient {
@@ -27,9 +28,11 @@ export class ApiClient {
   updateManagement(id: string, body: object): Observable<BackendManagement> { return this.request<ApiEnvelope<BackendManagement>>(`/gestiones/items/${encodeURIComponent(id)}`, { method: "put", body }).pipe(map(({ data }) => data)); }
   backgrounds(id: string): Observable<BackendBackground[]> { return this.get<BackendBackground[]>(`/gestiones/items/${encodeURIComponent(id)}/backgrounds`); }
   stages(id: string): Observable<BackendStage[]> { return this.get<BackendStage[]>(`/gestiones/items/${encodeURIComponent(id)}/stages`); }
+  updateBackground(id: string, body: object): Observable<BackendBackground> { return this.request<ApiEnvelope<BackendBackground>>(`/gestiones/backgrounds/${encodeURIComponent(id)}`, { method: "put", body }).pipe(map(({ data }) => data)); }
+  updateStage(id: string, body: object): Observable<BackendStage> { return this.request<ApiEnvelope<BackendStage>>(`/gestiones/stages/${encodeURIComponent(id)}`, { method: "put", body }).pipe(map(({ data }) => data)); }
   logs(id: string): Observable<BackendLogEntry[]> { return this.get<BackendLogEntry[]>(`/bitacora/items?managementId=${encodeURIComponent(id)}`); }
   createLog(body: object): Observable<BackendLogEntry> { return this.request<ApiEnvelope<BackendLogEntry>>("/bitacora/items", { method: "post", body }).pipe(map(({ data }) => data)); }
-  stationSummary(): Observable<unknown[]> { return this.get<unknown[]>("/consultas/stations/summary"); }
+  stationSummary(): Observable<BackendStationSummary[]> { return this.get<BackendStationSummary[]>("/consultas/stations/summary"); }
   catalogs<T>(path: string): Observable<T> { return this.get<T>(path); }
 
   private get<T>(path: string): Observable<T> { return this.request<ApiEnvelope<T>>(path, { method: "get" }).pipe(map(({ data }) => data)); }

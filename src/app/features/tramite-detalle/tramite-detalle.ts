@@ -4,6 +4,7 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  Optional,
   Output,
   ViewChild,
 } from "@angular/core";
@@ -37,6 +38,7 @@ import {
   Tramite,
 } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
+import { ApiClient, BackendBackground, BackendStage } from "../../shared/services/api-client";
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
@@ -154,6 +156,15 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
+    const apiId = this.tramite?.apiId;
+    if (apiId && this.api) {
+      this.api.management(apiId).subscribe({ next: (management) => {
+        if (this.tramite) this.tramite = { ...this.tramite, estado: management.status ?? this.tramite.estado, prioridad: management.priority, responsableInterno: management.responsibleName ?? management.responsibleUserId };
+      } });
+      this.api.backgrounds(apiId).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
+      this.api.stages(apiId).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
+      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramiteId!, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: item.registeredOn, hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+    }
     this.cargarDatosEditables();
 
     if (this.visible) {
@@ -291,7 +302,17 @@ export class TramiteDetalle {
   constructor(
     private readonly tramitesMock: TramitesMock,
     readonly userSession: UserSessionService,
+    @Optional() private readonly api: ApiClient | null = null,
   ) {}
+
+  private aplicarAntecedentesBackend(items: BackendBackground[]): void {
+    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: item.backgroundId, obligatorio: item.required, responsable: item.responsibleUserId, estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: item.backgroundId, solicitadoPor: "", responsable: item.responsibleUserId, estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+  }
+
+  private aplicarEtapasBackend(items: BackendStage[]): void {
+    this.etapasGestion = items.map((item) => ({ id: item.id, version: item.version, etapa: item.stageId, porcentaje: 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: item.responsible ?? "", observacion: item.notes ?? "" }));
+  }
 
   get bitacora(): EntradaBitacora[] {
     if (!this.tramite) {
@@ -422,6 +443,23 @@ export class TramiteDetalle {
       }),
     };
 
+    if (this.api && this.tramite.apiId) {
+      for (const antecedente of [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]) {
+        const item = antecedente as AntecedenteRequeridoDetalle & { id?: string; version?: number };
+        if (item.id && item.version) this.api.updateBackground(item.id, { responsibleUserId: item.responsable, status: item.estado, fileReference: item.archivo || null, version: item.version }).subscribe({ error: () => undefined });
+      }
+      for (const etapa of this.etapasGestion as Array<EtapaDetalle & { id?: string; version?: number }>) {
+        if (etapa.id && etapa.version) this.api.updateStage(etapa.id, { status: etapa.estado, estimatedOn: etapa.fechaEstimada || null, completedOn: etapa.fechaReal || null, responsible: etapa.responsable || null, notes: etapa.observacion || null, version: etapa.version }).subscribe({ error: () => undefined });
+      }
+      this.api.management(this.tramite.apiId).subscribe({
+        next: (management) => {
+          this.api?.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad }).subscribe({
+            next: () => { this.tramite = tramiteActualizado; this.actualizarVisibilidad(false); },
+          });
+        },
+      });
+      return;
+    }
     this.tramitesMock.guardar(tramiteActualizado);
     this.tramite = tramiteActualizado;
     this.actualizarVisibilidad(false);

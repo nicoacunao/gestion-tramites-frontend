@@ -42,6 +42,9 @@
     </div>
   </div>
 
+  @if (loading) { <p role="status">Cargando resumen de estaciones…</p> }
+  @if (errorMessage) { <p class="field-error" role="alert">{{ errorMessage }}</p> }
+
   <div class="summary-grid">
     <p-card
       *ngFor="let card of resumenCards"
