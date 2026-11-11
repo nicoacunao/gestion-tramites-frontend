@@ -356,16 +356,17 @@
           </div>
           }
           @if (stationsError) { <p class="field-error" role="alert">{{ stationsError }}</p> }
-          @if (!stationsLoading) {
-          @if (stations.length === 0 && !stationsError) {
+          @if (stations.length === 0 && !stationsLoading && !stationsError) {
           <div class="home-empty-state" role="status">
             <span class="home-empty-state__icon" aria-hidden="true">○</span>
             <strong>No hay estaciones disponibles para mostrar en este momento.</strong>
           </div>
-          } @else {
+          }
+          @if (stations.length > 0) {
           <div class="stations-table-wrap">
             <p-table
               [value]="stations"
+              [loading]="stationsLoading"
               [paginator]="true"
               [lazy]="true"
               [totalRecords]="stationsTotal"
@@ -396,7 +397,6 @@
               <ng-template #emptymessage><tr><td colspan="6">No hay estaciones para mostrar.</td></tr></ng-template>
             </p-table>
           </div>
-          }
           }
         </p-card>
         <p-dialog [(visible)]="importDialogVisible" [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: 'min(560px, calc(100vw - 32px))' }" header="Importar estaciones" (onHide)="resetImport()">

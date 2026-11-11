@@ -27,6 +27,7 @@ import { TagModule } from "primeng/tag";
 import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
+import { Subscription } from "rxjs";
 import { UserSessionService } from "../../shared/services/user-session";
 import { ApiClient, ApiClientError, BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-client";
 
@@ -152,7 +153,9 @@ export class Home {
   stationsTotal = 0;
   stationsPage = 1;
   private allStationsCache: BackendStation[] | null = null;
+  private readonly stationPageCache = new Map<number, BackendStation[]>();
   private stationRequestPage: number | null = null;
+  private stationRequest?: Subscription;
   stationsLoading = true;
   stationsError = "";
   importDialogVisible = false;
@@ -177,13 +180,24 @@ export class Home {
       this.setStationPage(this.allStationsCache, page);
       return;
     }
+    const cachedPage = this.stationPageCache.get(page);
+    if (!force && cachedPage) {
+      this.stations = cachedPage;
+      this.stationsPage = page;
+      this.stationsError = "";
+      this.stationsLoading = false;
+      return;
+    }
     this.stationsLoading = true;
     this.stationsError = "";
+    this.stationRequest?.unsubscribe();
     this.stationRequestPage = page;
-    this.api.stations(page, this.stationPageSize).subscribe({
+    this.stationRequest = this.api.stations(page, this.stationPageSize).subscribe({
       next: (response: BackendStationPage) => {
         this.stationRequestPage = null;
+        this.stationRequest = undefined;
         if (response.allData) this.allStationsCache = response.allData;
+        else this.stationPageCache.set(response.meta.page, response.data);
         this.stations = response.data;
         this.stationsPage = response.meta.page;
         this.stationsTotal = response.meta.total;
@@ -191,6 +205,7 @@ export class Home {
       },
       error: (error: Error) => {
         this.stationRequestPage = null;
+        this.stationRequest = undefined;
         this.stations = [];
         this.stationsTotal = 0;
         this.stationsError = error.message;
@@ -204,12 +219,13 @@ export class Home {
     this.loadStations(Math.floor(event.first / pageSize) + 1);
   }
 
-  private setStationPage(items: BackendStation[], page: number): void {
+  private setStationPage(items: BackendStation[], page: number, total = items.length): void {
     const start = (page - 1) * this.stationPageSize;
     this.stations = items.slice(start, start + this.stationPageSize);
     this.stationsPage = page;
-    this.stationsTotal = items.length;
+    this.stationsTotal = total;
     this.stationsError = "";
+    this.stationsLoading = false;
   }
 
   private toTask(item: BackendManagement): HomeTask {
@@ -342,6 +358,7 @@ export class Home {
         this.importDialogVisible = false;
         this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`, life: 6000 });
         this.allStationsCache = null;
+        this.stationPageCache.clear();
         this.loadStations(1, true);
       },
       error: (error: Error) => {
