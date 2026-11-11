@@ -24,13 +24,19 @@ import { ProgressBarModule } from "primeng/progressbar";
 import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
+import { forkJoin } from "rxjs";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
   ESTADOS_ANTECEDENTE,
   ESTADOS_ETAPA,
   ETAPAS_ESTANDAR,
 } from "../../models/estado-tramite";
-import { ApiClient, BackendUser } from "../../../../shared/services/api-client";
+import {
+  ApiClient,
+  BackendManagementType,
+  BackendSpecificManagement,
+  BackendUser,
+} from "../../../../shared/services/api-client";
 
 interface EstacionServicio {
   codigo: string;
@@ -55,14 +61,6 @@ interface TipoTramite {
   segundoNivelLabel: string;
   requiereSeleccionSegundoNivelParaPrincipal: boolean;
   tramitesEspecificos: TramiteEspecifico[];
-}
-
-interface CatalogosTramite {
-  estacionesServicio: EstacionServicio[];
-  prioridades: string[];
-  responsables: string[];
-  tiposTramite: TipoTramite[];
-  tiposDocumentoComplementario?: string[];
 }
 
 type ModalidadCreacion = "principal" | "subtramite";
@@ -173,7 +171,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   get requiereSeleccionSegundoNivel(): boolean {
     return Boolean(
-      this.tipoSeleccionado && this.modalidadCreacion === "subtramite",
+      this.tipoSeleccionado &&
+        (this.modalidadCreacion === "subtramite" ||
+          (this.modalidadCreacion === "principal" &&
+            this.tipoSeleccionado.requiereSeleccionSegundoNivelParaPrincipal)),
     );
   }
 
@@ -185,7 +186,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     }
 
     if (this.modalidadCreacion === "principal") {
-      return !this.form.tramiteEspecifico;
+      return this.tipoSeleccionado.requiereSeleccionSegundoNivelParaPrincipal
+        ? Boolean(this.form.tramiteEspecifico)
+        : !this.form.tramiteEspecifico;
     }
 
     return tipo.tramitesEspecificos.some(
@@ -223,7 +226,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   onTramiteEspecificoChange(tramiteEspecificoId: string): void {
     const tramiteEspecificoValido =
-      this.modalidadCreacion === "subtramite" &&
+      this.requiereSeleccionSegundoNivel &&
       this.tramitesEspecificos.some((item) => item.id === tramiteEspecificoId);
     const nuevoTramiteEspecifico = tramiteEspecificoValido
       ? tramiteEspecificoId
@@ -493,16 +496,44 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private cargarCatalogos(): void {
-    this.api.catalogs<CatalogosTramite>("/catalogos/tramites").subscribe({
-      next: (catalogos) => {
-        this.estacionesServicio = catalogos.estacionesServicio;
-        this.prioridades = catalogos.prioridades;
-        this.responsables = catalogos.responsables;
-        this.tiposTramite = catalogos.tiposTramite;
-        this.tiposDocumentoComplementario = catalogos.tiposDocumentoComplementario ?? [];
-        this.catalogosError = "";
-        this.changeDetectorRef.markForCheck();
-        this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });
+    forkJoin({
+      estaciones: this.api.catalogStations(),
+      tipos: this.api.managementTypes(),
+      responsables: this.api.users(),
+    }).subscribe({
+      next: ({ estaciones, tipos, responsables }) => {
+        this.estacionesServicio = estaciones.map((estacion) => ({
+          codigo: estacion.id,
+          nombre: estacion.name ?? estacion.legalName,
+          direccion: estacion.address,
+          comuna: estacion.commune,
+          concesionario: estacion.legalName,
+          rut: estacion.companyRut,
+        }));
+        this.prioridades = ["Alta", "Media", "Baja"];
+        this.responsablesApi = responsables;
+        this.responsables = responsables.map((user) =>
+          [user.names, user.firstSurname, user.secondSurname]
+            .filter(Boolean)
+            .join(" "),
+        );
+
+        forkJoin(
+          tipos.map((tipo) => this.api.specificManagements(tipo.id)),
+        ).subscribe({
+          next: (gestionesPorTipo) => {
+            this.tiposTramite = tipos.map((tipo, index) =>
+              this.mapearTipoTramite(tipo, gestionesPorTipo[index] ?? []),
+            );
+            this.catalogosError = "";
+            this.changeDetectorRef.markForCheck();
+          },
+          error: () => {
+            this.catalogosError =
+              "No fue posible cargar las gestiones específicas del catálogo.";
+            this.changeDetectorRef.markForCheck();
+          },
+        });
       },
       error: () => {
         this.catalogosError =
@@ -510,6 +541,27 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.changeDetectorRef.markForCheck();
       },
     });
+  }
+
+  private mapearTipoTramite(
+    tipo: BackendManagementType,
+    gestiones: BackendSpecificManagement[],
+  ): TipoTramite {
+    return {
+      id: tipo.id,
+      nombre: tipo.name,
+      segundoNivelLabel: tipo.secondLevelLabel ?? "Gestión específica",
+      requiereSeleccionSegundoNivelParaPrincipal:
+        tipo.requiresSpecificSelection ?? false,
+      tramitesEspecificos: gestiones
+        .filter((gestion) => gestion.active)
+        .map((gestion) => ({
+          id: gestion.id,
+          nombre: gestion.name,
+          // El endpoint de gestiones específicas no incluye antecedentes asociados.
+          antecedentes: [],
+        })),
+    };
   }
 
   private iniciarRedireccionAutomatica(): void {
