@@ -22,6 +22,7 @@ import { DialogModule } from "primeng/dialog";
 import { FileUploadModule } from "primeng/fileupload";
 import { InputTextModule } from "primeng/inputtext";
 import { TableModule } from "primeng/table";
+import { TablePageEvent } from "primeng/table";
 import { TagModule } from "primeng/tag";
 import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
@@ -147,6 +148,9 @@ export class Home {
   loadingTasks = true;
   tasksError = "";
   stations: BackendStation[] = [];
+  readonly stationPageSize = 5;
+  stationsTotal = 0;
+  stationsPage = 1;
   stationsLoading = true;
   stationsError = "";
   importDialogVisible = false;
@@ -161,10 +165,31 @@ export class Home {
       next: (items) => { this.tasks = items.slice(0, 3).map((item) => this.toTask(item)); this.loadingTasks = false; },
       error: (error: Error) => { this.tasks = []; this.tasksError = error.message; this.loadingTasks = false; },
     });
-    this.api.stations().subscribe({
-      next: (items) => { this.stations = items; this.stationsLoading = false; },
-      error: (error: Error) => { this.stations = []; this.stationsError = error.message; this.stationsLoading = false; },
+    this.loadStations();
+  }
+
+  loadStations(page = 1): void {
+    this.stationsLoading = true;
+    this.stationsError = "";
+    this.api.stations(page, this.stationPageSize).subscribe({
+      next: ({ data, meta }) => {
+        this.stations = data;
+        this.stationsPage = meta.page;
+        this.stationsTotal = meta.total;
+        this.stationsLoading = false;
+      },
+      error: (error: Error) => {
+        this.stations = [];
+        this.stationsTotal = 0;
+        this.stationsError = error.message;
+        this.stationsLoading = false;
+      },
     });
+  }
+
+  onStationsPage(event: TablePageEvent): void {
+    const pageSize = event.rows || this.stationPageSize;
+    this.loadStations(Math.floor(event.first / pageSize) + 1);
   }
 
   private toTask(item: BackendManagement): HomeTask {
@@ -292,11 +317,11 @@ export class Home {
     this.importError = "";
     this.api.importStations(this.selectedImportFile).subscribe({
       next: ({ data, meta }: ImportStationsResponse) => {
-        this.stations = data;
         this.importState = "verified";
         this.importRequestId = meta.requestId;
         this.importDialogVisible = false;
         this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`, life: 6000 });
+        this.loadStations();
       },
       error: (error: Error) => {
         this.importState = "verified";

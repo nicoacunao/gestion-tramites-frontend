@@ -330,7 +330,8 @@
 
           <div class="stations-toolbar">
             <div>
-              <strong>{{ stations.length }} estaciones visibles</strong>
+              <strong>{{ stationsTotal }} estaciones disponibles</strong>
+              <small>Consulta organizada en páginas de {{ stationPageSize }} registros.</small>
             </div>
             <button
               pButton
@@ -367,7 +368,20 @@
           </div>
           } @else {
           <div class="stations-table-wrap">
-            <p-table [value]="stations" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 25]" dataKey="stationId" styleClass="stations-table" stripedRows>
+            <p-table
+              [value]="stations"
+              [paginator]="true"
+              [lazy]="true"
+              [totalRecords]="stationsTotal"
+              [first]="(stationsPage - 1) * stationPageSize"
+              [rows]="stationPageSize"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} estaciones"
+              dataKey="stationId"
+              styleClass="stations-table"
+              stripedRows
+              (onPage)="onStationsPage($event)"
+            >
               <ng-template #header>
                 <tr>
                   <th>ID EDS</th><th>Razón social</th><th>Dirección</th><th>Comuna</th><th>Jefe de zona</th><th>Estado</th>

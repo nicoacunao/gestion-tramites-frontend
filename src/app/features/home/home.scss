@@ -773,6 +773,11 @@
     font-size: 13px;
   }
 
+  small {
+    color: var(--home-muted);
+    font-size: 11px;
+  }
+
   .import-stations-button {
     border-color: #2b74c5;
     background: #fff;
@@ -792,12 +797,15 @@
 }
 
 .stations-table-wrap {
+  margin-inline: -8px;
   max-width: 100%;
+  padding-inline: 8px;
+  padding-bottom: 4px;
   overflow-x: auto;
 }
 
 :host ::ng-deep .stations-table {
-  min-width: 820px;
+  min-width: 900px;
 
   th,
   td {
@@ -832,6 +840,11 @@
   .p-tag {
     white-space: nowrap;
     font-size: 10px;
+  }
+
+  .p-paginator {
+    margin-top: 8px;
+    padding-inline: 0;
   }
 }
 
@@ -999,7 +1012,7 @@
 @media (min-width: 1280px) {
   .home-page {
     --desktop-panel-height: clamp(526px, calc(100dvh - 220px), 860px);
-    width: clamp(82%, calc(52% + 32.5rem), 90%);
+    width: clamp(90%, calc(52% + 36rem), 98%);
     margin-inline: auto;
   }
 

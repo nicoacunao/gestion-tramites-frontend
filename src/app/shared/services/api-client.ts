@@ -1,9 +1,9 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 
-export interface ApiEnvelope<T> { data: T; meta: { requestId: string }; }
+export interface ApiEnvelope<T> { data: T; meta: { requestId: string; page?: number; pageSize?: number; total?: number; totalPages?: number }; }
 export interface ApiErrorBody {
   error?: { code?: string; message?: string; details?: unknown };
   meta?: { requestId?: string };
@@ -39,6 +39,10 @@ export interface BackendStation {
   legalRepresentativeRut: string;
   status: string;
 }
+export interface BackendStationPage {
+  data: BackendStation[];
+  meta: { requestId: string; page: number; pageSize: number; total: number; totalPages: number };
+}
 export interface ImportStationsMeta { requestId: string; created: number; updated: number; rejected: number; }
 export interface ImportStationsResponse { data: BackendStation[]; meta: ImportStationsMeta; }
 
@@ -62,7 +66,38 @@ export class ApiClient {
   logs(id: string): Observable<BackendLogEntry[]> { return this.get<BackendLogEntry[]>(`/bitacora/items?managementId=${encodeURIComponent(id)}`); }
   createLog(body: object): Observable<BackendLogEntry> { return this.request<ApiEnvelope<BackendLogEntry>>("/bitacora/items", { method: "post", body }).pipe(map(({ data }) => data)); }
   stationSummary(): Observable<BackendStationSummary[]> { return this.get<BackendStationSummary[]>("/consultas/stations/summary"); }
-  stations(): Observable<BackendStation[]> { return this.get<BackendStation[]>("/consultas/stations"); }
+  stations(page = 1, pageSize = 5): Observable<BackendStationPage> {
+    const params = new HttpParams().set("page", page).set("pageSize", pageSize);
+    return this.http.get<ApiEnvelope<BackendStation[]>>(`${this.baseUrl}/consultas/stations`, { params }).pipe(
+      map(({ data, meta }) => {
+        const total = meta.total ?? data.length;
+        const returnedPage = meta.page ?? page;
+        const returnedPageSize = meta.pageSize ?? pageSize;
+        const hasServerPagination = meta.total !== undefined || meta.totalPages !== undefined || meta.page !== undefined;
+        const pageData = hasServerPagination ? data : data.slice((page - 1) * pageSize, page * pageSize);
+        return {
+          data: pageData,
+          meta: {
+            requestId: meta.requestId,
+            page: returnedPage,
+            pageSize: returnedPageSize,
+            total,
+            totalPages: meta.totalPages ?? Math.max(1, Math.ceil(total / pageSize)),
+          },
+        };
+      }),
+      catchError((error: HttpErrorResponse) => {
+        const body = this.parseErrorBody(error.error);
+        return throwError(() => new ApiClientError(
+          body?.error?.message ?? "No fue posible cargar las estaciones.",
+          error.status,
+          body?.error?.code,
+          body?.meta?.requestId,
+          body?.error?.details,
+        ));
+      }),
+    );
+  }
   importStations(file: File): Observable<ImportStationsResponse> {
     const body = new FormData();
     body.append("file", file, file.name);
