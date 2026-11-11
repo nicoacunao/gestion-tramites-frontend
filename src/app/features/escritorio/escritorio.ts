@@ -18,13 +18,6 @@ interface AmbitoGestion {
   terminos: string[];
 }
 
-interface DatosAsociados {
-  rutRazonSocial: string;
-  representanteLegal: string;
-  rutRepresentanteLegal: string;
-  semaforo: EstadoSemaforo;
-}
-
 interface GestionEscritorio extends GestionListadoItem {
   ambito: string;
   codigoAmbito: string;
@@ -98,39 +91,6 @@ const AMBITO_OTROS: AmbitoGestion = {
   terminos: [],
 };
 
-const DATOS_ASOCIADOS: Record<string, DatosAsociados> = {
-  1001: {
-    rutRazonSocial: "76.543.210-3",
-    representanteLegal: "María José Soto Pérez",
-    rutRepresentanteLegal: "12.345.678-5",
-    semaforo: "al-dia",
-  },
-  1002: {
-    rutRazonSocial: "76.222.111-K",
-    representanteLegal: "Andrés Fuentes Díaz",
-    rutRepresentanteLegal: "15.842.367-7",
-    semaforo: "proximo-vencer",
-  },
-  1003: {
-    rutRazonSocial: "77.101.990-0",
-    representanteLegal: "Paula Andrea Rojas Silva",
-    rutRepresentanteLegal: "9.876.543-3",
-    semaforo: "atrasado",
-  },
-  1004: {
-    rutRazonSocial: "76.908.440-1",
-    representanteLegal: "Felipe Muñoz Contreras",
-    rutRepresentanteLegal: "13.579.246-2",
-    semaforo: "al-dia",
-  },
-  1005: {
-    rutRazonSocial: "77.450.320-K",
-    representanteLegal: "Carolina Pérez Lagos",
-    rutRepresentanteLegal: "17.223.456-9",
-    semaforo: "atrasado",
-  },
-};
-
 const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
   "al-dia": "Al día",
   "proximo-vencer": "Próximo a vencer",
@@ -184,14 +144,14 @@ export class Escritorio {
     nivel: NivelGestion,
     correlativo: number,
   ): GestionEscritorio {
-    const datos = DATOS_ASOCIADOS[tramite.id] ?? {
+    const datos = {
       rutRazonSocial:
         tramite.datosAdicionales?.["rutRazonSocial"] ?? "Sin registrar",
       representanteLegal:
         tramite.datosAdicionales?.["representanteLegal"] ?? "Sin registrar",
       rutRepresentanteLegal:
         tramite.datosAdicionales?.["rutRepresentanteLegal"] ?? "Sin registrar",
-      semaforo: "al-dia",
+      semaforo: this.obtenerSemaforo(tramite),
     };
     const ambito = this.obtenerAmbito(tramite);
 
@@ -228,6 +188,12 @@ export class Escritorio {
 
   private obtenerNivel(tramite: Tramite): NivelGestion {
     return tramite.modalidadCreacion === "subtramite" ? "N2" : "N1";
+  }
+
+  private obtenerSemaforo(tramite: Tramite): EstadoSemaforo {
+    return tramite.estado === "Observado" || tramite.estado === "Rechazado"
+      ? "atrasado"
+      : "al-dia";
   }
 
   private obtenerAmbito(tramite: Tramite): AmbitoGestion {

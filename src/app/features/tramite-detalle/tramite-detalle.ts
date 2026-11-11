@@ -27,7 +27,6 @@ import { UserSessionService } from "../../shared/services/user-session";
 import {
   ESTADOS_ANTECEDENTE,
   ESTADOS_ETAPA,
-  ETAPAS_ESTANDAR,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../tramites/models/estado-tramite";
@@ -54,58 +53,6 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
   antecedente: T;
   profundidad: number;
 }
-
-const DATOS_ETAPAS_DETALLE = [
-  {
-    estado: "Completado",
-    fechaEstimada: "02/07/2026",
-    fechaReal: "02/07/2026",
-    responsable: "Carlos Ramírez",
-    observacion: "Antecedentes necesarios confirmados.",
-  },
-  {
-    estado: "Completado",
-    fechaEstimada: "06/07/2026",
-    fechaReal: "06/07/2026",
-    responsable: "Oficina técnica",
-    observacion: "Expediente preparado con los documentos recibidos.",
-  },
-  {
-    estado: "Completado",
-    fechaEstimada: "07/07/2026",
-    fechaReal: "07/07/2026",
-    responsable: "Carlos Ramírez",
-    observacion: "Expediente ingresado bajo folio DOM-2841.",
-  },
-  {
-    estado: "En curso",
-    fechaEstimada: "15/07/2026",
-    fechaReal: "—",
-    responsable: "María González",
-    observacion: "Funcionario informó un plazo estimado de 15 días.",
-  },
-  {
-    estado: "Pendiente",
-    fechaEstimada: "18/07/2026",
-    fechaReal: "—",
-    responsable: "Oficina técnica",
-    observacion: "—",
-  },
-  {
-    estado: "Pendiente",
-    fechaEstimada: "25/07/2026",
-    fechaReal: "—",
-    responsable: "María González",
-    observacion: "—",
-  },
-  {
-    estado: "Pendiente",
-    fechaEstimada: "—",
-    fechaReal: "—",
-    responsable: "María González",
-    observacion: "—",
-  },
-];
 
 @Component({
   selector: "app-tramite-detalle",
@@ -157,15 +104,26 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
-    const apiId = this.tramite?.apiId;
-    if (apiId && this.api) {
+    const cargarDatosBackend = (tramite: Tramite) => {
+      if (!this.api || !tramite.apiId) return;
+      const apiId = tramite.apiId;
       this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });
       this.api.management(apiId).subscribe({ next: (management) => {
         if (this.tramite) this.tramite = { ...this.tramite, estado: management.status ?? this.tramite.estado, prioridad: management.priority, responsableInterno: management.responsibleName ?? management.responsibleUserId };
       } });
       this.api.backgrounds(apiId).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
       this.api.stages(apiId).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramiteId!, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+    };
+    if (this.tramite) {
+      cargarDatosBackend(this.tramite);
+    } else if (tramiteId && this.api) {
+      this.tramitesMock.cargarPorId(tramiteId).subscribe({
+        next: (tramite) => {
+          this.tramite = tramite;
+          cargarDatosBackend(tramite);
+        },
+      });
     }
     this.cargarDatosEditables();
 
@@ -202,101 +160,16 @@ export class TramiteDetalle {
     "Otro documento",
   ];
 
-  antecedentesRequeridos: AntecedenteRequeridoDetalle[] = [
-    {
-      id: "antecedente-dominio",
-      nivel: "N2",
-      padreId: null,
-      expandido: true,
-      antecedente: "Certificado de dominio vigente",
-      obligatorio: true,
-      responsable: "Concesionario",
-      estado: "Recibido conforme",
-      fechaCarga: "02-07-2026",
-      archivo: "certificado-dominio.pdf",
-    },
-    {
-      id: "antecedente-plano",
-      nivel: "N3",
-      padreId: "antecedente-dominio",
-      expandido: false,
-      antecedente: "Plano de instalaciones",
-      obligatorio: true,
-      responsable: "Oficina técnica",
-      estado: "Recibido",
-      fechaCarga: "07-07-2026",
-      archivo: "plano-instalaciones-v2.pdf",
-    },
-    {
-      id: "antecedente-formulario",
-      nivel: "N3",
-      padreId: "antecedente-dominio",
-      expandido: false,
-      antecedente: "Formulario de ingreso",
-      obligatorio: true,
-      responsable: "Concesionario",
-      estado: "Pendiente",
-      fechaCarga: "—",
-      archivo: "—",
-    },
-  ];
+  antecedentesRequeridos: AntecedenteRequeridoDetalle[] = [];
 
-  antecedentesComplementarios: AntecedenteComplementarioDetalle[] = [
-    {
-      id: "antecedente-seguridad",
-      nivel: "N2",
-      padreId: null,
-      expandido: true,
-      tipoDocumento: "Informe complementario de seguridad",
-      solicitadoPor: "Municipalidad de Concón",
-      responsable: "Prevención de riesgos",
-      estado: "Recibido",
-      fechaCarga: "08-07-2026",
-      archivo: "informe-seguridad.pdf",
-    },
-    {
-      id: "antecedente-matrimonio",
-      nivel: "N3",
-      padreId: "antecedente-seguridad",
-      expandido: false,
-      tipoDocumento: "Certificado de matrimonio",
-      solicitadoPor: "Municipalidad de Concón",
-      responsable: "Concesionario",
-      estado: "Pendiente",
-      fechaCarga: "—",
-      archivo: "—",
-    },
-  ];
+  antecedentesComplementarios: AntecedenteComplementarioDetalle[] = [];
 
-  etapasGestion: EtapaDetalle[] = ETAPAS_ESTANDAR.map((etapa, indice) => ({
-    etapa: etapa.nombre,
-    porcentaje: etapa.porcentaje,
-    ...DATOS_ETAPAS_DETALLE[indice],
-  }));
+  etapasGestion: EtapaDetalle[] = [];
 
-  readonly archivosAdjuntos = [
-    {
-      archivo: "certificado-dominio.pdf",
-      categoria: "Antecedente requerido",
-      documento: "Certificado de dominio vigente",
-      fechaCarga: "02-07-2026 10:12",
-      cargadoPor: "Carlos Ramírez",
-    },
-    {
-      archivo: "plano-instalaciones-v2.pdf",
-      categoria: "Antecedente requerido",
-      documento: "Plano de instalaciones",
-      fechaCarga: "07-07-2026 17:05",
-      cargadoPor: "Oficina técnica",
-    },
-    {
-      archivo: "informe-seguridad.pdf",
-      categoria: "Antecedente complementario",
-      documento: "Informe complementario de seguridad",
-      fechaCarga: "08-07-2026 15:48",
-      cargadoPor: "Prevención de riesgos",
-    },
-  ];
+  readonly archivosAdjuntos: Array<{
+    archivo: string; categoria: string; documento: string;
+    fechaCarga: string; cargadoPor: string;
+  }> = [];
 
   private readonly datosEditablesIniciales = this.clonarDatosEditables({
     antecedentesRequeridos: this.antecedentesRequeridos,
@@ -569,55 +442,7 @@ export class TramiteDetalle {
   }
 
   private crearEntradasIniciales(tramite: Tramite): EntradaBitacora[] {
-    return [
-      {
-        id: `BIT-${tramite.id}-solicitud-adicional`,
-        fecha: "08-07-2026",
-        fechaIso: "2026-07-08",
-        hora: "16:40",
-        usuario: "María González",
-        iniciales: "MG",
-        titulo: "Solicitud adicional de la institución",
-        comentario:
-          "La municipalidad solicitó complementar el plano con la ubicación de los accesos.",
-        automatica: false,
-      },
-      {
-        id: `BIT-${tramite.id}-seguimiento`,
-        fecha: "05-07-2026",
-        fechaIso: "2026-07-05",
-        hora: "12:10",
-        usuario: tramite.responsableInterno,
-        iniciales: this.obtenerIniciales(tramite.responsableInterno),
-        titulo: "Gestión de seguimiento",
-        comentario:
-          "Se consultó por el plazo de respuesta. La institución informó una demora debido al alto volumen de solicitudes.",
-        automatica: false,
-      },
-      {
-        id: `BIT-${tramite.id}-contacto`,
-        fecha: "04-07-2026",
-        fechaIso: "2026-07-04",
-        hora: "10:25",
-        usuario: "Carlos Ramírez",
-        iniciales: "CR",
-        titulo: "Contacto con profesional externo",
-        comentario:
-          "Se coordinó con el arquitecto la entrega de una versión actualizada de los planos.",
-        automatica: false,
-      },
-      {
-        id: `BIT-${tramite.id}-inicio`,
-        fecha: tramite.fechaApertura,
-        fechaIso: this.convertirFechaAIso(tramite.fechaApertura),
-        hora: "09:00",
-        usuario: tramite.solicitanteCopec,
-        iniciales: this.obtenerIniciales(tramite.solicitanteCopec),
-        titulo: "Inicio del trámite",
-        comentario: `El trámite #${tramite.id} fue creado e ingresado al sistema.`,
-        automatica: true,
-      },
-    ];
+    return [];
   }
 
   private limpiarFormularioDocumento(): void {

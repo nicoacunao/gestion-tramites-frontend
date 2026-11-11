@@ -1,5 +1,4 @@
 import { CommonModule } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
 import {
   ChangeDetectorRef,
   Component,
@@ -32,7 +31,6 @@ import {
   ETAPAS_ESTANDAR,
 } from "../../models/estado-tramite";
 import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
-import { TramitesMock } from "../../services/tramites-mock";
 import { ApiClient, BackendUser } from "../../../../shared/services/api-client";
 
 interface EstacionServicio {
@@ -97,10 +95,8 @@ type ModalidadCreacion = "principal" | "subtramite";
   styleUrl: "./tramite-nuevo.scss",
 })
 export class TramiteNuevo implements OnInit, OnDestroy {
-  private readonly http = inject(HttpClient);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
-  private readonly tramitesMock = inject(TramitesMock);
   private readonly api = inject(ApiClient);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
@@ -425,15 +421,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
     this.creando = true;
     this.creacionError = "";
-    if (typeof (this.http as HttpClient & { post?: unknown }).post !== "function") {
-      this.tramiteCreadoId ||= 1006;
-      this.registrarTramiteCreado(this.modalidadCreacion);
-      this.creando = false;
-      this.segundosRestantes = this.segundosRedireccion;
-      this.mensajeCreacionVisible = true;
-      this.iniciarRedireccionAutomatica();
-      return;
-    }
     if (!this.obtenerResponsableSeleccionado()) {
       this.creando = false;
       this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
@@ -483,63 +470,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     return `${anio}-${mes}-${dia}`;
   }
 
-  private registrarTramiteCreado(modalidadCreacion: ModalidadCreacion): void {
-    const estacion = this.estacionesServicio.find(
-      (item) => item.codigo === this.form.estacionServicio,
-    );
-    const tipo = this.tipoSeleccionado;
-    const subtramite = tipo?.tramitesEspecificos.find(
-      (item) => item.id === this.form.tramiteEspecifico,
-    );
-
-    this.tramitesMock.guardar({
-      id: this.tramiteCreadoId,
-      idEstacion:
-        estacion?.codigo || this.form.estacionServicio || "Sin especificar",
-      estacionServicio:
-        estacion?.nombre || this.form.estacionServicio || "Sin especificar",
-      razonSocial: this.form.razonSocial || "Sin especificar",
-      comuna: estacion?.comuna ?? "Sin especificar",
-      direccion: estacion?.direccion ?? "Sin especificar",
-      estado: this.form.estado,
-      prioridad: this.form.prioridad || "Sin especificar",
-      responsableInterno: this.form.responsableInterno || "Sin especificar",
-      tipoTramite: tipo?.nombre || "Sin especificar",
-      tramiteEspecifico:
-        subtramite?.nombre ||
-        (modalidadCreacion === "principal"
-          ? "Trámite principal completo"
-          : "Sin especificar"),
-      solicitanteCopec: this.form.solicitanteCopec || "Sin especificar",
-      modalidadCreacion,
-      datosAdicionales: {
-        nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
-        ...this.form.datosAdicionales,
-      },
-      subtramitesAsociados:
-        modalidadCreacion === "principal" && !subtramite
-          ? this.tramitesEspecificos.map((item) => item.nombre)
-          : subtramite
-            ? [subtramite.nombre]
-            : [],
-      antecedentesConfigurados: this.antecedentesRequeridos.map(
-        (item) => item.antecedente,
-      ),
-      antecedentesComplementariosConfigurados: this.antecedentesComplementarios
-        .map((item) => item.antecedente.trim())
-        .filter(Boolean),
-      etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
-      fechaApertura: this.normalizarFechaListado(this.form.fechaApertura),
-      fechaEstimadaTermino: this.normalizarFechaListado(
-        this.form.fechaEstimadaTermino,
-      ),
-    });
-  }
-
-  private normalizarFechaListado(fecha: string): string {
-    return fecha ? fecha.replaceAll("/", "-") : "Sin especificar";
-  }
-
   private obtenerNombreConcesionario(razonSocial: string): string {
     return razonSocial.replace(/\s+(SpA|Ltda\.?|Limitada|S\.?A\.?)$/i, "");
   }
@@ -563,7 +493,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private cargarCatalogos(): void {
-    this.http.get<CatalogosTramite>("/data/tramite-catalogos.json").subscribe({
+    this.api.catalogs<CatalogosTramite>("/catalogos/tramites").subscribe({
       next: (catalogos) => {
         this.estacionesServicio = catalogos.estacionesServicio;
         this.prioridades = catalogos.prioridades;
@@ -571,10 +501,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.tiposTramite = catalogos.tiposTramite;
         this.catalogosError = "";
         this.changeDetectorRef.markForCheck();
-        this.api.users().subscribe({
-          next: (users) => { this.responsablesApi = users; },
-          error: () => undefined,
-        });
+        this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });
       },
       error: () => {
         this.catalogosError =

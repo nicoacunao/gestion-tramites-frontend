@@ -137,52 +137,10 @@ export class Home {
   loadingTasks = true;
   tasksError = "";
 
-  private readonly fallbackTasks: HomeTask[] = [
-    {
-      id: 1001,
-      code: "N1-MUN-001",
-      stationId: "60001",
-      title: "Solicitud de patente EDS",
-      detail: "Se incorporaron nuevos antecedentes a la solicitud.",
-      updatedAt: "Actualizado hace 18 min",
-      trafficStatus: "al-dia",
-      trafficLabel: "Al día",
-      severity: "success",
-      route: "/todas-las-gestiones",
-      queryParams: { detalle: 1001 },
-    },
-    {
-      id: 1002,
-      code: "N1-SAN-002",
-      stationId: "60002",
-      title: "Resolución sanitaria de alimentos",
-      detail: "La fecha estimada de término se encuentra próxima.",
-      updatedAt: "Actualizado hoy, 09:20",
-      trafficStatus: "proximo-vencer",
-      trafficLabel: "Próximo a vencer",
-      severity: "warn",
-      route: "/todas-las-gestiones",
-      queryParams: { detalle: 1002 },
-    },
-    {
-      id: 1003,
-      code: "N1-SAN-003",
-      stationId: "60003",
-      title: "Informe sanitario de establecimiento",
-      detail: "Mantiene observaciones pendientes que requieren atención.",
-      updatedAt: "Actualizado hace 1 h",
-      trafficStatus: "atrasado",
-      trafficLabel: "Requiere atención",
-      severity: "danger",
-      route: "/todas-las-gestiones",
-      queryParams: { detalle: 1003 },
-    },
-  ];
-
   constructor(private readonly api: ApiClient) {
     this.api.managements().subscribe({
       next: (items) => { this.tasks = items.slice(0, 3).map((item) => this.toTask(item)); this.loadingTasks = false; },
-      error: (error: Error) => { this.tasks = this.fallbackTasks; this.tasksError = error.message; this.loadingTasks = false; },
+      error: (error: Error) => { this.tasks = []; this.tasksError = error.message; this.loadingTasks = false; },
     });
   }
 

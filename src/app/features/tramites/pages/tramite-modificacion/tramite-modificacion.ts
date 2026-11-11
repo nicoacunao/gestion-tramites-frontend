@@ -27,7 +27,6 @@ import {
   TagSeverity,
 } from "../../models/estado-tramite";
 import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
-import { TramitesMock } from "../../services/tramites-mock";
 import { ApiClient, BackendManagement } from "../../../../shared/services/api-client";
 
 @Component({
@@ -66,74 +65,37 @@ export class TramiteModificacion {
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
   readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
-  readonly responsables = [
-    "José L. Rosas",
-    "Claudio Doñas",
-    "Claudio Henríquez",
-    "María González",
-    "Carlos Ramírez",
-    "Oficina técnica",
-    "Concesionario",
-    "Otros",
-  ];
+  responsables: string[] = [];
 
   breadcrumbs: Array<{ label: string; route?: string }>;
 
   readonly tramite = {
-    estacionServicio: "Copec Concón",
-    concesionario: "Comercial Los Pinos SpA",
-    prioridad: "Alta",
-    estado: "En tramitación",
-    responsableInterno: "María González",
-    tipoTramite: "Patente comercial",
-    tramiteEspecifico: "Regularización de instalaciones",
-    solicitanteCopec: "Carlos Ramírez",
-    fechaApertura: "02-07-2026",
-    fechaEstimadaTermino: "12-07-2026",
+    estacionServicio: "",
+    concesionario: "",
+    prioridad: "",
+    estado: "",
+    responsableInterno: "",
+    tipoTramite: "",
+    tramiteEspecifico: "",
+    solicitanteCopec: "",
+    fechaApertura: "",
+    fechaEstimadaTermino: "",
   };
 
-  antecedentesRequeridos = [
-    {
-      antecedente: "Certificado de dominio vigente",
-      obligatorio: true,
-      responsable: "Concesionario",
-      estado: "Recibido",
-      observaciones: "Documento revisado y vigente.",
-      archivo: null as File | null,
-      archivoNombre: "",
-    },
-    {
-      antecedente: "Plano de instalaciones",
-      obligatorio: true,
-      responsable: "Oficina técnica",
-      estado: "Pendiente",
-      observaciones: "Pendiente de entrega por parte del solicitante.",
-      archivo: null as File | null,
-      archivoNombre: "",
-    },
-  ];
+  antecedentesRequeridos: Array<{
+    antecedente: string; obligatorio: boolean; responsable: string;
+    estado: string; observaciones: string; archivo: File | null; archivoNombre: string;
+  }> = [];
 
-  antecedentesComplementarios = [
-    {
-      antecedente: "Informe complementario de seguridad",
-      obligatorio: false,
-      responsable: "Oficina técnica",
-      estado: "Recibido",
-      observaciones: "Se solicitaron aclaraciones menores.",
-      archivo: null as File | null,
-      archivoNombre: "",
-    },
-  ];
+  antecedentesComplementarios: Array<{
+    antecedente: string; obligatorio: boolean; responsable: string;
+    estado: string; observaciones: string; archivo: File | null; archivoNombre: string;
+  }> = [];
 
-  etapasGestion = ETAPAS_ESTANDAR.map((etapa, indice) => ({
-    etapa: etapa.nombre,
-    porcentaje: etapa.porcentaje,
-    estado: indice < 3 ? "Completado" : indice === 3 ? "En curso" : "Pendiente",
-    fechaEstimada: "",
-    fechaReal: "",
-    responsable: "",
-    observacion: "",
-  }));
+  etapasGestion: Array<{
+    etapa: string; porcentaje: number; estado: string; fechaEstimada: string;
+    fechaReal: string; responsable: string; observacion: string;
+  }> = [];
 
   get porcentajeAvance(): number {
     return this.etapasGestion.reduce(
@@ -148,31 +110,13 @@ export class TramiteModificacion {
   constructor(
     route: ActivatedRoute,
     private readonly router: Router,
-    private readonly tramitesMock: TramitesMock,
     private readonly api: ApiClient,
   ) {
-    this.tramiteId = route.snapshot.paramMap.get("id") ?? "1001";
-    const tramiteRegistrado = this.tramitesMock.obtenerPorId(
-      Number(this.tramiteId),
-    );
-
-    if (tramiteRegistrado) {
-      Object.assign(this.tramite, {
-        estacionServicio: tramiteRegistrado.estacionServicio,
-        concesionario: tramiteRegistrado.razonSocial,
-        prioridad: tramiteRegistrado.prioridad,
-        estado: tramiteRegistrado.estado,
-        responsableInterno: tramiteRegistrado.responsableInterno,
-        tipoTramite: tramiteRegistrado.tipoTramite,
-        tramiteEspecifico: tramiteRegistrado.tramiteEspecifico,
-        solicitanteCopec: tramiteRegistrado.solicitanteCopec,
-        fechaApertura: tramiteRegistrado.fechaApertura,
-        fechaEstimadaTermino: tramiteRegistrado.fechaEstimadaTermino,
-      });
-    }
+    this.tramiteId = route.snapshot.paramMap.get("id") ?? "";
     this.api.management(this.tramiteId).subscribe({
       next: (management) => {
         this.backendManagement = management;
+        this.responsables = [management.responsibleName ?? management.responsibleUserId];
         Object.assign(this.tramite, {
           estacionServicio: management.stationName ?? management.stationId,
           concesionario: management.legalName ?? this.tramite.concesionario,
@@ -187,6 +131,11 @@ export class TramiteModificacion {
         this.loading = false;
       },
       error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+    });
+    this.api.users().subscribe({
+      next: (users) => {
+        this.responsables = users.map((user) => [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" "));
+      },
     });
 
     this.breadcrumbs = [
@@ -220,18 +169,6 @@ export class TramiteModificacion {
       });
       return;
     }
-    const tramiteRegistrado = this.tramitesMock.obtenerPorId(
-      Number(this.tramiteId),
-    );
-
-    if (tramiteRegistrado) {
-      this.tramitesMock.guardar({
-        ...tramiteRegistrado,
-        estado: this.tramite.estado,
-        responsableInterno: this.tramite.responsableInterno,
-      });
-    }
-
     this.navegarTrasGuardar();
   }
 
