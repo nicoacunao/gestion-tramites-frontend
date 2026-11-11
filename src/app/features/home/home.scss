@@ -713,6 +713,241 @@
   }
 }
 
+.stations-card {
+  .p-card-body {
+    min-width: 0;
+  }
+}
+
+.stations-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 14px;
+
+  > div {
+    display: grid;
+    gap: 4px;
+  }
+
+  strong {
+    color: #293b55;
+    font-size: 13px;
+  }
+
+  span {
+    color: var(--home-muted);
+    font-size: 11px;
+  }
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+.stations-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+:host ::ng-deep .stations-table {
+  min-width: 820px;
+
+  th,
+  td {
+    padding: 10px 9px;
+    font-size: 11px;
+    vertical-align: middle;
+  }
+
+  th {
+    color: #53647b;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  td {
+    color: #506078;
+  }
+
+  .station-name {
+    min-width: 205px;
+    color: #293b55;
+    font-weight: 650;
+  }
+
+  .station-id {
+    color: #175b9f;
+    font-size: 11px;
+  }
+
+  .p-tag {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+}
+
+.stations-empty {
+  padding: 28px;
+  color: var(--home-muted);
+  text-align: center;
+}
+
+.stations-import-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px dashed #b9cee5;
+  border-radius: 10px;
+  background: #f7fbff;
+
+  > div {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 3px;
+  }
+
+  strong {
+    color: #294667;
+    font-size: 11px;
+  }
+
+  span:not(.stations-import-hint__icon) {
+    color: #6c7d92;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}
+
+.stations-import-hint__icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5f1ff;
+  color: #2167ad;
+  font-size: 20px;
+}
+
+.import-dialog-content {
+  display: grid;
+  gap: 14px;
+}
+
+.import-dialog-lead {
+  margin: 0;
+  color: #65758a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.import-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  > span {
+    display: grid;
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e8f2ff;
+    color: #1e66ac;
+    font-size: 11px;
+    font-weight: 750;
+  }
+
+  div {
+    display: grid;
+    gap: 3px;
+  }
+
+  strong {
+    color: #293b55;
+    font-size: 13px;
+  }
+
+  small {
+    color: #76869a;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+:host ::ng-deep .import-dialog-content .p-fileupload-basic {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #c9e4d5;
+  border-radius: 8px;
+  background: #f3fbf6;
+
+  > div {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  strong {
+    overflow: hidden;
+    color: #276545;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: #688476;
+    font-size: 10px;
+  }
+}
+
+.selected-file__icon {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: #d8f1e2;
+  color: #258151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.import-success {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #effaf4;
+  color: #28704c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.import-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff4f4;
+}
+
 @media (min-width: 1280px) {
   .home-page {
     --desktop-panel-height: clamp(526px, calc(100dvh - 220px), 860px);
@@ -850,6 +1085,26 @@
     grid-template-columns: 1fr 1fr;
 
     button {
+      justify-content: center;
+    }
+  }
+
+  .stations-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .stations-import-hint {
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    button {
+      width: 100%;
       justify-content: center;
     }
   }

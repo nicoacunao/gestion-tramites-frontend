@@ -12,6 +12,18 @@ export interface BackendBackground { id: string; managementId: string; parentMan
 export interface BackendStage { id: string; managementId: string; stageId: string; status: string; estimatedOn: string | null; completedOn: string | null; responsible: string | null; notes: string | null; version: number; }
 export interface BackendLogEntry { id: string; managementId: string; userId: string | null; registeredOn: string; registeredAt: string; title: string; comment: string; authorName?: string | null; authorInitials?: string | null; type?: "inicio" | "novedad" | "seguimiento" | "contacto" | null; automatic?: boolean; version: number; }
 export interface BackendStationSummary { stationId: string; activeCount: number; pendingCount: number; daysWithoutProgress: number; overallStatus: string; }
+export interface BackendStation {
+  stationId: string;
+  legalName: string;
+  address: string;
+  comuna: string;
+  zoneManager: string;
+  commercialManager: string;
+  companyRut: string;
+  legalRepresentative: string;
+  legalRepresentativeRut: string;
+  status: string;
+}
 
 @Injectable({ providedIn: "root" })
 export class ApiClient {
@@ -33,6 +45,18 @@ export class ApiClient {
   logs(id: string): Observable<BackendLogEntry[]> { return this.get<BackendLogEntry[]>(`/bitacora/items?managementId=${encodeURIComponent(id)}`); }
   createLog(body: object): Observable<BackendLogEntry> { return this.request<ApiEnvelope<BackendLogEntry>>("/bitacora/items", { method: "post", body }).pipe(map(({ data }) => data)); }
   stationSummary(): Observable<BackendStationSummary[]> { return this.get<BackendStationSummary[]>("/consultas/stations/summary"); }
+  stations(): Observable<BackendStation[]> { return this.get<BackendStation[]>("/consultas/stations"); }
+  importStations(file: File): Observable<BackendStation[]> {
+    const body = new FormData();
+    body.append("file", file, file.name);
+    return this.http.post<ApiEnvelope<BackendStation[]>>(`${this.baseUrl}/consultas/stations/import`, body).pipe(
+      map(({ data }) => data),
+      catchError((error: HttpErrorResponse) => {
+        const response = error.error as ApiErrorBody | undefined;
+        return throwError(() => new Error(response?.error?.message ?? "No fue posible importar el archivo."));
+      }),
+    );
+  }
   catalogs<T>(path: string): Observable<T> { return this.get<T>(path); }
 
   private get<T>(path: string): Observable<T> { return this.request<ApiEnvelope<T>>(path, { method: "get" }).pipe(map(({ data }) => data)); }
