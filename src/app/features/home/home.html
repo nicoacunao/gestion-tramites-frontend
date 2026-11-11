@@ -384,7 +384,7 @@
             <button pButton type="button" severity="secondary" [outlined]="true" (click)="closeImportDialog()" [disabled]="importState === 'importing'">Cancelar</button>
             @if (importState !== 'verified' && importState !== 'importing') { <button pButton type="button" (click)="verifyImportFile()" [disabled]="!selectedImportFile">Verificar archivo</button> }
             @if (importState === 'verified') { <button pButton type="button" (click)="confirmImport()">Confirmar importación</button> }
-            @if (importState === 'importing') { <button pButton type="button" loading="true">Importando…</button> }
+            @if (importState === 'importing') { <button pButton type="button" [loading]="true">Importando…</button> }
           </ng-template>
         </p-dialog>
         } @case ("tareas") {
