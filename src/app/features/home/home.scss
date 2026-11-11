@@ -340,7 +340,7 @@
 
 .stations-skeleton {
   display: grid;
-  min-width: 820px;
+  min-width: 900px;
   margin-top: 18px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
@@ -357,6 +357,15 @@
   border-bottom: 1px solid #eef2f7;
 
   &:last-child { border-bottom: 0; }
+}
+
+.stations-skeleton-paginator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 54px;
+  padding: 12px 8px 4px;
+  gap: 12px;
 }
 
 .task-item {

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   inject,
@@ -84,6 +85,7 @@ type ImportState = "idle" | "selected" | "verified" | "importing";
 export class Home {
   private readonly userSession = inject(UserSessionService);
   private readonly messageService = inject(MessageService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
 
   @ViewChild("homeTabPanel", { read: ElementRef })
   private homeTabPanel?: ElementRef<HTMLElement>;
@@ -178,6 +180,7 @@ export class Home {
     if (!force && this.stationsPage === page && this.stations.length > 0) return;
     if (!force && this.allStationsCache) {
       this.setStationPage(this.allStationsCache, page);
+      this.changeDetector.markForCheck();
       return;
     }
     const cachedPage = this.stationPageCache.get(page);
@@ -186,10 +189,13 @@ export class Home {
       this.stationsPage = page;
       this.stationsError = "";
       this.stationsLoading = false;
+      this.changeDetector.markForCheck();
       return;
     }
     this.stationsLoading = true;
     this.stationsError = "";
+    this.stations = [];
+    this.changeDetector.markForCheck();
     this.stationRequest?.unsubscribe();
     this.stationRequestPage = page;
     this.stationRequest = this.api.stations(page, this.stationPageSize).subscribe({
@@ -202,6 +208,7 @@ export class Home {
         this.stationsPage = response.meta.page;
         this.stationsTotal = response.meta.total;
         this.stationsLoading = false;
+        this.changeDetector.markForCheck();
       },
       error: (error: Error) => {
         this.stationRequestPage = null;
@@ -210,6 +217,7 @@ export class Home {
         this.stationsTotal = 0;
         this.stationsError = error.message;
         this.stationsLoading = false;
+        this.changeDetector.markForCheck();
       },
     });
   }
@@ -226,6 +234,7 @@ export class Home {
     this.stationsTotal = total;
     this.stationsError = "";
     this.stationsLoading = false;
+    this.changeDetector.markForCheck();
   }
 
   private toTask(item: BackendManagement): HomeTask {

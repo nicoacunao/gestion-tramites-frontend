@@ -343,7 +343,7 @@
 
           @if (stationsLoading) {
           <div class="stations-skeleton" role="status" aria-label="Cargando estaciones">
-            @for (row of [1, 2, 3, 4]; track row) {
+            @for (row of [1, 2, 3, 4, 5]; track row) {
             <div class="stations-skeleton-row">
               <p-skeleton width="5rem" height="0.8rem" />
               <p-skeleton width="10rem" height="0.8rem" />
@@ -353,6 +353,11 @@
               <p-skeleton width="4.5rem" height="1.35rem" borderRadius="999px" />
             </div>
             }
+            <div class="stations-skeleton-paginator" aria-hidden="true">
+              <p-skeleton width="5rem" height="1.8rem" borderRadius="6px" />
+              <p-skeleton width="8rem" height="1rem" borderRadius="4px" />
+              <p-skeleton width="5rem" height="1.8rem" borderRadius="6px" />
+            </div>
           </div>
           }
           @if (stationsError) { <p class="field-error" role="alert">{{ stationsError }}</p> }
@@ -362,7 +367,7 @@
             <strong>No hay estaciones disponibles para mostrar en este momento.</strong>
           </div>
           }
-          @if (stations.length > 0) {
+          @if (!stationsLoading && stations.length > 0) {
           <div class="stations-table-wrap">
             <p-table
               [value]="stations"
