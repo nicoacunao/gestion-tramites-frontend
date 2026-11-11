@@ -23,6 +23,7 @@ import { FileUploadModule } from "primeng/fileupload";
 import { InputTextModule } from "primeng/inputtext";
 import { TableModule } from "primeng/table";
 import { TagModule } from "primeng/tag";
+import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { UserSessionService } from "../../shared/services/user-session";
@@ -68,6 +69,7 @@ type ImportState = "idle" | "selected" | "verified" | "importing";
     InputTextModule,
     ReactiveFormsModule,
     RouterLink,
+    SkeletonModule,
     TableModule,
     TagModule,
     TextareaModule,

@@ -88,5 +88,20 @@
 
     </div>
 
+    @if (loading) {
+    <div class="login-loading" role="status" aria-live="polite" aria-label="Iniciando sesión">
+      <div class="login-loading-card">
+        <div class="login-loading-icon" aria-hidden="true">
+          <p-progress-spinner strokeWidth="4" animationDuration="1.4s" />
+        </div>
+        <div class="login-loading-copy">
+          <strong>Iniciando sesión<span class="loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></strong>
+          <span>Estamos verificando tus credenciales</span>
+        </div>
+        <div class="login-loading-track" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+    }
+
   </section>
 </main>

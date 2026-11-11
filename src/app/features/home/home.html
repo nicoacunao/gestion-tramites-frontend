@@ -339,9 +339,29 @@
             </button>
           </div>
 
-          @if (stationsLoading) { <p class="stations-empty" role="status">Cargando estaciones…</p> }
+          @if (stationsLoading) {
+          <div class="stations-skeleton" role="status" aria-label="Cargando estaciones">
+            @for (row of [1, 2, 3, 4]; track row) {
+            <div class="stations-skeleton-row">
+              <p-skeleton width="5rem" height="0.8rem" />
+              <p-skeleton width="10rem" height="0.8rem" />
+              <p-skeleton width="14rem" height="0.8rem" />
+              <p-skeleton width="7rem" height="0.8rem" />
+              <p-skeleton width="8rem" height="0.8rem" />
+              <p-skeleton width="4.5rem" height="1.35rem" borderRadius="999px" />
+            </div>
+            }
+          </div>
+          }
           @if (stationsError) { <p class="field-error" role="alert">{{ stationsError }}</p> }
           @if (!stationsLoading) {
+          @if (stations.length === 0 && !stationsError) {
+          <div class="home-empty-state" role="status">
+            <span class="home-empty-state__icon" aria-hidden="true">○</span>
+            <strong>No hay estaciones para mostrar</strong>
+            <span>No se recibieron estaciones desde el sistema.</span>
+          </div>
+          } @else {
           <div class="stations-table-wrap">
             <p-table [value]="stations" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 25]" dataKey="stationId" styleClass="stations-table" stripedRows>
               <ng-template #header>
@@ -362,6 +382,7 @@
               <ng-template #emptymessage><tr><td colspan="6">No hay estaciones para mostrar.</td></tr></ng-template>
             </p-table>
           </div>
+          }
           }
 
           <div class="stations-import-hint">
@@ -389,7 +410,6 @@
         </p-dialog>
         } @case ("tareas") {
         <p-card styleClass="tasks-card tab-content-card">
-          @if (loadingTasks) { <p role="status">Cargando gestiones…</p> }
           @if (tasksError) { <p class="field-error" role="alert">{{ tasksError }}</p> }
           <div class="tasks-heading">
             <div>
@@ -410,6 +430,29 @@
             </a>
           </div>
 
+          @if (loadingTasks) {
+          <div class="task-list task-list--skeleton" role="status" aria-label="Cargando gestiones">
+            @for (row of [1, 2, 3]; track row) {
+            <article class="task-item task-item--skeleton">
+              <div class="task-copy">
+                <p-skeleton width="9rem" height="0.7rem" />
+                <p-skeleton width="min(75%, 20rem)" height="1.15rem" />
+                <p-skeleton width="12rem" height="0.75rem" />
+              </div>
+              <div class="task-side task-side--skeleton">
+                <p-skeleton width="5.5rem" height="1.3rem" borderRadius="999px" />
+                <p-skeleton width="4rem" height="0.7rem" />
+              </div>
+            </article>
+            }
+          </div>
+          } @else if (tasks.length === 0 && !tasksError) {
+          <div class="home-empty-state home-empty-state--tasks" role="status">
+            <span class="home-empty-state__icon" aria-hidden="true">○</span>
+            <strong>No tienes gestiones asignadas</strong>
+            <span>No se recibieron gestiones para mostrar en este momento.</span>
+          </div>
+          } @else {
           <p-dataview
             [value]="tasks"
             layout="list"
@@ -469,6 +512,7 @@
               </div>
             </ng-template>
           </p-dataview>
+          }
         </p-card>
         } @case ("reporte") {
         <p-card styleClass="tab-content-card">

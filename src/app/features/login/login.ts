@@ -12,6 +12,7 @@ import { Router } from "@angular/router";
 import { ButtonDirective, ButtonLabel } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { ApiClient } from "../../shared/services/api-client";
 import { UserSessionService } from "../../shared/services/user-session";
 
@@ -61,6 +62,7 @@ function validarRut(control: AbstractControl<string>): ValidationErrors | null {
     CommonModule,
     InputTextModule,
     PasswordModule,
+    ProgressSpinnerModule,
     ReactiveFormsModule,
   ],
   templateUrl: "./login.html",
