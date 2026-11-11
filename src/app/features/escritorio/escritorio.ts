@@ -98,7 +98,7 @@ const AMBITO_OTROS: AmbitoGestion = {
   terminos: [],
 };
 
-const DATOS_ASOCIADOS: Record<number, DatosAsociados> = {
+const DATOS_ASOCIADOS: Record<string, DatosAsociados> = {
   1001: {
     rutRazonSocial: "76.543.210-3",
     representanteLegal: "María José Soto Pérez",

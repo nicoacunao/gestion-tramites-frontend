@@ -113,7 +113,7 @@ export class TramitesMock {
     return this.api!.management(String(id)).pipe(map((item) => this.fromBackend(item)), tap((item) => this.guardar(item)));
   }
 
-  obtenerPorId(id: number): Tramite | undefined {
+  obtenerPorId(id: string | number): Tramite | undefined {
     const tramite = this.tramites.find((item) => item.id === id);
 
     return tramite ? { ...tramite } : undefined;
@@ -131,17 +131,16 @@ export class TramitesMock {
   }
 
   private fromBackend(item: BackendManagement): Tramite {
-    const numericId = Number.parseInt(item.id.replace(/\D/g, ""), 10) || this.hash(item.id);
     return {
-      id: numericId,
+      id: item.id,
       apiId: item.id,
       idEstacion: item.stationId,
       tipoTramite: item.managementTypeName ?? item.managementTypeId,
-      tramiteEspecifico: item.managementTypeCode ?? item.specificManagementId ?? item.managementTypeId,
-      estacionServicio: item.stationName ?? item.stationId,
+      tramiteEspecifico: item.specificManagementId ?? item.managementTypeId,
+      estacionServicio: item.stationName && item.stationName !== item.stationId ? item.stationName : item.stationId,
       razonSocial: item.legalName ?? "Sin registrar",
-      comuna: "Sin registrar",
-      direccion: "Sin registrar",
+      comuna: item.comuna ?? "Sin registrar",
+      direccion: item.address ?? "Sin registrar",
       estado: item.status ?? "Pendiente",
       prioridad: item.priority,
       responsableInterno: item.responsibleName ?? item.responsibleUserId,
@@ -154,5 +153,4 @@ export class TramitesMock {
   }
 
   private toDisplayDate(value: string): string { const [year, month, day] = value.split("-"); return `${day}-${month}-${year}`; }
-  private hash(value: string): number { return [...value].reduce((total, char) => (total * 31 + char.charCodeAt(0)) % 1_000_000, 0) || 1; }
 }

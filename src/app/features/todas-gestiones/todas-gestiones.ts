@@ -30,7 +30,7 @@ const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
   atrasado: "Requiere atención",
 };
 
-const CODIGOS_GESTIONES: Record<number, string> = {
+const CODIGOS_GESTIONES: Record<string, string> = {
   1001: "N1-MUN-001",
   1002: "N1-SAN-002",
   1003: "N1-SAN-003",
@@ -41,7 +41,7 @@ const CODIGOS_GESTIONES: Record<number, string> = {
   2003: "N1-URB-008",
 };
 
-const DATOS_ASOCIADOS: Record<number, DatosAsociados> = {
+const DATOS_ASOCIADOS: Record<string, DatosAsociados> = {
   1001: {
     rutRazonSocial: "76.543.210-3",
     representanteLegal: "María José Soto Pérez",
@@ -164,14 +164,14 @@ export class TodasGestiones {
   gestiones: GestionGlobal[] = [];
   loading = true;
   errorMessage = "";
-  readonly tramiteDetalleInicialId: number | null;
+  readonly tramiteDetalleInicialId: string | number | null;
   readonly idEstacionInicial: string | null;
 
   constructor(tramitesMock: TramitesMock, route?: ActivatedRoute) {
     const detalleParam = route?.snapshot.queryParamMap.get("detalle") ?? null;
-    const detalle = detalleParam === null ? Number.NaN : Number(detalleParam);
-
-    this.tramiteDetalleInicialId = Number.isInteger(detalle) ? detalle : null;
+    this.tramiteDetalleInicialId = detalleParam && /^\d+$/.test(detalleParam)
+      ? Number(detalleParam)
+      : detalleParam;
     this.idEstacionInicial =
       route?.snapshot.queryParamMap.get("estacion") ?? null;
 

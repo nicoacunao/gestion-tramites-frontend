@@ -53,6 +53,8 @@ interface TramiteEspecifico {
 interface TipoTramite {
   id: string;
   nombre: string;
+  scopeCode?: string;
+  datosAdicionales?: Array<{ id: string; label: string; tipo: "text" | "select"; requerido: boolean; opciones?: string[] }>;
   segundoNivelLabel: string;
   requiereSeleccionSegundoNivelParaPrincipal: boolean;
   tramitesEspecificos: TramiteEspecifico[];
@@ -135,7 +137,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   creacionError = "";
   creando = false;
   private responsablesApi: BackendUser[] = [];
-  tramiteCreadoId = 1006;
+  tramiteCreadoId: string | number = "";
   segundosRestantes = this.segundosRedireccion;
   mensajeCreacionVisible = false;
 
@@ -151,6 +153,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     solicitanteCopec: "",
     fechaApertura: "",
     fechaEstimadaTermino: "",
+    datosAdicionales: {} as Record<string, string>,
   };
 
   antecedentesRequeridos: Array<ReturnType<typeof this.crearAntecedente>> = [];
@@ -199,6 +202,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.modalidadCreacion = null;
     this.form.tramiteEspecifico = "";
     this.tramitesEspecificos = this.tipoSeleccionado?.tramitesEspecificos ?? [];
+    this.form.datosAdicionales = Object.fromEntries(
+      (this.tipoSeleccionado?.datosAdicionales ?? []).map(({ id }) => [id, ""]),
+    );
     this.reconfigurarFormulario();
   }
 
@@ -420,6 +426,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.creando = true;
     this.creacionError = "";
     if (typeof (this.http as HttpClient & { post?: unknown }).post !== "function") {
+      this.tramiteCreadoId ||= 1006;
       this.registrarTramiteCreado(this.modalidadCreacion);
       this.creando = false;
       this.segundosRestantes = this.segundosRedireccion;
@@ -427,9 +434,14 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       this.iniciarRedireccionAutomatica();
       return;
     }
+    if (!this.obtenerResponsableSeleccionado()) {
+      this.creando = false;
+      this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
+      return;
+    }
     this.api.createManagement(this.crearPayload(this.modalidadCreacion)).subscribe({
       next: (tramite) => {
-        this.tramiteCreadoId = Number.parseInt(tramite.id.replace(/\D/g, ""), 10) || this.tramiteCreadoId;
+        this.tramiteCreadoId = tramite.id;
         this.creando = false;
         this.segundosRestantes = this.segundosRedireccion;
         this.mensajeCreacionVisible = true;
@@ -443,18 +455,22 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     const estacion = this.estacionesServicio.find((item) => item.codigo === this.form.estacionServicio);
     const tipo = this.tipoSeleccionado;
     const subtramite = tipo?.tramitesEspecificos.find((item) => item.id === this.form.tramiteEspecifico);
-    const responsable = this.responsablesApi.find((user) => [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" ") === this.form.responsableInterno);
+    const responsable = this.obtenerResponsableSeleccionado();
     return {
-      id: String(this.tramiteCreadoId), stationId: estacion?.codigo || this.form.estacionServicio,
-      managementTypeId: tipo?.id || this.form.tipoTramite, scopeCode: "OTR",
-      responsibleUserId: responsable?.id || this.form.responsableInterno,
-      level: modalidadCreacion === "subtramite" ? "N2" : "N1", sequence: this.tramiteCreadoId,
+      stationId: estacion?.codigo || this.form.estacionServicio,
+      managementTypeId: tipo?.id || this.form.tipoTramite,
+      scopeCode: tipo?.scopeCode || this.obtenerScopeCode(tipo?.id),
+      responsibleUserId: responsable!.id,
+      level: modalidadCreacion === "subtramite" ? "N2" : "N1",
       openedOn: this.normalizarFechaApi(this.form.fechaApertura),
       estimatedCompletionOn: this.form.fechaEstimadaTermino ? this.normalizarFechaApi(this.form.fechaEstimadaTermino) : null,
       lastReviewedOn: null, priority: this.form.prioridad || "Media",
       requesterName: this.form.solicitanteCopec || "Sin especificar", status: this.form.estado || "Borrador",
       creationMode: modalidadCreacion, specificManagementId: subtramite?.id ?? null,
-      datosAdicionales: { nombreConcesionario: this.form.nombreConcesionario || "Sin especificar" },
+      datosAdicionales: {
+        nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
+        ...this.form.datosAdicionales,
+      },
       subtramitesAsociados: modalidadCreacion === "principal" && !subtramite ? this.tramitesEspecificos.map((item) => item.id) : subtramite ? [subtramite.id] : [],
       antecedentesConfigurados: this.antecedentesRequeridos.map((item) => item.antecedente),
       antecedentesComplementariosConfigurados: this.antecedentesComplementarios.map((item) => item.antecedente.trim()).filter(Boolean),
@@ -498,6 +514,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       modalidadCreacion,
       datosAdicionales: {
         nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
+        ...this.form.datosAdicionales,
       },
       subtramitesAsociados:
         modalidadCreacion === "principal" && !subtramite
@@ -525,6 +542,24 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   private obtenerNombreConcesionario(razonSocial: string): string {
     return razonSocial.replace(/\s+(SpA|Ltda\.?|Limitada|S\.?A\.?)$/i, "");
+  }
+
+  private obtenerResponsableSeleccionado(): BackendUser | undefined {
+    return this.responsablesApi.find(
+      (user) => [user.names, user.firstSurname, user.secondSurname]
+        .filter(Boolean)
+        .join(" ") === this.form.responsableInterno,
+    );
+  }
+
+  private obtenerScopeCode(tipoId = ""): string {
+    const prefijoPorTipo: Record<string, string> = {
+      "patente-comercial": "MUN",
+      "resolucion-sanitaria-alimentos": "SAN",
+      "informe-sanitario-establecimientos": "SAN",
+      "regularizacion-obras": "DOM",
+    };
+    return prefijoPorTipo[tipoId] ?? "OTR";
   }
 
   private cargarCatalogos(): void {

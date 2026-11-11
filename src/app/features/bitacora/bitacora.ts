@@ -11,7 +11,7 @@ import { ApiClient } from "../../shared/services/api-client";
 export type EstadoSemaforoBitacora = "al-dia" | "proximo-vencer" | "atrasado";
 
 export interface GestionBitacora {
-  id: number;
+  id: string | number;
   codigo: string;
   nivel: `N${number}`;
   idEstacion: string;
@@ -38,7 +38,7 @@ export interface GestionBitacora {
 })
 export class Bitacora {
   private gestionSeleccionada: GestionBitacora | null = null;
-  private readonly entradasPorGestion = new Map<number, EntradaBitacora[]>();
+  private readonly entradasPorGestion = new Map<string | number, EntradaBitacora[]>();
 
   @Input()
   set gestion(gestion: GestionBitacora | null) {

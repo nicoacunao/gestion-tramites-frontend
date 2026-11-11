@@ -61,7 +61,7 @@ export class GestionListado {
   @Input() bitacoraPersonal = false;
 
   private _gestiones: GestionListadoItem[] = [];
-  private _detalleInicialId: number | null = null;
+  private _detalleInicialId: string | number | null = null;
   private _idEstacionInicial: string | null = null;
 
   @Input({ required: true })
@@ -76,7 +76,7 @@ export class GestionListado {
   }
 
   @Input()
-  set detalleInicialId(detalleInicialId: number | null) {
+  set detalleInicialId(detalleInicialId: string | number | null) {
     this._detalleInicialId = detalleInicialId;
     this.aplicarDetalleInicial();
   }
@@ -105,7 +105,7 @@ export class GestionListado {
   readonly direccionOrdenInicial = -1;
   gestionBitacoraSeleccionada: GestionBitacora | null = null;
   bitacoraVisible = false;
-  tramiteDetalleId: number | null = null;
+  tramiteDetalleId: string | number | null = null;
   detalleTramiteVisible = false;
 
   get cantidadResultados(): number {

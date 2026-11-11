@@ -9,6 +9,7 @@ export interface AntecedenteRequeridoDetalle {
   estado: string;
   fechaCarga: string;
   archivo: string;
+  version?: number;
 }
 
 export interface AntecedenteComplementarioDetalle {
@@ -22,9 +23,12 @@ export interface AntecedenteComplementarioDetalle {
   estado: string;
   fechaCarga: string;
   archivo: string;
+  version?: number;
 }
 
 export interface EtapaDetalle {
+  id?: string;
+  version?: number;
   etapa: string;
   porcentaje: number;
   estado: string;
@@ -41,7 +45,7 @@ export interface DetalleEditableTramite {
 }
 
 export interface Tramite {
-  id: number;
+  id: string | number;
   apiId?: string;
   idEstacion: string;
   tipoTramite: string;

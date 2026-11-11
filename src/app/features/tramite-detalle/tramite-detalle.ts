@@ -9,6 +9,7 @@ import {
   ViewChild,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { forkJoin, map, switchMap } from "rxjs";
 import { ButtonDirective } from "primeng/button";
 import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
@@ -38,7 +39,7 @@ import {
   Tramite,
 } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
-import { ApiClient, BackendBackground, BackendStage } from "../../shared/services/api-client";
+import { ApiClient, BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-client";
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
@@ -127,8 +128,8 @@ const DATOS_ETAPAS_DETALLE = [
   styleUrl: "./tramite-detalle.scss",
 })
 export class TramiteDetalle {
-  private readonly entradasPorTramite = new Map<number, EntradaBitacora[]>();
-  private _tramiteId: number | null = null;
+  private readonly entradasPorTramite = new Map<string | number, EntradaBitacora[]>();
+  private _tramiteId: string | number | null = null;
   private _visible = false;
 
   @Input()
@@ -151,19 +152,20 @@ export class TramiteDetalle {
   @ViewChild("archivoInput") archivoInput?: ElementRef<HTMLInputElement>;
 
   @Input()
-  set tramiteId(tramiteId: number | null) {
+  set tramiteId(tramiteId: string | number | null) {
     this._tramiteId = tramiteId;
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
     const apiId = this.tramite?.apiId;
     if (apiId && this.api) {
+      this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });
       this.api.management(apiId).subscribe({ next: (management) => {
         if (this.tramite) this.tramite = { ...this.tramite, estado: management.status ?? this.tramite.estado, prioridad: management.priority, responsableInterno: management.responsibleName ?? management.responsibleUserId };
       } });
       this.api.backgrounds(apiId).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
       this.api.stages(apiId).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramiteId!, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: item.registeredOn, hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramiteId!, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
     }
     this.cargarDatosEditables();
 
@@ -175,11 +177,14 @@ export class TramiteDetalle {
     this.restablecerJerarquiaAntecedentes();
   }
 
-  get tramiteId(): number | null {
+  get tramiteId(): string | number | null {
     return this._tramiteId;
   }
 
   tramite: Tramite | undefined;
+  private responsablesApi: BackendUser[] = [];
+  guardando = false;
+  errorGuardado = "";
   tipoAntecedenteNuevo: string | null = null;
   archivoAntecedenteNuevo: File | null = null;
   contextoDocumentoNuevo = "";
@@ -306,12 +311,12 @@ export class TramiteDetalle {
   ) {}
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
-    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: item.backgroundId, obligatorio: item.required, responsable: item.responsibleUserId, estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
-    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: item.backgroundId, solicitadoPor: "", responsable: item.responsibleUserId, estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: item.backgroundId, obligatorio: item.required, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: item.backgroundId, solicitadoPor: "", responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
   }
 
   private aplicarEtapasBackend(items: BackendStage[]): void {
-    this.etapasGestion = items.map((item) => ({ id: item.id, version: item.version, etapa: item.stageId, porcentaje: 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: item.responsible ?? "", observacion: item.notes ?? "" }));
+    this.etapasGestion = items.map((item) => ({ id: item.id, version: item.version, etapa: item.stageId, porcentaje: 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: this.nombreResponsable(item.responsible ?? ""), observacion: item.notes ?? "" }));
   }
 
   get bitacora(): EntradaBitacora[] {
@@ -444,19 +449,20 @@ export class TramiteDetalle {
     };
 
     if (this.api && this.tramite.apiId) {
-      for (const antecedente of [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]) {
-        const item = antecedente as AntecedenteRequeridoDetalle & { id?: string; version?: number };
-        if (item.id && item.version) this.api.updateBackground(item.id, { responsibleUserId: item.responsable, status: item.estado, fileReference: item.archivo || null, version: item.version }).subscribe({ error: () => undefined });
-      }
-      for (const etapa of this.etapasGestion as Array<EtapaDetalle & { id?: string; version?: number }>) {
-        if (etapa.id && etapa.version) this.api.updateStage(etapa.id, { status: etapa.estado, estimatedOn: etapa.fechaEstimada || null, completedOn: etapa.fechaReal || null, responsible: etapa.responsable || null, notes: etapa.observacion || null, version: etapa.version }).subscribe({ error: () => undefined });
-      }
-      this.api.management(this.tramite.apiId).subscribe({
-        next: (management) => {
-          this.api?.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad }).subscribe({
-            next: () => { this.tramite = tramiteActualizado; this.actualizarVisibilidad(false); },
-          });
-        },
+      this.guardando = true;
+      this.errorGuardado = "";
+      const antecedentes = [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
+        .filter((item) => item.id && item.version !== undefined)
+        .map((item) => this.api!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, version: item.version }));
+      const etapas = this.etapasGestion
+        .filter((item) => item.id && item.version !== undefined)
+        .map((item) => this.api!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
+      this.api.management(this.tramite.apiId).pipe(
+        map((management) => this.api!.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad })),
+        switchMap((managementUpdate) => forkJoin([...antecedentes, ...etapas, managementUpdate])),
+      ).subscribe({
+        next: () => { this.guardando = false; this.tramite = tramiteActualizado; this.actualizarVisibilidad(false); },
+        error: (error: Error) => { this.guardando = false; this.errorGuardado = error.message; },
       });
       return;
     }
@@ -756,6 +762,28 @@ export class TramiteDetalle {
       partes.find(({ type }) => type === tipo)?.value ?? "";
 
     return `${valor("year")}-${valor("month")}-${valor("day")}`;
+  }
+
+  private formatearFechaIsoComoVista(fechaIso: string): string {
+    const [anio, mes, dia] = fechaIso.split("-");
+    return `${dia}-${mes}-${anio}`;
+  }
+
+  private nombreResponsable(id: string): string {
+    const user = this.responsablesApi.find(({ id: userId }) => userId === id);
+    return user
+      ? [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" ")
+      : id;
+  }
+
+  private resolverResponsable(nombre: string): string | null {
+    if (!nombre) {
+      return null;
+    }
+    const user = this.responsablesApi.find(
+      (item) => [item.names, item.firstSurname, item.secondSurname].filter(Boolean).join(" ") === nombre || item.id === nombre,
+    );
+    return user?.id ?? null;
   }
 
   private formatearHora(fecha: Date): string {
