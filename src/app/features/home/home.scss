@@ -773,13 +773,21 @@
     font-size: 13px;
   }
 
-  span {
-    color: var(--home-muted);
-    font-size: 11px;
-  }
-
-  button {
+  .import-stations-button {
+    border-color: #2b74c5;
+    background: #fff;
+    color: #175b9f;
     white-space: nowrap;
+
+    &:hover {
+      border-color: #1f6fbd;
+      background: #1f6fbd;
+      color: #fff;
+    }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 3px rgb(43 116 197 / 20%);
+    }
   }
 }
 
@@ -869,47 +877,6 @@
   font-size: 24px;
   line-height: 1;
   place-items: center;
-}
-
-.stations-import-hint {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  padding: 12px 14px;
-  border: 1px dashed #b9cee5;
-  border-radius: 10px;
-  background: #f7fbff;
-
-  > div {
-    display: grid;
-    min-width: 0;
-    flex: 1;
-    gap: 3px;
-  }
-
-  strong {
-    color: #294667;
-    font-size: 11px;
-  }
-
-  span:not(.stations-import-hint__icon) {
-    color: #6c7d92;
-    font-size: 10px;
-    line-height: 1.4;
-  }
-}
-
-.stations-import-hint__icon {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  place-items: center;
-  border-radius: 50%;
-  background: #e5f1ff;
-  color: #2167ad;
-  font-size: 20px;
 }
 
 .import-dialog-content {
@@ -1174,15 +1141,6 @@
     }
   }
 
-  .stations-import-hint {
-    align-items: flex-start;
-    flex-wrap: wrap;
-
-    button {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 }
 
 @media (max-width: 460px) {

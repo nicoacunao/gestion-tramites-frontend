@@ -331,10 +331,15 @@
           <div class="stations-toolbar">
             <div>
               <strong>{{ stations.length }} estaciones visibles</strong>
-              <span>La información se identifica por el ID EDS y se actualiza desde el backend.</span>
             </div>
-            <button pButton type="button" (click)="openImportDialog()">
-              <span aria-hidden="true">＋</span>
+            <button
+              pButton
+              type="button"
+              class="import-stations-button"
+              severity="secondary"
+              [outlined]="true"
+              (click)="openImportDialog()"
+            >
               Importar archivo
             </button>
           </div>
@@ -358,8 +363,7 @@
           @if (stations.length === 0 && !stationsError) {
           <div class="home-empty-state" role="status">
             <span class="home-empty-state__icon" aria-hidden="true">○</span>
-            <strong>No hay estaciones para mostrar</strong>
-            <span>No se recibieron estaciones desde el sistema.</span>
+            <strong>No hay estaciones disponibles para mostrar en este momento.</strong>
           </div>
           } @else {
           <div class="stations-table-wrap">
@@ -384,12 +388,6 @@
           </div>
           }
           }
-
-          <div class="stations-import-hint">
-            <span class="stations-import-hint__icon" aria-hidden="true">↥</span>
-            <div><strong>¿Necesitas actualizar la base?</strong><span>Importa un archivo Excel o CSV. Los registros existentes se reconocerán por su ID EDS.</span></div>
-            <button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="openImportDialog()">Importar</button>
-          </div>
         </p-card>
         <p-dialog [(visible)]="importDialogVisible" [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: 'min(560px, calc(100vw - 32px))' }" header="Importar estaciones" (onHide)="resetImport()">
           <div class="import-dialog-content">
@@ -450,7 +448,6 @@
           <div class="home-empty-state home-empty-state--tasks" role="status">
             <span class="home-empty-state__icon" aria-hidden="true">○</span>
             <strong>No tienes gestiones asignadas</strong>
-            <span>No se recibieron gestiones para mostrar en este momento.</span>
           </div>
           } @else {
           <p-dataview
