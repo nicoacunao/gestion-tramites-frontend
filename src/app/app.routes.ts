@@ -1,15 +1,18 @@
 import { Routes } from "@angular/router";
 import { MainLayoutComponent } from "./layout/main-layout/main-layout";
+import { authGuard, loginGuard } from "./shared/guards/auth.guard";
 
 export const routes: Routes = [
   {
     path: "login",
+    canActivate: [loginGuard],
     title: "Acceso | Gestión de Trámites",
     loadComponent: () => import("./features/login/login").then((m) => m.Login),
   },
   {
     path: "",
     component: MainLayoutComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: "",
@@ -45,20 +48,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/tramites/pages/tramite-nuevo/tramite-nuevo").then(
             (m) => m.TramiteNuevo,
-          ),
-      },
-      {
-        path: "tramites/estado-estaciones",
-        loadComponent: () =>
-          import("./features/tramites/pages/estado-estaciones/estado-estaciones").then(
-            (m) => m.EstadoEstaciones,
-          ),
-      },
-      {
-        path: "tramites/:id/modificar",
-        loadComponent: () =>
-          import("./features/tramites/pages/tramite-modificacion/tramite-modificacion").then(
-            (m) => m.TramiteModificacion,
           ),
       },
       {

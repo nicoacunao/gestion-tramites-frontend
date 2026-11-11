@@ -13,6 +13,7 @@ import { ButtonDirective, ButtonLabel } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
 import { ApiClient } from "../../shared/services/api-client";
+import { UserSessionService } from "../../shared/services/user-session";
 
 export interface LoginCredentials {
   rut: string;
@@ -82,7 +83,7 @@ export class Login {
   loading = false;
   errorMessage = "";
 
-  constructor(private readonly router: Router, private readonly api: ApiClient) { }
+  constructor(private readonly router: Router, private readonly api: ApiClient, private readonly userSession: UserSessionService) { }
 
   formatRut(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -113,9 +114,8 @@ export class Login {
     this.loading = true;
     this.errorMessage = "";
     this.api.login(limpiarRut(credentials.rut), credentials.password).subscribe({
-      next: ({ accessToken, user }) => {
-        localStorage.setItem("gestion-tramites.access-token", accessToken);
-        localStorage.setItem("gestion-tramites.user", JSON.stringify(user));
+      next: ({ accessToken, expiresAt, user }) => {
+        this.userSession.setSession(accessToken, expiresAt, user);
         this.submitted.emit({ rut: limpiarRut(credentials.rut), password: credentials.password });
         this.loading = false;
         void this.router.navigate(["/home"]);

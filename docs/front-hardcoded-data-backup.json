@@ -1,6 +1,11 @@
 {
   "description": "Respaldo de los datos de demostración retirados del front. No se sirve como asset ni participa en runtime.",
-  "source": "src/app/features/tramites/services/tramites-mock.ts",
+  "source": [
+    "src/app/features/tramites/services/tramites-mock.ts",
+    "src/app/features/home/home.ts",
+    "src/app/shared/services/user-session.ts",
+    "src/app/features/tramite-detalle/tramite-detalle.ts"
+  ],
   "tramites": [
     {
       "id": 1001,
@@ -87,5 +92,31 @@
       "fechaEstimadaTermino": "30-06-2026",
       "fechaUltimaRevision": null
     }
+  ],
+  "homeSeedStations": [
+    { "stationId": "60001", "legalName": "Comercial y Servicios Soar Limitada", "address": "Pedro Fontova 6789", "comuna": "Huechuraba", "zoneManager": "Alejandra Zuvic", "commercialManager": "Eduardo Consiglio", "companyRut": "77.618.579-5", "legalRepresentative": "Américo Soza Aravena", "legalRepresentativeRut": "10.995.619-8", "status": "Pendiente de validar" },
+    { "stationId": "60003", "legalName": "Centros de Servicios Focacci Bórquez Limitada", "address": "Av. Gabriela N°3950", "comuna": "Puente Alto", "zoneManager": "Veronica Torreblanca", "commercialManager": "Mauricio Soto", "companyRut": "77.094.345-0", "legalRepresentative": "Alejandro Focacci González", "legalRepresentativeRut": "8.320.617-9", "status": "No" },
+    { "stationId": "60004", "legalName": "Garcia y Compañía Limitada", "address": "Av. Chamisero N°10.410", "comuna": "Colina", "zoneManager": "Alejandra Zuvic", "commercialManager": "Eduardo Consiglio", "companyRut": "76.194.458-4", "legalRepresentative": "Felipe García Real", "legalRepresentativeRut": "10.820.309-9", "status": "No" },
+    { "stationId": "60006", "legalName": "Comercial y Servicios Tarahuin Limitada", "address": "Av. Jorge Alessandri Rodriguez N°20011 al N°20055", "comuna": "San Bernardo", "zoneManager": "Veronica Torreblanca", "commercialManager": "Mauricio Soto", "companyRut": "76.197.149-2", "legalRepresentative": "Mario Torrealba Andrade", "legalRepresentativeRut": "8.399.040-6", "status": "Pendiente de validar" },
+    { "stationId": "60007", "legalName": "Inversiones y Proyectos Haensgen Limitada", "address": "Balmaceda N°83", "comuna": "Peñaflor", "zoneManager": "Benjamin Fuentes", "commercialManager": "Mauricio Soto", "companyRut": "76.724.513-0", "legalRepresentative": "Anne Marie Haensgen Martínez", "legalRepresentativeRut": "13.458.764-4", "status": "No" }
+  ],
+  "userSessionDefault": {
+    "firstName": "Jose Luis",
+    "fullName": "Jose Luis Rozas",
+    "initials": "JL",
+    "role": "Gestor de trámites",
+    "description": "Administración y seguimiento de gestiones municipales",
+    "email": "jlrozas.a@gmail.com",
+    "phone": "+56 9 9999 9999",
+    "rut": "11.111.111-1",
+    "organization": ""
+  },
+  "tramiteDetalleTiposAntecedenteAdicional": [
+    "Formulario de ingreso de solicitud",
+    "Informe técnico",
+    "Documento de Dirección de Obras",
+    "Antecedente complementario",
+    "Documento solicitado posteriormente por una institución",
+    "Otro documento"
   ]
 }

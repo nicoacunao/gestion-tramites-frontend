@@ -30,7 +30,6 @@ import {
   ESTADOS_ETAPA,
   ETAPAS_ESTANDAR,
 } from "../../models/estado-tramite";
-import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { ApiClient, BackendUser } from "../../../../shared/services/api-client";
 
 interface EstacionServicio {
@@ -63,6 +62,7 @@ interface CatalogosTramite {
   prioridades: string[];
   responsables: string[];
   tiposTramite: TipoTramite[];
+  tiposDocumentoComplementario?: string[];
 }
 
 type ModalidadCreacion = "principal" | "subtramite";
@@ -120,7 +120,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   readonly estadosIniciales = ["Borrador", "Pendiente", "Ingresado"];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
-  readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
+  tiposDocumentoComplementario: string[] = [];
 
   estacionesServicio: EstacionServicio[] = [];
   prioridades: string[] = [];
@@ -499,6 +499,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.prioridades = catalogos.prioridades;
         this.responsables = catalogos.responsables;
         this.tiposTramite = catalogos.tiposTramite;
+        this.tiposDocumentoComplementario = catalogos.tiposDocumentoComplementario ?? [];
         this.catalogosError = "";
         this.changeDetectorRef.markForCheck();
         this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });

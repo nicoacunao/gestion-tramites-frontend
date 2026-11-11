@@ -14,6 +14,7 @@ export class HeaderComponent {
   readonly user = this.userSession.currentUser;
 
   signOut(): void {
+    this.userSession.clearSession();
     void this.router.navigate(["/login"]);
   }
 }

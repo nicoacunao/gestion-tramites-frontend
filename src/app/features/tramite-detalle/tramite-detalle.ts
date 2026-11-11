@@ -151,14 +151,7 @@ export class TramiteDetalle {
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
 
-  readonly tiposAntecedenteAdicional = [
-    "Formulario de ingreso de solicitud",
-    "Informe técnico",
-    "Documento de Dirección de Obras",
-    "Antecedente complementario",
-    "Documento solicitado posteriormente por una institución",
-    "Otro documento",
-  ];
+  tiposAntecedenteAdicional: string[] = [];
 
   antecedentesRequeridos: AntecedenteRequeridoDetalle[] = [];
 
@@ -184,6 +177,7 @@ export class TramiteDetalle {
   ) {}
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
+    this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => item.backgroundId))];
     this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: item.backgroundId, obligatorio: item.required, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
     this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: item.backgroundId, solicitadoPor: "", responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
   }

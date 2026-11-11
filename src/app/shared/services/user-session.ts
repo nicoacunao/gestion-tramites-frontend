@@ -22,30 +22,60 @@ export interface EditableUserProfile {
   description: string;
 }
 
+const ACCESS_TOKEN_KEY = "gestion-tramites.access-token";
+const USER_KEY = "gestion-tramites.user";
+const EXPIRES_AT_KEY = "gestion-tramites.expires-at";
+
 @Injectable({ providedIn: "root" })
 export class UserSessionService {
   private readonly userState = signal<ConnectedUser>({
-    firstName: "Jose Luis",
-    fullName: "Jose Luis Rozas",
-    initials: "JL",
-    role: "Gestor de trámites",
-    description: "Administración y seguimiento de gestiones municipales",
-    email: "jlrozas.a@gmail.com",
-    phone: "+56 9 9999 9999",
-    rut: "11.111.111-1",
+    firstName: "",
+    fullName: "",
+    initials: "",
+    role: "",
+    description: "",
+    email: "",
+    phone: "",
+    rut: "",
     organization: "",
   });
 
   readonly currentUser = this.userState.asReadonly();
 
   constructor(@Optional() private readonly api: ApiClient | null = null) {
-    const stored = typeof localStorage === "undefined" ? null : localStorage.getItem("gestion-tramites.user");
+    if (!this.hasValidSession()) {
+      this.clearSession();
+      return;
+    }
+
+    const stored = typeof localStorage === "undefined" ? null : localStorage.getItem(USER_KEY);
     if (stored) {
       try { this.userState.set(this.toConnectedUser(JSON.parse(stored) as BackendUser)); } catch { /* ignore invalid local cache */ }
     }
-    if (typeof localStorage !== "undefined" && localStorage.getItem("gestion-tramites.access-token")) {
+    if (typeof localStorage !== "undefined" && localStorage.getItem(ACCESS_TOKEN_KEY)) {
       this.api?.profile().subscribe({ next: (user) => this.setUser(user) });
     }
+  }
+
+  hasValidSession(): boolean {
+    if (typeof localStorage === "undefined") return false;
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const expiresAt = Date.parse(localStorage.getItem(EXPIRES_AT_KEY) ?? "");
+    return Boolean(token && Number.isFinite(expiresAt) && expiresAt > Date.now());
+  }
+
+  setSession(accessToken: string, expiresAt: string, user: BackendUser): void {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    localStorage.setItem(EXPIRES_AT_KEY, expiresAt);
+    this.setUser(user);
+  }
+
+  clearSession(): void {
+    if (typeof localStorage === "undefined") return;
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(EXPIRES_AT_KEY);
+    this.userState.set({ firstName: "", fullName: "", initials: "", role: "", description: "", email: "", phone: "", rut: "", organization: "" });
   }
 
   updateProfile(profile: EditableUserProfile): void {
@@ -75,7 +105,7 @@ export class UserSessionService {
   private setUser(user: BackendUser): void {
     const connected = this.toConnectedUser(user);
     this.userState.set(connected);
-    localStorage.setItem("gestion-tramites.user", JSON.stringify(user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   private toConnectedUser(user: BackendUser): ConnectedUser {

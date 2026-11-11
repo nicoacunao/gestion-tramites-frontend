@@ -26,7 +26,6 @@ import {
   resolverSeveridadEstado,
   TagSeverity,
 } from "../../models/estado-tramite";
-import { TIPOS_DOCUMENTO_COMPLEMENTARIO } from "../../models/tipo-documento";
 import { ApiClient, BackendManagement } from "../../../../shared/services/api-client";
 
 @Component({
@@ -64,7 +63,7 @@ export class TramiteModificacion {
   readonly estadosTramite = [...ESTADOS_TRAMITE];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
-  readonly tiposDocumentoComplementario = [...TIPOS_DOCUMENTO_COMPLEMENTARIO];
+  readonly tiposDocumentoComplementario: string[] = [];
   responsables: string[] = [];
 
   breadcrumbs: Array<{ label: string; route?: string }>;
