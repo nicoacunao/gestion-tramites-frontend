@@ -558,8 +558,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         .map((gestion) => ({
           id: gestion.id,
           nombre: gestion.name,
-          // El endpoint de gestiones específicas no incluye antecedentes asociados.
-          antecedentes: [],
+          antecedentes: gestion.backgrounds?.map((background) => background.name) ?? [],
         })),
     };
   }

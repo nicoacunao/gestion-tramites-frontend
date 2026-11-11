@@ -24,7 +24,14 @@ export interface LoginResponse { accessToken: string; expiresAt: string; user: B
 export interface BackendUser { id: string; rut: string; names: string; firstSurname: string; secondSurname: string | null; email: string; phone?: string | null; description?: string | null; role: string; organization?: string | null; version?: number; }
 export interface BackendCatalogStation { id: string; name?: string | null; address: string; commune: string; legalName: string; companyRut: string; }
 export interface BackendManagementType { id: string; name: string; version: number; secondLevelLabel?: string; requiresSpecificSelection?: boolean; }
-export interface BackendSpecificManagement { id: string; managementTypeId: string; code: string; name: string; active: boolean; }
+export interface BackendSpecificManagement {
+  id: string;
+  managementTypeId: string;
+  code: string;
+  name: string;
+  active: boolean;
+  backgrounds?: Array<{ id: string; name: string }>;
+}
 export interface BackendManagement { id: string; stationId: string; managementTypeId: string; scopeCode: string; responsibleUserId: string; level: "N1" | "N2" | "N3" | "N4"; sequence: number; openedOn: string; estimatedCompletionOn: string | null; lastReviewedOn: string | null; priority: "Alta" | "Media" | "Baja"; requesterName: string; status: string | null; version: number; stationName?: string | null; legalName?: string | null; responsibleName?: string | null; managementTypeName?: string | null; managementTypeCode?: string | null; comuna?: string | null; address?: string | null; legalRut?: string | null; legalRepresentative?: string | null; creationMode?: "principal" | "subtramite"; specificManagementId?: string | null; }
 export interface BackendBackground { id: string; managementId: string; parentManagementBackgroundId: string | null; managementTypeId: string; backgroundId: string; level: "N2" | "N3" | "N4"; required: boolean; responsibleUserId: string; status: string; fileReference: string | null; uploadedAt: string | null; version: number; }
 export interface BackendStage { id: string; managementId: string; stageId: string; status: string; estimatedOn: string | null; completedOn: string | null; responsible: string | null; notes: string | null; version: number; }
