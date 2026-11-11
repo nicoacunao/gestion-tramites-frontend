@@ -28,7 +28,7 @@ import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { UserSessionService } from "../../shared/services/user-session";
-import { ApiClient, ApiClientError, BackendManagement, BackendStation, ImportStationsResponse } from "../../shared/services/api-client";
+import { ApiClient, ApiClientError, BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-client";
 
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
 type TaskSeverity = "success" | "warn" | "danger";
@@ -151,6 +151,8 @@ export class Home {
   readonly stationPageSize = 5;
   stationsTotal = 0;
   stationsPage = 1;
+  private allStationsCache: BackendStation[] | null = null;
+  private stationRequestPage: number | null = null;
   stationsLoading = true;
   stationsError = "";
   importDialogVisible = false;
@@ -168,17 +170,27 @@ export class Home {
     this.loadStations();
   }
 
-  loadStations(page = 1): void {
+  loadStations(page = 1, force = false): void {
+    if (!force && this.stationRequestPage === page) return;
+    if (!force && this.stationsPage === page && this.stations.length > 0) return;
+    if (!force && this.allStationsCache) {
+      this.setStationPage(this.allStationsCache, page);
+      return;
+    }
     this.stationsLoading = true;
     this.stationsError = "";
+    this.stationRequestPage = page;
     this.api.stations(page, this.stationPageSize).subscribe({
-      next: ({ data, meta }) => {
-        this.stations = data;
-        this.stationsPage = meta.page;
-        this.stationsTotal = meta.total;
+      next: (response: BackendStationPage) => {
+        this.stationRequestPage = null;
+        if (response.allData) this.allStationsCache = response.allData;
+        this.stations = response.data;
+        this.stationsPage = response.meta.page;
+        this.stationsTotal = response.meta.total;
         this.stationsLoading = false;
       },
       error: (error: Error) => {
+        this.stationRequestPage = null;
         this.stations = [];
         this.stationsTotal = 0;
         this.stationsError = error.message;
@@ -190,6 +202,14 @@ export class Home {
   onStationsPage(event: TablePageEvent): void {
     const pageSize = event.rows || this.stationPageSize;
     this.loadStations(Math.floor(event.first / pageSize) + 1);
+  }
+
+  private setStationPage(items: BackendStation[], page: number): void {
+    const start = (page - 1) * this.stationPageSize;
+    this.stations = items.slice(start, start + this.stationPageSize);
+    this.stationsPage = page;
+    this.stationsTotal = items.length;
+    this.stationsError = "";
   }
 
   private toTask(item: BackendManagement): HomeTask {
@@ -321,7 +341,8 @@ export class Home {
         this.importRequestId = meta.requestId;
         this.importDialogVisible = false;
         this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`, life: 6000 });
-        this.loadStations();
+        this.allStationsCache = null;
+        this.loadStations(1, true);
       },
       error: (error: Error) => {
         this.importState = "verified";

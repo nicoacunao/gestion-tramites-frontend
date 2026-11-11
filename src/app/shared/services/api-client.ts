@@ -42,6 +42,7 @@ export interface BackendStation {
 export interface BackendStationPage {
   data: BackendStation[];
   meta: { requestId: string; page: number; pageSize: number; total: number; totalPages: number };
+  allData?: BackendStation[];
 }
 export interface ImportStationsMeta { requestId: string; created: number; updated: number; rejected: number; }
 export interface ImportStationsResponse { data: BackendStation[]; meta: ImportStationsMeta; }
@@ -77,6 +78,7 @@ export class ApiClient {
         const pageData = hasServerPagination ? data : data.slice((page - 1) * pageSize, page * pageSize);
         return {
           data: pageData,
+          allData: hasServerPagination ? undefined : data,
           meta: {
             requestId: meta.requestId,
             page: returnedPage,
