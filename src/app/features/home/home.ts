@@ -27,7 +27,7 @@ import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { UserSessionService } from "../../shared/services/user-session";
-import { ApiClient, BackendManagement, BackendStation } from "../../shared/services/api-client";
+import { ApiClient, ApiClientError, BackendManagement, BackendStation, ImportStationsResponse } from "../../shared/services/api-client";
 
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
 type TaskSeverity = "success" | "warn" | "danger";
@@ -154,6 +154,7 @@ export class Home {
   selectedImportFile: File | null = null;
   importError = "";
   importSummary = "";
+  importRequestId = "";
 
   constructor(private readonly api: ApiClient) {
     this.api.managements().subscribe({
@@ -290,15 +291,20 @@ export class Home {
     this.importState = "importing";
     this.importError = "";
     this.api.importStations(this.selectedImportFile).subscribe({
-      next: (items) => {
-        this.stations = items;
+      next: ({ data, meta }: ImportStationsResponse) => {
+        this.stations = data;
         this.importState = "verified";
+        this.importRequestId = meta.requestId;
         this.importDialogVisible = false;
-        this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${items.length} estaciones fueron actualizadas correctamente.`, life: 5000 });
+        this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`, life: 6000 });
       },
       error: (error: Error) => {
         this.importState = "verified";
-        this.importError = error.message;
+        const apiError = error instanceof ApiClientError ? error : undefined;
+        this.importRequestId = apiError?.requestId ?? "";
+        this.importError = apiError?.code === "INVALID_MULTIPART"
+          ? `El servidor indicó: ${error.message} Vuelve a seleccionar el archivo e inténtalo nuevamente.`
+          : error.message;
       },
     });
   }
@@ -308,6 +314,7 @@ export class Home {
     this.importState = "idle";
     this.importError = "";
     this.importSummary = "";
+    this.importRequestId = "";
   }
 
   stationStatusSeverity(status: string): "success" | "warn" | "secondary" {

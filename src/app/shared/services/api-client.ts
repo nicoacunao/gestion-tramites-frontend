@@ -1,10 +1,25 @@
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 
 export interface ApiEnvelope<T> { data: T; meta: { requestId: string }; }
-export interface ApiErrorBody { error?: { code?: string; message?: string }; meta?: { requestId?: string }; }
+export interface ApiErrorBody {
+  error?: { code?: string; message?: string; details?: unknown };
+  meta?: { requestId?: string };
+}
+export class ApiClientError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code?: string,
+    readonly requestId?: string,
+    readonly details?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiClientError";
+  }
+}
 export interface LoginResponse { accessToken: string; expiresAt: string; user: BackendUser; }
 export interface BackendUser { id: string; rut: string; names: string; firstSurname: string; secondSurname: string | null; email: string; phone?: string | null; description?: string | null; role: string; organization?: string | null; version?: number; }
 export interface BackendManagement { id: string; stationId: string; managementTypeId: string; scopeCode: string; responsibleUserId: string; level: "N1" | "N2" | "N3" | "N4"; sequence: number; openedOn: string; estimatedCompletionOn: string | null; lastReviewedOn: string | null; priority: "Alta" | "Media" | "Baja"; requesterName: string; status: string | null; version: number; stationName?: string | null; legalName?: string | null; responsibleName?: string | null; managementTypeName?: string | null; managementTypeCode?: string | null; comuna?: string | null; address?: string | null; legalRut?: string | null; legalRepresentative?: string | null; creationMode?: "principal" | "subtramite"; specificManagementId?: string | null; }
@@ -24,6 +39,8 @@ export interface BackendStation {
   legalRepresentativeRut: string;
   status: string;
 }
+export interface ImportStationsMeta { requestId: string; created: number; updated: number; rejected: number; }
+export interface ImportStationsResponse { data: BackendStation[]; meta: ImportStationsMeta; }
 
 @Injectable({ providedIn: "root" })
 export class ApiClient {
@@ -46,14 +63,24 @@ export class ApiClient {
   createLog(body: object): Observable<BackendLogEntry> { return this.request<ApiEnvelope<BackendLogEntry>>("/bitacora/items", { method: "post", body }).pipe(map(({ data }) => data)); }
   stationSummary(): Observable<BackendStationSummary[]> { return this.get<BackendStationSummary[]>("/consultas/stations/summary"); }
   stations(): Observable<BackendStation[]> { return this.get<BackendStation[]>("/consultas/stations"); }
-  importStations(file: File): Observable<BackendStation[]> {
+  importStations(file: File): Observable<ImportStationsResponse> {
     const body = new FormData();
     body.append("file", file, file.name);
-    return this.http.post<ApiEnvelope<BackendStation[]>>(`${this.baseUrl}/consultas/stations/import`, body).pipe(
-      map(({ data }) => data),
+    // Do not set Content-Type manually: the browser must add the multipart boundary.
+    return this.http.post<ImportStationsResponse>(
+      `${this.baseUrl}/consultas/stations/import`,
+      body,
+      { headers: new HttpHeaders({ Accept: "application/json" }) },
+    ).pipe(
       catchError((error: HttpErrorResponse) => {
-        const response = error.error as ApiErrorBody | undefined;
-        return throwError(() => new Error(response?.error?.message ?? "No fue posible importar el archivo."));
+        const response = this.parseErrorBody(error.error);
+        return throwError(() => new ApiClientError(
+          response?.error?.message ?? "No fue posible importar el archivo.",
+          error.status,
+          response?.error?.code,
+          response?.meta?.requestId,
+          response?.error?.details,
+        ));
       }),
     );
   }
@@ -64,8 +91,25 @@ export class ApiClient {
     const url = `${this.baseUrl}${path}`;
     const request = options.method === "get" ? this.http.get<T>(url) : options.method === "post" ? this.http.post<T>(url, options.body) : this.http.put<T>(url, options.body);
     return request.pipe(catchError((error: HttpErrorResponse) => {
-      const body = error.error as ApiErrorBody | undefined;
-      return throwError(() => new Error(body?.error?.message ?? "No fue posible completar la operación."));
+      const body = this.parseErrorBody(error.error);
+      return throwError(() => new ApiClientError(
+        body?.error?.message ?? "No fue posible completar la operación.",
+        error.status,
+        body?.error?.code,
+        body?.meta?.requestId,
+        body?.error?.details,
+      ));
     }));
+  }
+
+  private parseErrorBody(error: unknown): ApiErrorBody | undefined {
+    if (typeof error === "object" && error !== null) return error as ApiErrorBody;
+    if (typeof error !== "string") return undefined;
+    try {
+      const parsed: unknown = JSON.parse(error);
+      return typeof parsed === "object" && parsed !== null ? parsed as ApiErrorBody : undefined;
+    } catch {
+      return undefined;
+    }
   }
 }

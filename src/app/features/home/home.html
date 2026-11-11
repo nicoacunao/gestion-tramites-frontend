@@ -397,7 +397,13 @@
             @if (selectedImportFile) { <div class="selected-file"><span class="selected-file__icon">✓</span><div><strong>{{ selectedImportFile.name }}</strong><small>{{ (selectedImportFile.size / 1024).toFixed(1) }} KB</small></div></div> }
             <div class="import-step"><span>2</span><div><strong>Verifica la información</strong><small>Se revisará la estructura, las columnas requeridas y la existencia de IDs EDS.</small></div></div>
             @if (importSummary) { <p class="import-success" role="status">{{ importSummary }}</p> }
-            @if (importError) { <p class="field-error import-error" role="alert">{{ importError }}</p> }
+            @if (importError) {
+              <div class="import-error" role="alert">
+                <strong>No se pudo importar el archivo</strong>
+                <p>{{ importError }}</p>
+                <small>Revisa el formato y vuelve a intentarlo. Si el problema continúa, comparte este identificador con soporte: {{ importRequestId || 'no disponible' }}</small>
+              </div>
+            }
           </div>
           <ng-template #footer>
             <button pButton type="button" severity="secondary" [outlined]="true" (click)="closeImportDialog()" [disabled]="importState === 'importing'">Cancelar</button>

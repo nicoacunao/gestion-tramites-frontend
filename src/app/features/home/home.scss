@@ -984,10 +984,16 @@
 }
 
 .import-error {
+  display: grid;
   margin: 0;
+  gap: 4px;
   padding: 10px 12px;
   border-radius: 8px;
   background: #fff4f4;
+
+  strong { color: #9f2d2d; font-size: 12px; }
+  p { margin: 0; color: #9f2d2d; font-size: 11px; line-height: 1.45; }
+  small { color: #874b4b; font-size: 10px; line-height: 1.4; }
 }
 
 @media (min-width: 1280px) {
