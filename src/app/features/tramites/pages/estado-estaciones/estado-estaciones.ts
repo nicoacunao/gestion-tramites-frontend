@@ -13,7 +13,8 @@ import { TagModule } from "primeng/tag";
 import { TooltipModule } from "primeng/tooltip";
 import { ToastModule } from "primeng/toast";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
-import { ApiClient, BackendStationSummary } from "../../../../shared/services/api-client";
+import { BackendStationSummary } from "../../../../shared/services/api-models";
+import { StationApiService } from "../../../../shared/services/station-api";
 
 type TagSeverity =
   "success" | "secondary" | "info" | "warn" | "danger" | "contrast";
@@ -90,8 +91,8 @@ export class EstadoEstaciones {
   first = 0;
   rows = 10;
 
-  constructor(private readonly messageService: MessageService, private readonly api: ApiClient) {
-    this.api.stationSummary().subscribe({
+  constructor(private readonly messageService: MessageService, private readonly stationApi: StationApiService) {
+    this.stationApi.stationSummary().subscribe({
       next: (items) => { this.cargarResumen(items); this.loading = false; },
       error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
     });

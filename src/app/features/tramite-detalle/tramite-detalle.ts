@@ -39,7 +39,10 @@ import {
   Tramite,
 } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
-import { ApiClient, BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-client";
+import { BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-models";
+import { BitacoraApiService } from "../../shared/services/bitacora-api";
+import { IdentityApiService } from "../../shared/services/identity-api";
+import { ManagementApiService } from "../../shared/services/management-api";
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
@@ -103,23 +106,23 @@ export class TramiteDetalle {
   @Input()
   set tramiteId(tramiteId: string | number | null) {
     this._tramiteId = tramiteId;
-    this.cargandoDetalle = Boolean(tramiteId && this.api);
+    this.cargandoDetalle = Boolean(tramiteId && this.managementApi);
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
     const cargarDatosBackend = (tramite: Tramite) => {
-      if (!this.api || !tramite.apiId) return;
+      if (!this.managementApi || !this.identityApi || !this.bitacoraApi || !tramite.apiId) return;
       this.cargandoDetalle = true;
       this.solicitudesDetallePendientes = 3;
       const apiId = tramite.apiId;
-      this.api.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
-      this.api.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
-      this.api.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-      this.api.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+      this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
+      this.managementApi.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
+      this.managementApi.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
+      this.bitacoraApi.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
     };
     if (this.tramite) {
       cargarDatosBackend(this.tramite);
-    } else if (tramiteId && this.api) {
+    } else if (tramiteId && this.managementApi) {
       this.tramitesMock.cargarPorId(tramiteId).subscribe({
         next: (tramite) => {
           this.tramite = tramite;
@@ -178,7 +181,9 @@ export class TramiteDetalle {
   constructor(
     private readonly tramitesMock: TramitesMock,
     readonly userSession: UserSessionService,
-    @Optional() private readonly api: ApiClient | null = null,
+    @Optional() private readonly managementApi: ManagementApiService | null = null,
+    @Optional() private readonly identityApi: IdentityApiService | null = null,
+    @Optional() private readonly bitacoraApi: BitacoraApiService | null = null,
   ) {}
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
@@ -328,17 +333,17 @@ export class TramiteDetalle {
       }),
     };
 
-    if (this.api && this.tramite.apiId) {
+    if (this.managementApi && this.tramite.apiId) {
       this.guardando = true;
       this.errorGuardado = "";
       const antecedentes = [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
         .filter((item) => item.id && item.version !== undefined)
-        .map((item) => this.api!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, version: item.version }));
+        .map((item) => this.managementApi!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, version: item.version }));
       const etapas = this.etapasGestion
         .filter((item) => item.id && item.version !== undefined)
-        .map((item) => this.api!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
-      this.api.management(this.tramite.apiId).pipe(
-        map((management) => this.api!.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad })),
+        .map((item) => this.managementApi!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
+      this.managementApi.management(this.tramite.apiId).pipe(
+        map((management) => this.managementApi!.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad })),
         switchMap((managementUpdate) => forkJoin([...antecedentes, ...etapas, managementUpdate])),
       ).subscribe({
         next: () => { this.guardando = false; this.tramite = tramiteActualizado; this.actualizarVisibilidad(false); },

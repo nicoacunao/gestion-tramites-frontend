@@ -6,7 +6,7 @@ import {
   EntradaBitacora,
 } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
-import { ApiClient } from "../../shared/services/api-client";
+import { BitacoraApiService } from "../../shared/services/bitacora-api";
 
 export type EstadoSemaforoBitacora = "al-dia" | "proximo-vencer" | "atrasado";
 
@@ -61,7 +61,7 @@ export class Bitacora {
 
   constructor(
     private readonly userSession: UserSessionService = new UserSessionService(),
-    private readonly api: ApiClient | null = null,
+    private readonly api: BitacoraApiService | null = null,
   ) {}
 
   get entradas(): EntradaBitacora[] {

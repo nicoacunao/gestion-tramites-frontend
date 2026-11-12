@@ -30,7 +30,10 @@ import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { Subscription } from "rxjs";
 import { UserSessionService } from "../../shared/services/user-session";
-import { ApiClient, ApiClientError, BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-client";
+import { ApiClientError } from "../../shared/services/api-base";
+import { BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-models";
+import { ManagementApiService } from "../../shared/services/management-api";
+import { StationApiService } from "../../shared/services/station-api";
 
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
 type TaskSeverity = "success" | "warn" | "danger";
@@ -167,8 +170,8 @@ export class Home {
   importSummary = "";
   importRequestId = "";
 
-  constructor(private readonly api: ApiClient) {
-    this.api.managements().subscribe({
+  constructor(private readonly managementApi: ManagementApiService, private readonly stationApi: StationApiService) {
+    this.managementApi.managements().subscribe({
       next: (items) => { this.tasks = items.slice(0, 3).map((item) => this.toTask(item)); this.loadingTasks = false; },
       error: (error: Error) => { this.tasks = []; this.tasksError = error.message; this.loadingTasks = false; },
     });
@@ -198,7 +201,7 @@ export class Home {
     this.changeDetector.markForCheck();
     this.stationRequest?.unsubscribe();
     this.stationRequestPage = page;
-    this.stationRequest = this.api.stations(page, this.stationPageSize).subscribe({
+    this.stationRequest = this.stationApi.stations(page, this.stationPageSize).subscribe({
       next: (response: BackendStationPage) => {
         this.stationRequestPage = null;
         this.stationRequest = undefined;
@@ -360,7 +363,7 @@ export class Home {
     if (!this.selectedImportFile || this.importState !== "verified") return;
     this.importState = "importing";
     this.importError = "";
-    this.api.importStations(this.selectedImportFile).subscribe({
+    this.stationApi.importStations(this.selectedImportFile).subscribe({
       next: ({ data, meta }: ImportStationsResponse) => {
         this.importState = "verified";
         this.importRequestId = meta.requestId;

@@ -13,7 +13,7 @@ import { ButtonDirective, ButtonLabel } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
-import { ApiClient } from "../../shared/services/api-client";
+import { IdentityApiService } from "../../shared/services/identity-api";
 import { UserSessionService } from "../../shared/services/user-session";
 
 export interface LoginCredentials {
@@ -85,7 +85,7 @@ export class Login {
   loading = false;
   errorMessage = "";
 
-  constructor(private readonly router: Router, private readonly api: ApiClient, private readonly userSession: UserSessionService) { }
+  constructor(private readonly router: Router, private readonly api: IdentityApiService, private readonly userSession: UserSessionService) { }
 
   formatRut(event: Event): void {
     const input = event.target as HTMLInputElement;

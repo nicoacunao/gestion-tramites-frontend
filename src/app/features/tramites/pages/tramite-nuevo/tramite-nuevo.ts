@@ -33,12 +33,14 @@ import {
   ETAPAS_ESTANDAR,
 } from "../../models/estado-tramite";
 import {
-  ApiClient,
-  ApiClientError,
   BackendManagementType,
   BackendSpecificManagement,
   BackendUser,
-} from "../../../../shared/services/api-client";
+} from "../../../../shared/services/api-models";
+import { ApiClientError } from "../../../../shared/services/api-base";
+import { CatalogApiService } from "../../../../shared/services/catalog-api";
+import { IdentityApiService } from "../../../../shared/services/identity-api";
+import { ManagementApiService } from "../../../../shared/services/management-api";
 
 interface EstacionServicio {
   codigo: string;
@@ -98,7 +100,9 @@ type ModalidadCreacion = "principal" | "subtramite";
 export class TramiteNuevo implements OnInit, OnDestroy {
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
-  private readonly api = inject(ApiClient);
+  private readonly catalogApi = inject(CatalogApiService);
+  private readonly identityApi = inject(IdentityApiService);
+  private readonly managementApi = inject(ManagementApiService);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
   readonly segundosRedireccion = 6;
@@ -437,7 +441,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
       return;
     }
-    this.api.createManagement(this.crearPayload(this.modalidadCreacion)).subscribe({
+    this.managementApi.createManagement(this.crearPayload(this.modalidadCreacion)).subscribe({
       next: (tramite) => {
         this.tramiteCreadoId = tramite.id;
         this.creando = false;
@@ -515,9 +519,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.cargarAntecedentesComplementarios();
 
     forkJoin({
-      estaciones: this.api.catalogStations(),
-      tipos: this.api.managementTypes(),
-      responsables: this.api.users(),
+      estaciones: this.catalogApi.catalogStations(),
+      tipos: this.catalogApi.managementTypes(),
+      responsables: this.identityApi.users(),
     }).subscribe({
       next: ({ estaciones, tipos, responsables }) => {
         this.estacionesServicio = estaciones.map((estacion) => ({
@@ -543,7 +547,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.changeDetectorRef.markForCheck();
 
         forkJoin(
-          tipos.map((tipo) => this.api.specificManagements(tipo.id)),
+          tipos.map((tipo) => this.catalogApi.specificManagements(tipo.id)),
         ).subscribe({
           next: (gestionesPorTipo) => {
             this.tiposTramite = tipos.map((tipo, index) =>
@@ -574,7 +578,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private cargarAntecedentesComplementarios(): void {
-    this.api.backgroundCatalog("complementario").subscribe({
+    this.catalogApi.backgroundCatalog("complementario").subscribe({
       next: (antecedentes) => {
         this.tiposDocumentoComplementario = antecedentes.map(
           ({ name }) => name,

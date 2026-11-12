@@ -1,5 +1,6 @@
 import { Injectable, Optional, signal } from "@angular/core";
-import { ApiClient, BackendUser } from "./api-client";
+import { BackendUser } from "./api-models";
+import { IdentityApiService } from "./identity-api";
 
 export interface ConnectedUser {
   id?: string;
@@ -42,7 +43,7 @@ export class UserSessionService {
 
   readonly currentUser = this.userState.asReadonly();
 
-  constructor(@Optional() private readonly api: ApiClient | null = null) {
+  constructor(@Optional() private readonly api: IdentityApiService | null = null) {
     if (!this.hasValidSession()) {
       this.clearSession();
       return;

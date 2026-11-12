@@ -26,7 +26,9 @@ import {
   resolverSeveridadEstado,
   TagSeverity,
 } from "../../models/estado-tramite";
-import { ApiClient, BackendManagement } from "../../../../shared/services/api-client";
+import { BackendManagement } from "../../../../shared/services/api-models";
+import { IdentityApiService } from "../../../../shared/services/identity-api";
+import { ManagementApiService } from "../../../../shared/services/management-api";
 
 @Component({
   selector: "app-tramite-modificacion",
@@ -109,10 +111,11 @@ export class TramiteModificacion {
   constructor(
     route: ActivatedRoute,
     private readonly router: Router,
-    private readonly api: ApiClient,
+    private readonly managementApi: ManagementApiService,
+    private readonly identityApi: IdentityApiService,
   ) {
     this.tramiteId = route.snapshot.paramMap.get("id") ?? "";
-    this.api.management(this.tramiteId).subscribe({
+    this.managementApi.management(this.tramiteId).subscribe({
       next: (management) => {
         this.backendManagement = management;
         this.responsables = [management.responsibleName ?? management.responsibleUserId];
@@ -131,7 +134,7 @@ export class TramiteModificacion {
       },
       error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
     });
-    this.api.users().subscribe({
+    this.identityApi.users().subscribe({
       next: (users) => {
         this.responsables = users.map((user) => [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" "));
       },
@@ -153,7 +156,7 @@ export class TramiteModificacion {
 
   grabar(): void {
     if (this.backendManagement) {
-      this.api.updateManagement(this.tramiteId, {
+      this.managementApi.updateManagement(this.tramiteId, {
         ...this.backendManagement,
         priority: this.tramite.prioridad,
         status: this.tramite.estado,

@@ -1,14 +1,15 @@
 import { Injectable } from "@angular/core";
 import { Observable, map, tap, throwError } from "rxjs";
 import { Tramite } from "../models/tramite";
-import { ApiClient, BackendManagement } from "../../../shared/services/api-client";
+import { BackendManagement } from "../../../shared/services/api-models";
+import { ManagementApiService } from "../../../shared/services/management-api";
 
 /** Adaptador de gestiones del backend; no contiene datos locales. */
 @Injectable({ providedIn: "root" })
 export class TramitesMock {
   private tramites: Tramite[] = [];
 
-  constructor(private readonly api?: ApiClient) {}
+  constructor(private readonly api?: ManagementApiService) {}
 
   get usaApi(): boolean { return Boolean(this.api); }
 
