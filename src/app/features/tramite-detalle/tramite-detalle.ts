@@ -28,6 +28,7 @@ import { UserSessionService } from "../../shared/services/user-session";
 import {
   ESTADOS_ANTECEDENTE,
   ESTADOS_ETAPA,
+  ETAPAS_ESTANDAR,
   resolverSeveridadEstado,
   TagSeverity,
 } from "../tramites/models/estado-tramite";
@@ -41,6 +42,7 @@ import {
 import { TramitesMock } from "../tramites/services/tramites-mock";
 import { BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-models";
 import { BitacoraApiService } from "../../shared/services/bitacora-api";
+import { CatalogApiService } from "../../shared/services/catalog-api";
 import { IdentityApiService } from "../../shared/services/identity-api";
 import { ManagementApiService } from "../../shared/services/management-api";
 
@@ -110,25 +112,27 @@ export class TramiteDetalle {
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
-    const cargarDatosBackend = (tramite: Tramite) => {
-      if (!this.managementApi || !this.identityApi || !this.bitacoraApi || !tramite.apiId) return;
-      this.cargandoDetalle = true;
-      this.solicitudesDetallePendientes = 3;
-      const apiId = tramite.apiId;
-      this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
-      this.managementApi.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
-      this.managementApi.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-      this.bitacoraApi.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
-    };
-    if (this.tramite) {
-      cargarDatosBackend(this.tramite);
-    } else if (tramiteId && this.managementApi) {
-      this.tramitesMock.cargarPorId(tramiteId).subscribe({
+    if (tramiteId && this.managementApi) {
+      // El listado puede tener una copia previa. Se muestra de inmediato, pero
+      // el detalle siempre se refresca para evitar presentar información obsoleta.
+      this.solicitudesDetallePendientes = 4 + (this.catalogApi ? 1 : 0);
+      this.tramitesMock.cargarPorId(tramiteId).pipe(
+        finalize(() => this.finalizarCargaDetalle()),
+      ).subscribe({
         next: (tramite) => {
-          this.tramite = tramite;
-          cargarDatosBackend(tramite);
+          if (this._tramiteId === tramiteId) {
+            this.tramite = tramite;
+            this.cargarDatosEditables();
+          }
+          this.cargarDatosBackend(tramite);
         },
-        error: () => { this.cargandoDetalle = false; },
+        error: () => {
+          if (this.tramite) {
+            this.cargarDatosBackend(this.tramite);
+          } else {
+            this.cancelarCargaDetalle();
+          }
+        },
       });
     }
     this.cargarDatosEditables();
@@ -147,6 +151,7 @@ export class TramiteDetalle {
 
   tramite: Tramite | undefined;
   private responsablesApi: BackendUser[] = [];
+  private nombresAntecedentes = new Map<string, string>();
   guardando = false;
   cargandoDetalle = false;
   private solicitudesDetallePendientes = 0;
@@ -184,16 +189,20 @@ export class TramiteDetalle {
     @Optional() private readonly managementApi: ManagementApiService | null = null,
     @Optional() private readonly identityApi: IdentityApiService | null = null,
     @Optional() private readonly bitacoraApi: BitacoraApiService | null = null,
+    @Optional() private readonly catalogApi: CatalogApiService | null = null,
   ) {}
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
-    this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => item.backgroundId))];
-    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: item.backgroundId, obligatorio: item.required, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
-    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: item.backgroundId, solicitadoPor: "", responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => this.nombreAntecedente(item.backgroundId)))];
+    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
   }
 
   private aplicarEtapasBackend(items: BackendStage[]): void {
-    this.etapasGestion = items.map((item) => ({ id: item.id, version: item.version, etapa: item.stageId, porcentaje: 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: this.nombreResponsable(item.responsible ?? ""), observacion: item.notes ?? "" }));
+    this.etapasGestion = items.map((item, indice) => {
+      const etapaEstandar = ETAPAS_ESTANDAR[indice];
+      return { id: item.id, version: item.version, etapa: etapaEstandar?.nombre ?? item.stageId, porcentaje: etapaEstandar?.porcentaje ?? 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: this.nombreResponsable(item.responsible ?? ""), observacion: item.notes ?? "" };
+    });
   }
 
   get bitacora(): EntradaBitacora[] {
@@ -317,6 +326,44 @@ export class TramiteDetalle {
     if (this.solicitudesDetallePendientes <= 0) {
       this.cargandoDetalle = false;
     }
+  }
+
+  private cancelarCargaDetalle(): void {
+    this.solicitudesDetallePendientes = 0;
+    this.cargandoDetalle = false;
+  }
+
+  private cargarDatosBackend(tramite: Tramite): void {
+    if (!this.managementApi || !this.identityApi || !this.bitacoraApi || !tramite.apiId) {
+      this.cancelarCargaDetalle();
+      return;
+    }
+
+    const apiId = tramite.apiId;
+    this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
+    this.managementApi.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
+    this.managementApi.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
+    this.bitacoraApi.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+    if (this.catalogApi) {
+      this.catalogApi.backgroundCatalog().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({
+        next: (items) => {
+          this.nombresAntecedentes = new Map(items.map(({ id, name }) => [id, name]));
+          this.recargarNombresAntecedentes();
+        },
+      });
+    } else {
+      this.finalizarCargaDetalle();
+    }
+  }
+
+  private nombreAntecedente(id: string): string {
+    return this.nombresAntecedentes.get(id) ?? id;
+  }
+
+  private recargarNombresAntecedentes(): void {
+    this.antecedentesRequeridos.forEach((item) => { item.antecedente = this.nombreAntecedente(item.antecedente); });
+    this.antecedentesComplementarios.forEach((item) => { item.tipoDocumento = this.nombreAntecedente(item.tipoDocumento); });
+    this.tiposAntecedenteAdicional = this.tiposAntecedenteAdicional.map((id) => this.nombreAntecedente(id));
   }
 
   guardarCambios(): void {

@@ -755,6 +755,7 @@
   }
 
   <ng-template #footer>
+    @if (tramite && !cargandoDetalle) {
     <button pButton type="button" [disabled]="guardando || cargandoDetalle" (click)="guardarCambios()">
       @if (guardando) {
       Guardando…
@@ -762,5 +763,6 @@
       Guardar cambios
       }
     </button>
+    }
   </ng-template>
 </p-dialog>
