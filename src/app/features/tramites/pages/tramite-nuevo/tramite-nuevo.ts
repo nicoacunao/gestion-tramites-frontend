@@ -130,6 +130,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   modalidadCreacion: ModalidadCreacion | null = null;
   catalogosError = "";
   creacionError = "";
+  creacionErrorCode = "";
+  creacionRequestId = "";
   creando = false;
   private responsablesApi: BackendUser[] = [];
   tramiteCreadoId: string | number = "";
@@ -425,6 +427,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
     this.creando = true;
     this.creacionError = "";
+    this.creacionErrorCode = "";
+    this.creacionRequestId = "";
     if (!this.obtenerResponsableSeleccionado()) {
       this.creando = false;
       this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
@@ -434,11 +438,18 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       next: (tramite) => {
         this.tramiteCreadoId = tramite.id;
         this.creando = false;
+        this.creacionErrorCode = "";
+        this.creacionRequestId = "";
         this.segundosRestantes = this.segundosRedireccion;
         this.mensajeCreacionVisible = true;
         this.iniciarRedireccionAutomatica();
       },
-      error: (error: Error) => { this.creando = false; this.creacionError = error.message; },
+      error: (error: Error) => {
+        this.creando = false;
+        this.creacionError = error.message;
+        this.creacionErrorCode = error instanceof ApiClientError ? error.code ?? "" : "";
+        this.creacionRequestId = error instanceof ApiClientError ? error.requestId ?? "" : "";
+      },
     });
   }
 
