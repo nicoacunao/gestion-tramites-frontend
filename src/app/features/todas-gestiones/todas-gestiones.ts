@@ -7,22 +7,12 @@ import {
   GestionListado,
   GestionListadoItem,
 } from "../../shared/components/gestion-listado/gestion-listado";
-import { EstadoSemaforoBitacora } from "../bitacora/bitacora";
-import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../tramites/services/tramites-mock";
-
-type EstadoSemaforo = EstadoSemaforoBitacora;
 
 interface GestionGlobal extends GestionListadoItem {
   rutRepresentanteLegal: string;
   tieneDetalle: boolean;
 }
-
-const ETIQUETAS_SEMAFORO: Record<EstadoSemaforo, string> = {
-  "al-dia": "Al día",
-  "proximo-vencer": "Próximo a vencer",
-  atrasado: "Requiere atención",
-};
 
 @Component({
   selector: "app-todas-gestiones",
@@ -57,73 +47,13 @@ export class TodasGestiones {
 
     tramitesMock.cargarTodos().pipe(finalize(() => { this.loading = false; })).subscribe({
       next: (tramites) => {
-        this.gestiones = tramites.map((tramite) => this.crearGestionGlobal(tramite, true));
+        this.gestiones = tramites.map((tramite) => ({
+          ...tramite,
+          tieneDetalle: true,
+        }));
       },
       error: (error: Error) => { this.errorMessage = error.message; },
     });
   }
 
-  private crearGestionGlobal(
-    tramite: Tramite,
-    tieneDetalle: boolean,
-  ): GestionGlobal {
-    const datos = {
-      rutRazonSocial:
-        tramite.datosAdicionales?.["rutRazonSocial"] ?? "Sin registrar",
-      representanteLegal:
-        tramite.datosAdicionales?.["representanteLegal"] ?? "Sin registrar",
-      rutRepresentanteLegal:
-        tramite.datosAdicionales?.["rutRepresentanteLegal"] ?? "Sin registrar",
-      semaforo: this.obtenerSemaforo(tramite),
-    };
-    const responsableInterno = this.normalizarResponsable(
-      tramite.responsableInterno,
-    );
-
-    return {
-      id: tramite.id,
-      codigo: `N${tramite.modalidadCreacion === "subtramite" ? 2 : 1}-OTR-${tramite.id}`,
-      nivel: tramite.modalidadCreacion === "subtramite" ? "N2" : "N1",
-      idEstacion: tramite.idEstacion,
-      estacionServicio: tramite.estacionServicio,
-      direccion: tramite.direccion,
-      comuna: tramite.comuna,
-      rutRazonSocial: datos.rutRazonSocial,
-      razonSocial: tramite.razonSocial,
-      representanteLegal: datos.representanteLegal,
-      rutRepresentanteLegal: datos.rutRepresentanteLegal,
-      descripcion: tramite.tramiteEspecifico,
-      fechaInicio: tramite.fechaApertura,
-      fechaIngreso: tramite.fechaApertura,
-      fechaIngresoOrden: this.convertirFechaAOrden(tramite.fechaApertura),
-      fechaEstimadaTermino: tramite.fechaEstimadaTermino,
-      concesionario: tramite.razonSocial.replace(/\s+(SpA|Ltda\.)$/i, ""),
-      responsableInterno,
-      semaforo: datos.semaforo,
-      semaforoEtiqueta: ETIQUETAS_SEMAFORO[datos.semaforo],
-      tieneDetalle,
-    };
-  }
-
-  private normalizarResponsable(responsable: string): string {
-    return responsable;
-  }
-
-  private obtenerSemaforo(tramite: Tramite): EstadoSemaforo {
-    return tramite.estado === "Observado" || tramite.estado === "Rechazado"
-      ? "atrasado"
-      : "al-dia";
-  }
-
-  private normalizarTexto(valor: string): string {
-    return valor
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("es-CL");
-  }
-
-  private convertirFechaAOrden(fecha: string): string {
-    const [dia, mes, anio] = fecha.split("-");
-    return `${anio}-${mes}-${dia}`;
-  }
 }

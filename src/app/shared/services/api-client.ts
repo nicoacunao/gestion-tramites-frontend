@@ -33,7 +33,53 @@ export interface BackendSpecificManagement {
   backgrounds?: Array<{ id: string; name: string }>;
 }
 export interface BackendCatalogBackground { id: string; name: string; version: number; }
-export interface BackendManagement { id: string; stationId: string; managementTypeId: string; scopeCode: string; responsibleUserId: string; level: "N1" | "N2" | "N3" | "N4"; sequence: number; openedOn: string; estimatedCompletionOn: string | null; lastReviewedOn: string | null; priority: "Alta" | "Media" | "Baja"; requesterName: string; status: string | null; version: number; stationName?: string | null; legalName?: string | null; responsibleName?: string | null; managementTypeName?: string | null; managementTypeCode?: string | null; comuna?: string | null; address?: string | null; legalRut?: string | null; legalRepresentative?: string | null; creationMode?: "principal" | "subtramite"; specificManagementId?: string | null; }
+export interface BackendManagement {
+  id: string;
+  stationId: string;
+  managementTypeId: string;
+  scopeCode: string;
+  responsibleUserId: string;
+  level: "N1" | "N2" | "N3" | "N4";
+  sequence: number;
+  openedOn: string;
+  estimatedCompletionOn: string | null;
+  lastReviewedOn: string | null;
+  priority: "Alta" | "Media" | "Baja";
+  requesterName: string;
+  status: string | null;
+  version: number;
+  codigo: string;
+  nivel: `N${number}`;
+  ambito: string;
+  codigoAmbito: string;
+  correlativo: number;
+  semaforo: "al-dia" | "proximo-vencer" | "atrasado";
+  semaforoEtiqueta: string;
+  fechaInicio: string;
+  fechaIngreso: string;
+  fechaIngresoOrden: string;
+  fechaEstimadaTermino: string;
+  responsableInterno: string;
+  idEstacion: string;
+  estacionServicio: string;
+  direccion: string;
+  comuna: string;
+  rutRazonSocial: string;
+  razonSocial: string;
+  representanteLegal: string;
+  rutRepresentanteLegal: string;
+  concesionario: string;
+  descripcion: string;
+  stationName?: string | null;
+  legalName?: string | null;
+  responsibleName?: string | null;
+  managementTypeName?: string | null;
+  managementTypeCode?: string | null;
+  legalRut?: string | null;
+  legalRepresentative?: string | null;
+  creationMode?: "principal" | "subtramite";
+  specificManagementId?: string | null;
+}
 export interface BackendBackground { id: string; managementId: string; parentManagementBackgroundId: string | null; managementTypeId: string; backgroundId: string; level: "N2" | "N3" | "N4"; required: boolean; responsibleUserId: string; status: string; fileReference: string | null; uploadedAt: string | null; version: number; }
 export interface BackendStage { id: string; managementId: string; stageId: string; status: string; estimatedOn: string | null; completedOn: string | null; responsible: string | null; notes: string | null; version: number; }
 export interface BackendLogEntry { id: string; managementId: string; userId: string | null; registeredOn: string; registeredAt: string; title: string; comment: string; authorName?: string | null; authorInitials?: string | null; type?: "inicio" | "novedad" | "seguimiento" | "contacto" | null; automatic?: boolean; version: number; }

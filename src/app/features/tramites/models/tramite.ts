@@ -47,6 +47,13 @@ export interface DetalleEditableTramite {
 export interface Tramite {
   id: string | number;
   apiId?: string;
+  codigo: string;
+  nivel: `N${number}`;
+  ambito: string;
+  codigoAmbito: string;
+  correlativo: number;
+  semaforo: "al-dia" | "proximo-vencer" | "atrasado";
+  semaforoEtiqueta: string;
   idEstacion: string;
   tipoTramite: string;
   estacionServicio: string;
@@ -55,11 +62,19 @@ export interface Tramite {
   direccion: string;
   estado: string;
   fechaApertura: string;
+  fechaInicio: string;
+  fechaIngreso: string;
+  fechaIngresoOrden: string;
   fechaEstimadaTermino: string;
   fechaUltimaRevision?: string | null;
   prioridad: string;
   responsableInterno: string;
   tramiteEspecifico: string;
+  descripcion: string;
+  rutRazonSocial: string;
+  representanteLegal: string;
+  rutRepresentanteLegal: string;
+  concesionario: string;
   solicitanteCopec: string;
   modalidadCreacion?: "principal" | "subtramite";
   datosAdicionales?: Record<string, string>;

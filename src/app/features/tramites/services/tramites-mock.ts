@@ -52,30 +52,40 @@ export class TramitesMock {
     return {
       id: item.id,
       apiId: item.id,
-      idEstacion: item.stationId,
+      codigo: item.codigo,
+      nivel: item.nivel,
+      ambito: item.ambito,
+      codigoAmbito: item.codigoAmbito,
+      correlativo: item.correlativo,
+      semaforo: item.semaforo,
+      semaforoEtiqueta: item.semaforoEtiqueta,
+      idEstacion: item.idEstacion,
       tipoTramite: item.managementTypeName ?? item.managementTypeId,
-      tramiteEspecifico: item.specificManagementId ?? item.managementTypeId,
-      estacionServicio: item.stationName && item.stationName !== item.stationId ? item.stationName : item.stationId,
-      razonSocial: item.legalName ?? "Sin registrar",
-      comuna: item.comuna ?? "Sin registrar",
-      direccion: item.address ?? "Sin registrar",
+      tramiteEspecifico: item.descripcion,
+      descripcion: item.descripcion,
+      estacionServicio: item.estacionServicio,
+      razonSocial: item.razonSocial,
+      comuna: item.comuna,
+      direccion: item.direccion,
+      rutRazonSocial: item.rutRazonSocial,
+      representanteLegal: item.representanteLegal,
+      rutRepresentanteLegal: item.rutRepresentanteLegal,
+      concesionario: item.concesionario,
       estado: item.status ?? "Pendiente",
       prioridad: item.priority,
-      responsableInterno: item.responsibleName ?? item.responsibleUserId,
+      responsableInterno: item.responsableInterno,
       solicitanteCopec: item.requesterName,
-      fechaApertura: this.toDisplayDate(item.openedOn),
-      fechaEstimadaTermino: item.estimatedCompletionOn ? this.toDisplayDate(item.estimatedCompletionOn) : "Sin especificar",
-      fechaUltimaRevision: item.lastReviewedOn ? this.toDisplayDate(item.lastReviewedOn) : null,
+      fechaApertura: item.fechaInicio,
+      fechaInicio: item.fechaInicio,
+      fechaIngreso: item.fechaIngreso,
+      fechaIngresoOrden: item.fechaIngresoOrden,
+      fechaEstimadaTermino: item.fechaEstimadaTermino,
+      fechaUltimaRevision: item.lastReviewedOn,
       modalidadCreacion: item.creationMode,
       datosAdicionales: {
-        ...(item.legalRut ? { rutRazonSocial: item.legalRut } : {}),
-        ...(item.legalRepresentative ? { representanteLegal: item.legalRepresentative } : {}),
+        rutRazonSocial: item.rutRazonSocial,
+        representanteLegal: item.representanteLegal,
       },
     };
-  }
-
-  private toDisplayDate(value: string): string {
-    const [year, month, day] = value.split("-");
-    return `${day}-${month}-${year}`;
   }
 }
