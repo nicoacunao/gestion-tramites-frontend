@@ -6,6 +6,8 @@ import { InputTextModule } from "primeng/inputtext";
 import { ListboxModule } from "primeng/listbox";
 import { Table, TableModule, TablePageEvent } from "primeng/table";
 import { TooltipModule } from "primeng/tooltip";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { SkeletonModule } from "primeng/skeleton";
 import { Bitacora, GestionBitacora } from "../../../features/bitacora/bitacora";
 import { TramiteDetalle } from "../../../features/tramite-detalle/tramite-detalle";
 
@@ -43,6 +45,8 @@ const VALOR_TODOS = "__todos__";
     FormsModule,
     InputTextModule,
     ListboxModule,
+    ProgressSpinnerModule,
+    SkeletonModule,
     TableModule,
     TramiteDetalle,
     TooltipModule,
@@ -59,6 +63,7 @@ export class GestionListado {
   @Input() mostrarCantidadResultados = false;
   @Input() mostrarResponsableInterno = false;
   @Input() bitacoraPersonal = false;
+  @Input() loading = false;
 
   private _gestiones: GestionListadoItem[] = [];
   private _detalleInicialId: string | number | null = null;
@@ -103,6 +108,7 @@ export class GestionListado {
   readonly opcionesFilasPorPagina = [10, 25, 50, 100];
   readonly campoOrdenInicial = "fechaIngresoOrden";
   readonly direccionOrdenInicial = -1;
+  readonly filasSkeleton = Array.from({ length: 7 }, (_, indice) => indice);
   gestionBitacoraSeleccionada: GestionBitacora | null = null;
   bitacoraVisible = false;
   tramiteDetalleId: string | number | null = null;

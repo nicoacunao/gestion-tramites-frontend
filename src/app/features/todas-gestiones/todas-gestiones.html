@@ -15,11 +15,11 @@
     </div>
   </header>
 
-  @if (loading) { <p role="status">Cargando gestiones…</p> }
   @if (errorMessage) { <p class="field-error" role="alert">{{ errorMessage }}</p> }
 
   <app-gestion-listado
     [gestiones]="gestiones"
+    [loading]="loading"
     titulo="Gestiones de la organización"
     ariaLabelBusqueda="Buscar en todas las gestiones"
     ariaLabelTabla="Tabla de todas las gestiones"

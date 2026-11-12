@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
+import { finalize } from "rxjs";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import { GestionAlcanceInfo } from "../../shared/components/gestion-alcance-info/gestion-alcance-info";
 import {
@@ -54,12 +55,11 @@ export class TodasGestiones {
     this.idEstacionInicial =
       route?.snapshot.queryParamMap.get("estacion") ?? null;
 
-    tramitesMock.cargarTodos().subscribe({
+    tramitesMock.cargarTodos().pipe(finalize(() => { this.loading = false; })).subscribe({
       next: (tramites) => {
         this.gestiones = tramites.map((tramite) => this.crearGestionGlobal(tramite, true));
-        this.loading = false;
       },
-      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+      error: (error: Error) => { this.errorMessage = error.message; },
     });
   }
 

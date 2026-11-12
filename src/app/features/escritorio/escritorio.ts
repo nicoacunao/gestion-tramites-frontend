@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { finalize } from "rxjs";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import { GestionAlcanceInfo } from "../../shared/components/gestion-alcance-info/gestion-alcance-info";
 import {
@@ -124,7 +125,7 @@ export class Escritorio {
   errorMessage = "";
 
   constructor(tramitesMock: TramitesMock) {
-    tramitesMock.cargarTodos().subscribe({
+    tramitesMock.cargarTodos().pipe(finalize(() => { this.loading = false; })).subscribe({
       next: (tramites) => {
         const correlativosPorNivel = new Map<NivelGestion, number>();
         this.gestiones = tramites.map((tramite) => {
@@ -133,9 +134,8 @@ export class Escritorio {
           correlativosPorNivel.set(nivel, correlativo);
           return this.crearGestion(tramite, nivel, correlativo);
         });
-        this.loading = false;
       },
-      error: (error: Error) => { this.loading = false; this.errorMessage = error.message; },
+      error: (error: Error) => { this.errorMessage = error.message; },
     });
   }
 

@@ -2,7 +2,7 @@
   <div class="panel-heading">
     <div class="panel-title">
       <h2 id="gestion-listado-title">{{ titulo }}</h2>
-      @if (mostrarCantidadResultados) {
+      @if (mostrarCantidadResultados && !loading) {
       <p aria-live="polite">
         {{ cantidadResultados }} {{ cantidadResultados === 1 ? "resultado" :
         "resultados" }}
@@ -45,6 +45,43 @@
   </div>
 
   <div class="table-region" [attr.aria-label]="ariaLabelTabla">
+    @if (loading) {
+    <div class="table-loading" role="status" aria-live="polite">
+      <div class="table-loading__message">
+        <p-progressspinner
+          strokeWidth="6"
+          fill="transparent"
+          animationDuration="1s"
+          ariaLabel="Cargando gestiones"
+        />
+        <span>Cargando gestiones</span>
+      </div>
+
+      <table
+        class="loading-table"
+        aria-hidden="true"
+        [class.loading-table--global]="mostrarResponsableInterno"
+      >
+        <thead>
+          <tr>
+            <th *ngFor="let columna of filasSkeleton">
+              <p-skeleton height="1rem" />
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fila of filasSkeleton">
+            <td *ngFor="let columna of filasSkeleton">
+              <p-skeleton
+                [width]="columna === 0 ? '72%' : columna === 8 ? '58%' : '88%'"
+                height="0.85rem"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    } @else {
     <p-table
       #tabla
       [value]="gestiones"
@@ -491,6 +528,7 @@
         </tr>
       </ng-template>
     </p-table>
+    }
   </div>
 </section>
 
