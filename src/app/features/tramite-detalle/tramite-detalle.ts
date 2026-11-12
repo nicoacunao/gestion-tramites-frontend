@@ -103,18 +103,16 @@ export class TramiteDetalle {
   @Input()
   set tramiteId(tramiteId: string | number | null) {
     this._tramiteId = tramiteId;
+    this.cargandoDetalle = Boolean(tramiteId && this.api);
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
     const cargarDatosBackend = (tramite: Tramite) => {
       if (!this.api || !tramite.apiId) return;
       this.cargandoDetalle = true;
-      this.solicitudesDetallePendientes = 4;
+      this.solicitudesDetallePendientes = 3;
       const apiId = tramite.apiId;
       this.api.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
-      this.api.management(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (management) => {
-        if (this.tramite) this.tramite = { ...this.tramite, estado: management.status ?? this.tramite.estado, prioridad: management.priority, responsableInterno: management.responsibleName ?? management.responsibleUserId };
-      } });
       this.api.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
       this.api.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
       this.api.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
@@ -127,6 +125,7 @@ export class TramiteDetalle {
           this.tramite = tramite;
           cargarDatosBackend(tramite);
         },
+        error: () => { this.cargandoDetalle = false; },
       });
     }
     this.cargarDatosEditables();

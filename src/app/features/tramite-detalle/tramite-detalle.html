@@ -3,14 +3,15 @@
   [visible]="visible"
   (visibleChange)="actualizarVisibilidad($event)"
   [modal]="true"
-  [dismissableMask]="true"
-  [closeOnEscape]="true"
+  [dismissableMask]="!cargandoDetalle"
+  [closeOnEscape]="!cargandoDetalle"
+  [closable]="!cargandoDetalle"
   closeAriaLabel="Cerrar detalle del trámite"
   [draggable]="false"
   [resizable]="false"
   [blockScroll]="true"
   [style]="{ width: 'min(98vw, 1480px)', height: 'min(94vh, 920px)' }"
-  styleClass="tramite-detail-dialog"
+  [styleClass]="cargandoDetalle ? 'tramite-detail-dialog is-loading' : 'tramite-detail-dialog'"
 >
   <ng-template #header>
     <div class="dialog-title">
@@ -41,27 +42,27 @@
     </div>
   </ng-template>
 
+  @if (cargandoDetalle) {
+  <div class="detail-loading-layer" role="status" aria-live="polite">
+    <p-progressspinner
+      strokeWidth="5"
+      fill="transparent"
+      animationDuration="1s"
+      ariaLabel="Cargando detalle del trámite"
+    />
+    <div>
+      <strong>Cargando detalle</strong>
+      <p>Estamos preparando la información del trámite.</p>
+    </div>
+  </div>
+  }
+
   @if (tramite) {
   <article
     class="detail-content"
     [attr.aria-busy]="cargandoDetalle"
     [attr.aria-label]="'Detalle del trámite ' + tramite.id"
   >
-    @if (cargandoDetalle) {
-    <div class="detail-loading" role="status" aria-live="polite">
-      <p-progressspinner
-        strokeWidth="5"
-        fill="transparent"
-        animationDuration="1s"
-        ariaLabel="Cargando detalle del trámite"
-      />
-      <div>
-        <strong>Actualizando detalle</strong>
-        <p>Estamos cargando antecedentes, etapas y bitácora.</p>
-      </div>
-    </div>
-    }
-
     <section class="general-card" aria-labelledby="general-title">
       <header class="general-card__header">
         <div class="general-card__title">
@@ -743,7 +744,7 @@
       </ng-template>
     </div>
   </article>
-  } @else {
+  } @else if (!cargandoDetalle) {
   <div class="not-found" role="status">
     <span aria-hidden="true">!</span>
     <div>
