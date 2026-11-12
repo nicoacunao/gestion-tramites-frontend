@@ -437,6 +437,26 @@
   padding-top: 4px;
 }
 
+.antecedentes-selection-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.antecedentes-select-all {
+  color: #334155;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+
+  &:has(.p-disabled) {
+    color: #94a3b8;
+    cursor: default;
+  }
+}
+
 .antecedentes-checklist {
   display: flex;
   max-height: min(52vh, 430px);

@@ -173,6 +173,26 @@ describe("TramiteNuevo", () => {
     );
   });
 
+  it("selecciona y deselecciona todos los antecedentes disponibles", () => {
+    componente.onTipoTramiteChange("tipo-a");
+    componente.onModalidadChange("principal");
+
+    expect(componente.todosAntecedentesSeleccionados).toBe(false);
+
+    componente.seleccionarTodosAntecedentes(true);
+
+    expect(componente.antecedentesSeleccionadosBorrador).toEqual([
+      "Documento A1",
+      "Documento A2",
+    ]);
+    expect(componente.todosAntecedentesSeleccionados).toBe(true);
+
+    componente.seleccionarTodosAntecedentes(false);
+
+    expect(componente.antecedentesSeleccionadosBorrador).toEqual([]);
+    expect(componente.todosAntecedentesSeleccionados).toBe(false);
+  });
+
   it("mantiene la estructura común de etapas para todos los tipos de trámite", () => {
     const etapasEsperadas = [
       "Consulta y definición de antecedentes",

@@ -1007,23 +1007,41 @@
     </div>
 
     <ng-template #footer>
-      <button
-        pButton
-        type="button"
-        severity="secondary"
-        [text]="true"
-        (click)="selectorAntecedentesVisible = false"
-      >
-        Cancelar
-      </button>
-      <button
-        pButton
-        type="button"
-        [disabled]="!antecedentesSeleccionadosBorrador.length"
-        (click)="guardarSeleccionAntecedentes()"
-      >
-        Agregar
-      </button>
+      <div class="antecedentes-selection-footer">
+        <label
+          class="antecedentes-select-all d-flex align-items-center gap-2"
+          for="seleccionarTodosAntecedentes"
+        >
+          <p-checkbox
+            inputId="seleccionarTodosAntecedentes"
+            [binary]="true"
+            [ngModel]="todosAntecedentesSeleccionados"
+            [disabled]="!antecedentesDisponibles.length"
+            (ngModelChange)="seleccionarTodosAntecedentes($event)"
+          />
+          <span>Seleccionar todos</span>
+        </label>
+
+        <div class="d-flex gap-2">
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            [text]="true"
+            (click)="selectorAntecedentesVisible = false"
+          >
+            Cancelar
+          </button>
+          <button
+            pButton
+            type="button"
+            [disabled]="!antecedentesSeleccionadosBorrador.length"
+            (click)="guardarSeleccionAntecedentes()"
+          >
+            Agregar
+          </button>
+        </div>
+      </div>
     </ng-template>
   </p-dialog>
 

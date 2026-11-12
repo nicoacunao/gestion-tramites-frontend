@@ -312,6 +312,20 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.selectorAntecedentesVisible = true;
   }
 
+  get todosAntecedentesSeleccionados(): boolean {
+    return (
+      this.antecedentesDisponibles.length > 0 &&
+      this.antecedentesSeleccionadosBorrador.length ===
+        this.antecedentesDisponibles.length
+    );
+  }
+
+  seleccionarTodosAntecedentes(seleccionarTodos: boolean): void {
+    this.antecedentesSeleccionadosBorrador = seleccionarTodos
+      ? [...this.antecedentesDisponibles]
+      : [];
+  }
+
   guardarSeleccionAntecedentes(): void {
     if (!this.antecedentesSeleccionadosBorrador.length) {
       return;
