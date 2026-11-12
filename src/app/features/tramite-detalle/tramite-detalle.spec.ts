@@ -39,6 +39,21 @@ describe("TramiteDetalle", () => {
     );
   });
 
+  it("conserva los antecedentes cargados al cerrar y volver a abrir el detalle", () => {
+    const antecedentesCargados = componente.antecedentesRequeridos.map(
+      (antecedente) => ({ ...antecedente }),
+    );
+
+    // Simula un trámite del backend: los antecedentes se cargan por una
+    // solicitud independiente y todavía no viven en detalleEditable.
+    componente.tramite = { ...componente.tramite!, detalleEditable: undefined };
+    componente.visible = true;
+    componente.visible = false;
+    componente.visible = true;
+
+    expect(componente.antecedentesRequeridos).toEqual(antecedentesCargados);
+  });
+
   it("incluye una primera entrada automática de inicio con fecha y usuario", () => {
     const inicio = componente.bitacora.find(({ automatica }) => automatica);
 

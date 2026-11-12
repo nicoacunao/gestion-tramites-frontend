@@ -93,7 +93,6 @@ export class TramiteDetalle {
     this._visible = visible;
 
     if (seAbreDetalle) {
-      this.cargarDatosEditables();
       this.registrarUltimaRevision();
     }
   }
