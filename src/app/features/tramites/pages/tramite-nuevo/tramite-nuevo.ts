@@ -484,6 +484,40 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       antecedentesConfigurados: this.antecedentesRequeridos.map((item) => item.antecedente),
       antecedentesComplementariosConfigurados: this.antecedentesComplementarios.map((item) => item.antecedente.trim()).filter(Boolean),
       etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
+      requiredBackgrounds: this.antecedentesRequeridos.map((item) => ({
+        backgroundId: null,
+        name: item.antecedente,
+        category: "requerido",
+        required: true,
+        responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
+        responsibleName: item.responsable || null,
+        status: item.estado,
+        observations: item.observaciones || null,
+        fileName: item.archivoNombre || null,
+      })),
+      complementaryBackgrounds: this.antecedentesComplementarios
+        .filter((item) => item.antecedente.trim())
+        .map((item) => ({
+          backgroundId: null,
+          name: item.antecedente.trim(),
+          category: "complementario",
+          required: false,
+          responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
+          responsibleName: item.responsable || null,
+          status: item.estado,
+          observations: item.observaciones || null,
+          fileName: item.archivoNombre || null,
+        })),
+      stages: this.etapasGestion.map((item) => ({
+        stageId: null,
+        name: item.etapa,
+        status: item.estado,
+        estimatedOn: item.fechaEstimada ? this.normalizarFechaApi(item.fechaEstimada) : null,
+        completedOn: item.fechaReal ? this.normalizarFechaApi(item.fechaReal) : null,
+        responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
+        responsibleName: item.responsable || null,
+        notes: item.observacion || null,
+      })),
     };
   }
 
@@ -497,10 +531,16 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private obtenerResponsableSeleccionado(): BackendUser | undefined {
+    return this.obtenerResponsablePorNombre(this.form.responsableInterno);
+  }
+
+  private obtenerResponsablePorNombre(nombre: string): BackendUser | undefined {
+    const nombreNormalizado = nombre.trim().toLocaleLowerCase("es-CL");
     return this.responsablesApi.find(
       (user) => [user.names, user.firstSurname, user.secondSurname]
         .filter(Boolean)
-        .join(" ") === this.form.responsableInterno,
+        .join(" ")
+        .toLocaleLowerCase("es-CL") === nombreNormalizado,
     );
   }
 
