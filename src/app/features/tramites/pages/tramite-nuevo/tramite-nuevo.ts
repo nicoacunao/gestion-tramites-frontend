@@ -33,6 +33,7 @@ import {
 } from "../../models/estado-tramite";
 import {
   ApiClient,
+  ApiClientError,
   BackendManagementType,
   BackendSpecificManagement,
   BackendUser,
@@ -496,6 +497,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private cargarCatalogos(): void {
+    this.cargarAntecedentesComplementarios();
+
     forkJoin({
       estaciones: this.api.catalogStations(),
       tipos: this.api.managementTypes(),
@@ -518,6 +521,12 @@ export class TramiteNuevo implements OnInit, OnDestroy {
             .join(" "),
         );
 
+        this.tiposTramite = tipos.map((tipo) =>
+          this.mapearTipoTramite(tipo, []),
+        );
+        this.catalogosError = "";
+        this.changeDetectorRef.markForCheck();
+
         forkJoin(
           tipos.map((tipo) => this.api.specificManagements(tipo.id)),
         ).subscribe({
@@ -528,16 +537,37 @@ export class TramiteNuevo implements OnInit, OnDestroy {
             this.catalogosError = "";
             this.changeDetectorRef.markForCheck();
           },
-          error: () => {
+          error: (error: ApiClientError) => {
             this.catalogosError =
-              "No fue posible cargar las gestiones específicas del catálogo.";
+              error.status === 403
+                ? "No tiene autorización para consultar las gestiones específicas del catálogo."
+                : "No fue posible cargar las gestiones específicas del catálogo.";
             this.changeDetectorRef.markForCheck();
           },
         });
       },
-      error: () => {
-        this.catalogosError =
-          "No fue posible cargar los catálogos del formulario.";
+      error: (error: ApiClientError) => {
+        this.catalogosError = error.status === 403
+          ? "No tiene autorización para consultar los catálogos del formulario."
+          : "No fue posible cargar los catálogos del formulario.";
+        this.changeDetectorRef.markForCheck();
+      },
+    });
+  }
+
+  private cargarAntecedentesComplementarios(): void {
+    this.api.backgroundCatalog("complementario").subscribe({
+      next: (antecedentes) => {
+        this.tiposDocumentoComplementario = antecedentes.map(
+          ({ name }) => name,
+        );
+        this.changeDetectorRef.markForCheck();
+      },
+      error: (error: ApiClientError) => {
+        this.tiposDocumentoComplementario = [];
+        this.catalogosError = error.status === 403
+          ? "No tiene autorización para consultar los antecedentes complementarios."
+          : "No fue posible cargar los antecedentes complementarios.";
         this.changeDetectorRef.markForCheck();
       },
     });

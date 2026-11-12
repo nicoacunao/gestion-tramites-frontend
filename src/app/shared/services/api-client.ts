@@ -32,6 +32,7 @@ export interface BackendSpecificManagement {
   active: boolean;
   backgrounds?: Array<{ id: string; name: string }>;
 }
+export interface BackendCatalogBackground { id: string; name: string; version: number; }
 export interface BackendManagement { id: string; stationId: string; managementTypeId: string; scopeCode: string; responsibleUserId: string; level: "N1" | "N2" | "N3" | "N4"; sequence: number; openedOn: string; estimatedCompletionOn: string | null; lastReviewedOn: string | null; priority: "Alta" | "Media" | "Baja"; requesterName: string; status: string | null; version: number; stationName?: string | null; legalName?: string | null; responsibleName?: string | null; managementTypeName?: string | null; managementTypeCode?: string | null; comuna?: string | null; address?: string | null; legalRut?: string | null; legalRepresentative?: string | null; creationMode?: "principal" | "subtramite"; specificManagementId?: string | null; }
 export interface BackendBackground { id: string; managementId: string; parentManagementBackgroundId: string | null; managementTypeId: string; backgroundId: string; level: "N2" | "N3" | "N4"; required: boolean; responsibleUserId: string; status: string; fileReference: string | null; uploadedAt: string | null; version: number; }
 export interface BackendStage { id: string; managementId: string; stageId: string; status: string; estimatedOn: string | null; completedOn: string | null; responsible: string | null; notes: string | null; version: number; }
@@ -71,6 +72,10 @@ export class ApiClient {
   specificManagements(managementTypeId?: string): Observable<BackendSpecificManagement[]> {
     const query = managementTypeId ? `?managementTypeId=${encodeURIComponent(managementTypeId)}` : "";
     return this.get<BackendSpecificManagement[]>(`/gestiones-especificas/items${query}`);
+  }
+  backgroundCatalog(category?: "requerido" | "complementario"): Observable<BackendCatalogBackground[]> {
+    const query = category ? `?categoria=${encodeURIComponent(category)}` : "";
+    return this.get<BackendCatalogBackground[]>(`/antecedentes/items${query}`);
   }
   managements(): Observable<BackendManagement[]> { return this.get<BackendManagement[]>("/gestiones/items"); }
   management(id: string): Observable<BackendManagement> { return this.get<BackendManagement>(`/gestiones/items/${encodeURIComponent(id)}`); }

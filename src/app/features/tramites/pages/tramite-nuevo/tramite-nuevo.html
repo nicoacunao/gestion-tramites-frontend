@@ -4,12 +4,6 @@
   </div>
 
   <form class="creation-form">
-    <p-message
-      *ngIf="catalogosError"
-      severity="error"
-      [text]="catalogosError"
-      styleClass="w-100"
-    />
       @if (creacionError) {
       <p-message severity="error" [text]="creacionError" />
       }
