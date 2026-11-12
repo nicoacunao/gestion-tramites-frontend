@@ -25,7 +25,7 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
-import { forkJoin } from "rxjs";
+import { forkJoin, map, of, switchMap } from "rxjs";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
   ESTADOS_ANTECEDENTE,
@@ -38,9 +38,11 @@ import {
   BackendUser,
 } from "../../../../shared/services/api-models";
 import { ApiClientError } from "../../../../shared/services/api-base";
+import { BitacoraApiService } from "../../../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../../../shared/services/catalog-api";
 import { IdentityApiService } from "../../../../shared/services/identity-api";
 import { ManagementApiService } from "../../../../shared/services/management-api";
+import { UserSessionService } from "../../../../shared/services/user-session";
 
 interface EstacionServicio {
   codigo: string;
@@ -103,6 +105,8 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private readonly catalogApi = inject(CatalogApiService);
   private readonly identityApi = inject(IdentityApiService);
   private readonly managementApi = inject(ManagementApiService);
+  private readonly bitacoraApi = inject(BitacoraApiService);
+  private readonly userSession = inject(UserSessionService);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
   readonly segundosRedireccion = 6;
@@ -441,7 +445,15 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
       return;
     }
-    this.managementApi.createManagement(this.crearPayload(this.modalidadCreacion)).subscribe({
+    this.managementApi.createManagement(this.crearPayload(this.modalidadCreacion)).pipe(
+      switchMap((tramite) =>
+        this.form.estado === "Ingresado"
+          ? this.bitacoraApi
+              .createLog(this.crearLogIngreso(tramite.id))
+              .pipe(map(() => tramite))
+          : of(tramite),
+      ),
+    ).subscribe({
       next: (tramite) => {
         this.tramiteCreadoId = tramite.id;
         this.creando = false;
@@ -458,6 +470,33 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.creacionRequestId = error instanceof ApiClientError ? error.requestId ?? "" : "";
       },
     });
+  }
+
+  private crearLogIngreso(managementId: string): object {
+    const usuario = this.userSession.currentUser();
+
+    return {
+      managementId,
+      userId: usuario.id ?? null,
+      registeredOn: this.normalizarFechaApi(this.form.fechaApertura),
+      registeredAt: this.obtenerHoraActual(),
+      title: "Ingreso del trámite",
+      comment: "Se ha ingresado el trámite al sistema.",
+      authorName: usuario.fullName || null,
+      authorInitials: usuario.initials || null,
+      type: "inicio",
+      automatic: true,
+    };
+  }
+
+  private obtenerHoraActual(): string {
+    return new Intl.DateTimeFormat("es-CL", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "America/Santiago",
+    }).format(new Date());
   }
 
   private crearPayload(modalidadCreacion: ModalidadCreacion): object {
