@@ -44,8 +44,24 @@
   @if (tramite) {
   <article
     class="detail-content"
+    [attr.aria-busy]="cargandoDetalle"
     [attr.aria-label]="'Detalle del trámite ' + tramite.id"
   >
+    @if (cargandoDetalle) {
+    <div class="detail-loading" role="status" aria-live="polite">
+      <p-progressspinner
+        strokeWidth="5"
+        fill="transparent"
+        animationDuration="1s"
+        ariaLabel="Cargando detalle del trámite"
+      />
+      <div>
+        <strong>Actualizando detalle</strong>
+        <p>Estamos cargando antecedentes, etapas y bitácora.</p>
+      </div>
+    </div>
+    }
+
     <section class="general-card" aria-labelledby="general-title">
       <header class="general-card__header">
         <div class="general-card__title">
@@ -738,8 +754,12 @@
   }
 
   <ng-template #footer>
-    <button pButton type="button" (click)="guardarCambios()">
+    <button pButton type="button" [disabled]="guardando || cargandoDetalle" (click)="guardarCambios()">
+      @if (guardando) {
+      Guardando…
+      } @else {
       Guardar cambios
+      }
     </button>
   </ng-template>
 </p-dialog>

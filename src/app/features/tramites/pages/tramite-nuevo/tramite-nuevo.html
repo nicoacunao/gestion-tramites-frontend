@@ -70,6 +70,8 @@
           optionLabel="nombre"
           optionValue="id"
           placeholder="Seleccione un tipo de trámite"
+          [loading]="catalogosCargando"
+          [disabled]="catalogosCargando"
           [filter]="true"
           filterBy="nombre"
           filterPlaceholder="Buscar tipo de trámite"
@@ -77,6 +79,20 @@
           styleClass="w-100"
           (ngModelChange)="onTipoTramiteChange($event)"
         />
+        <small
+          *ngIf="catalogosCargando"
+          class="catalog-loading-hint"
+          role="status"
+          aria-live="polite"
+        >
+          <p-progressspinner
+            strokeWidth="7"
+            fill="transparent"
+            animationDuration="1s"
+            ariaLabel="Cargando catálogo"
+          />
+          Estamos cargando los tipos de trámite y sus antecedentes disponibles.
+        </small>
       </div>
 
       <ng-container *ngIf="tipoSeleccionado as tipo">
@@ -224,6 +240,8 @@
               optionLabel="codigo"
               optionValue="codigo"
               placeholder="Seleccione ID de estación"
+              [loading]="catalogosCargando"
+              [disabled]="catalogosCargando"
               [filter]="true"
               filterBy="codigo"
               filterPlaceholder="Buscar ID"
@@ -314,6 +332,8 @@
               [(ngModel)]="form.responsableInterno"
               [options]="responsables"
               placeholder="Seleccione responsable principal"
+              [loading]="catalogosCargando"
+              [disabled]="catalogosCargando"
               [filter]="true"
               filterPlaceholder="Buscar responsable"
               styleClass="w-100"
@@ -641,6 +661,8 @@
                   [(ngModel)]="item.antecedente"
                   [options]="tiposDocumentoComplementario"
                   placeholder="Seleccione tipo de documento"
+                  [loading]="catalogosCargando"
+                  [disabled]="catalogosCargando"
                   [filter]="true"
                   filterPlaceholder="Buscar tipo de documento"
                   appendTo="body"
@@ -988,8 +1010,8 @@
   </p-dialog>
 
   <p-dialog
-    header="Trámite creado correctamente"
-    [(visible)]="mensajeCreacionVisible"
+    [header]="creando ? 'Guardando trámite' : 'Trámite creado correctamente'"
+    [visible]="creando || mensajeCreacionVisible"
     [modal]="true"
     [closable]="false"
     [closeOnEscape]="false"
@@ -1000,7 +1022,25 @@
     [style]="{ width: 'min(92vw, 460px)' }"
     styleClass="creation-success-dialog"
   >
-    <div class="creation-success-content">
+    <div *ngIf="creando" class="creation-loading-content" role="status" aria-live="polite">
+      <p-progressspinner
+        strokeWidth="5"
+        fill="transparent"
+        animationDuration="1s"
+        ariaLabel="Guardando trámite"
+      />
+      <div class="creation-success-copy">
+        <strong>Guardando el trámite</strong>
+        <p>Estamos enviando la información. No cierres esta ventana.</p>
+      </div>
+      <p-progressbar
+        mode="indeterminate"
+        [showValue]="false"
+        styleClass="creation-progress creation-progress--indeterminate"
+      />
+    </div>
+
+    <div *ngIf="mensajeCreacionVisible" class="creation-success-content">
       <span class="creation-success-icon" aria-hidden="true">
         <svg data-p-icon="check"></svg>
       </span>

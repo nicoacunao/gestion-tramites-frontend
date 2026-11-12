@@ -81,11 +81,49 @@
 }
 
 .detail-content {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 14px 16px 22px;
   color: var(--detail-ink);
+}
+
+.detail-loading {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 30vh 24px 24px;
+  background: rgb(238 242 245 / 72%);
+  color: var(--detail-ink);
+  text-align: left;
+  backdrop-filter: blur(2px);
+
+  :host ::ng-deep .p-progressspinner {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+
+  strong,
+  p {
+    display: block;
+    margin: 0;
+  }
+
+  strong {
+    font-size: 16px;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--detail-muted);
+    font-size: 13px;
+  }
 }
 
 .general-card {

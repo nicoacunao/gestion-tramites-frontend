@@ -9,13 +9,14 @@ import {
   ViewChild,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { forkJoin, map, switchMap } from "rxjs";
+import { finalize, forkJoin, map, switchMap } from "rxjs";
 import { ButtonDirective } from "primeng/button";
 import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
 import { InputTextModule } from "primeng/inputtext";
 import { PanelModule } from "primeng/panel";
 import { ProgressBarModule } from "primeng/progressbar";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SelectModule } from "primeng/select";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
@@ -67,6 +68,7 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
     InputTextModule,
     PanelModule,
     ProgressBarModule,
+    ProgressSpinnerModule,
     SelectModule,
     TagModule,
     TextareaModule,
@@ -106,14 +108,16 @@ export class TramiteDetalle {
       : undefined;
     const cargarDatosBackend = (tramite: Tramite) => {
       if (!this.api || !tramite.apiId) return;
+      this.cargandoDetalle = true;
+      this.solicitudesDetallePendientes = 4;
       const apiId = tramite.apiId;
-      this.api.users().subscribe({ next: (users) => { this.responsablesApi = users; } });
-      this.api.management(apiId).subscribe({ next: (management) => {
+      this.api.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
+      this.api.management(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (management) => {
         if (this.tramite) this.tramite = { ...this.tramite, estado: management.status ?? this.tramite.estado, prioridad: management.priority, responsableInterno: management.responsibleName ?? management.responsibleUserId };
       } });
-      this.api.backgrounds(apiId).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
-      this.api.stages(apiId).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-      this.api.logs(apiId).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+      this.api.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
+      this.api.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
+      this.api.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
     };
     if (this.tramite) {
       cargarDatosBackend(this.tramite);
@@ -142,6 +146,8 @@ export class TramiteDetalle {
   tramite: Tramite | undefined;
   private responsablesApi: BackendUser[] = [];
   guardando = false;
+  cargandoDetalle = false;
+  private solicitudesDetallePendientes = 0;
   errorGuardado = "";
   tipoAntecedenteNuevo: string | null = null;
   archivoAntecedenteNuevo: File | null = null;
@@ -299,6 +305,14 @@ export class TramiteDetalle {
     return (
       indice === 0 || this.etapasGestion[indice - 1].estado === "Completado"
     );
+  }
+
+  private finalizarCargaDetalle(): void {
+    this.solicitudesDetallePendientes -= 1;
+
+    if (this.solicitudesDetallePendientes <= 0) {
+      this.cargandoDetalle = false;
+    }
   }
 
   guardarCambios(): void {

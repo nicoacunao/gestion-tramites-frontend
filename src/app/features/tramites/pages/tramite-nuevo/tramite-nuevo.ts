@@ -21,6 +21,7 @@ import { InputTextModule } from "primeng/inputtext";
 import { MessageModule } from "primeng/message";
 import { PopoverModule } from "primeng/popover";
 import { ProgressBarModule } from "primeng/progressbar";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
@@ -85,6 +86,7 @@ type ModalidadCreacion = "principal" | "subtramite";
     PlusIcon,
     PopoverModule,
     ProgressBarModule,
+    ProgressSpinnerModule,
     SelectModule,
     TableModule,
     TextareaModule,
@@ -129,6 +131,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   modalidadCreacion: ModalidadCreacion | null = null;
   catalogosError = "";
+  catalogosCargando = false;
   creacionError = "";
   creacionErrorCode = "";
   creacionRequestId = "";
@@ -508,6 +511,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private cargarCatalogos(): void {
+    this.catalogosCargando = true;
     this.cargarAntecedentesComplementarios();
 
     forkJoin({
@@ -546,6 +550,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
               this.mapearTipoTramite(tipo, gestionesPorTipo[index] ?? []),
             );
             this.catalogosError = "";
+            this.catalogosCargando = false;
             this.changeDetectorRef.markForCheck();
           },
           error: (error: ApiClientError) => {
@@ -553,6 +558,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
               error.status === 403
                 ? "No tiene autorización para consultar las gestiones específicas del catálogo."
                 : "No fue posible cargar las gestiones específicas del catálogo.";
+            this.catalogosCargando = false;
             this.changeDetectorRef.markForCheck();
           },
         });
@@ -561,6 +567,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         this.catalogosError = error.status === 403
           ? "No tiene autorización para consultar los catálogos del formulario."
           : "No fue posible cargar los catálogos del formulario.";
+        this.catalogosCargando = false;
         this.changeDetectorRef.markForCheck();
       },
     });
