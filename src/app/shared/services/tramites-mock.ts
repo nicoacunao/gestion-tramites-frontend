@@ -81,12 +81,21 @@ export class TramitesMock {
       fechaIngreso: item.fechaIngreso,
       fechaIngresoOrden: item.fechaIngresoOrden,
       fechaEstimadaTermino: item.fechaEstimadaTermino,
-      fechaUltimaRevision: item.lastReviewedOn,
+      fechaUltimaRevision: this.fechaParaVista(item.lastReviewedOn),
       modalidadCreacion: item.creationMode,
       datosAdicionales: {
         rutRazonSocial: item.rutRazonSocial,
         representanteLegal: item.representanteLegal,
       },
     };
+  }
+
+  private fechaParaVista(fecha: string | null): string | null {
+    if (!fecha) {
+      return null;
+    }
+
+    const [anio, mes, dia] = fecha.slice(0, 10).split("-");
+    return anio?.length === 4 ? `${dia}-${mes}-${anio}` : fecha;
   }
 }

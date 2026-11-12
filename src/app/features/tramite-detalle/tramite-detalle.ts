@@ -86,6 +86,7 @@ export class TramiteDetalle {
   private readonly entradasPorTramite = new Map<string | number, EntradaBitacora[]>();
   private _tramiteId: string | number | null = null;
   private _visible = false;
+  private ultimaRevisionEnviada: string | null = null;
 
   @Input()
   set visible(visible: boolean) {
@@ -107,6 +108,10 @@ export class TramiteDetalle {
 
   @Input()
   set tramiteId(tramiteId: string | number | null) {
+    if (this._tramiteId !== tramiteId) {
+      this.ultimaRevisionEnviada = null;
+    }
+
     this._tramiteId = tramiteId;
     this.cargandoDetalle = Boolean(tramiteId && this.managementApi);
     this.tramite = tramiteId
@@ -123,6 +128,9 @@ export class TramiteDetalle {
           if (this._tramiteId === tramiteId) {
             this.tramite = tramite;
             this.cargarDatosEditables();
+            if (this.visible) {
+              this.registrarUltimaRevision();
+            }
           }
           this.cargarDatosBackend(tramite);
         },
@@ -248,6 +256,7 @@ export class TramiteDetalle {
 
     if (!visible) {
       this.limpiarFormularioDocumento();
+      this.guardarUltimaRevision();
     }
 
     this.visibleChange.emit(visible);
@@ -401,10 +410,20 @@ export class TramiteDetalle {
         .filter((item) => item.id && item.version !== undefined)
         .map((item) => this.managementApi!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
       this.managementApi.management(this.tramite.apiId).pipe(
-        map((management) => this.managementApi!.updateManagement(this.tramite!.apiId!, { ...management, status: this.tramite!.estado, priority: this.tramite!.prioridad })),
+        map((management) => this.managementApi!.updateManagement(this.tramite!.apiId!, {
+          ...management,
+          status: this.tramite!.estado,
+          priority: this.tramite!.prioridad,
+          lastReviewedOn: this.fechaRevisionParaApi(this.tramite!.fechaUltimaRevision),
+        })),
         switchMap((managementUpdate) => forkJoin([...antecedentes, ...etapas, managementUpdate])),
       ).subscribe({
-        next: () => { this.guardando = false; this.tramite = tramiteActualizado; this.actualizarVisibilidad(false); },
+        next: () => {
+          this.guardando = false;
+          this.tramite = tramiteActualizado;
+          this.ultimaRevisionEnviada = this.tramite.fechaUltimaRevision ?? null;
+          this.actualizarVisibilidad(false);
+        },
         error: (error: Error) => { this.guardando = false; this.errorGuardado = error.message; },
       });
       return;
@@ -623,11 +642,47 @@ export class TramiteDetalle {
       return;
     }
 
+    const fecha = this.formatearFecha(new Date());
     this.tramite = {
       ...this.tramite,
-      fechaUltimaRevision: this.formatearFecha(new Date()),
+      fechaUltimaRevision: fecha,
     };
     this.tramitesMock.guardar(this.tramite);
+  }
+
+  private guardarUltimaRevision(): void {
+    if (
+      !this.managementApi ||
+      !this.tramite?.apiId ||
+      !this.tramite.fechaUltimaRevision ||
+      this.ultimaRevisionEnviada === this.tramite.fechaUltimaRevision
+    ) {
+      return;
+    }
+
+    const fechaRevision = this.tramite.fechaUltimaRevision;
+    this.managementApi.management(this.tramite.apiId).pipe(
+      switchMap((management) => this.managementApi!.updateManagement(
+        this.tramite!.apiId!,
+        {
+          ...management,
+          lastReviewedOn: this.fechaRevisionParaApi(fechaRevision),
+        },
+      )),
+    ).subscribe({
+      next: () => {
+        this.ultimaRevisionEnviada = fechaRevision;
+      },
+    });
+  }
+
+  private fechaRevisionParaApi(fecha: string | null | undefined): string | null {
+    if (!fecha) {
+      return null;
+    }
+
+    const [dia, mes, anio] = fecha.split("-");
+    return `${anio}-${mes}-${dia}`;
   }
 
   private convertirFechaAIso(fecha: string): string {
