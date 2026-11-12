@@ -1,7 +1,7 @@
 {
   "description": "Respaldo de los datos de demostración retirados del front. No se sirve como asset ni participa en runtime.",
   "source": [
-    "src/app/features/tramites/services/tramites-mock.ts",
+    "src/app/shared/services/tramites-mock.ts",
     "src/app/features/home/home.ts",
     "src/app/shared/services/user-session.ts",
     "src/app/features/tramite-detalle/tramite-detalle.ts"

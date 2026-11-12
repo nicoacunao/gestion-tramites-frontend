@@ -6,7 +6,7 @@ import {
   GestionListado,
   GestionListadoItem,
 } from "../../shared/components/gestion-listado/gestion-listado";
-import { TramitesMock } from "../tramites/services/tramites-mock";
+import { TramitesMock } from "../../shared/services/tramites-mock";
 
 @Component({
   selector: "app-escritorio",

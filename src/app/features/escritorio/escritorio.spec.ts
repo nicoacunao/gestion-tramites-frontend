@@ -1,6 +1,6 @@
 import { Escritorio } from "./escritorio";
 import { Tramite } from "../tramites/models/tramite";
-import { TramitesMock } from "../tramites/services/tramites-mock";
+import { TramitesMock } from "../../shared/services/tramites-mock";
 
 class TramitesMockVolumen extends TramitesMock {
   override obtenerTodos(): Tramite[] {

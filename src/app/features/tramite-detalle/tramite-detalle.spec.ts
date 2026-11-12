@@ -1,5 +1,5 @@
 import { UserSessionService } from "../../shared/services/user-session";
-import { TramitesMock } from "../tramites/services/tramites-mock";
+import { TramitesMock } from "../../shared/services/tramites-mock";
 import { TramiteDetalle } from "./tramite-detalle";
 
 describe("TramiteDetalle", () => {

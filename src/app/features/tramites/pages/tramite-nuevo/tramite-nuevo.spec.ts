@@ -4,7 +4,7 @@ import { TestBed } from "@angular/core/testing";
 import { of } from "rxjs";
 import { UserSessionService } from "../../../../shared/services/user-session";
 import { TramiteDetalle } from "../../../tramite-detalle/tramite-detalle";
-import { TramitesMock } from "../../services/tramites-mock";
+import { TramitesMock } from "../../../../shared/services/tramites-mock";
 import { TramiteNuevo } from "./tramite-nuevo";
 
 describe("TramiteNuevo", () => {

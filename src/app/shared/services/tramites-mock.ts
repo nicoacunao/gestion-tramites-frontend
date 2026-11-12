@@ -1,8 +1,8 @@
 import { Injectable } from "@angular/core";
 import { Observable, map, tap, throwError } from "rxjs";
-import { Tramite } from "../models/tramite";
-import { BackendManagement } from "../../../shared/services/api-models";
-import { ManagementApiService } from "../../../shared/services/management-api";
+import { Tramite } from "../../features/tramites/models/tramite";
+import { BackendManagement } from "./api-models";
+import { ManagementApiService } from "./management-api";
 
 /** Adaptador de gestiones del backend; no contiene datos locales. */
 @Injectable({ providedIn: "root" })

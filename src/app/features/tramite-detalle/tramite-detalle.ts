@@ -39,7 +39,7 @@ import {
   EtapaDetalle,
   Tramite,
 } from "../tramites/models/tramite";
-import { TramitesMock } from "../tramites/services/tramites-mock";
+import { TramitesMock } from "../../shared/services/tramites-mock";
 import { BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-models";
 import { BitacoraApiService } from "../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../shared/services/catalog-api";
