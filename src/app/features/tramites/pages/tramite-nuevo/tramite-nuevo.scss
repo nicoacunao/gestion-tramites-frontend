@@ -525,6 +525,37 @@ textarea[pTextarea] {
       box-shadow: 4px 0 8px rgb(15 23 42 / 5%);
     }
 
+    .antecedente-field-actions {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .antecedente-field-select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .remove-antecedente-button {
+      flex: 0 0 42px;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 6px;
+      background: #dc2626;
+      color: #ffffff;
+
+      &:hover {
+        background: #b91c1c;
+        color: #ffffff;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #991b1b;
+        outline-offset: 2px;
+      }
+    }
+
     th.antecedente-column {
       z-index: 2;
       background: var(--creation-accent-soft);

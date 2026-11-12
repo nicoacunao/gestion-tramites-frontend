@@ -25,6 +25,8 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SelectModule } from "primeng/select";
 import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
+import { TooltipModule } from "primeng/tooltip";
+import { TrashIcon } from "primeng/icons/trash";
 import { forkJoin, map, of, switchMap } from "rxjs";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
@@ -94,6 +96,8 @@ type ModalidadCreacion = "principal" | "subtramite";
     SelectModule,
     TableModule,
     TextareaModule,
+    TooltipModule,
+    TrashIcon,
     UploadIcon,
   ],
   templateUrl: "./tramite-nuevo.html",
@@ -168,7 +172,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   antecedentesDisponibles: string[] = [];
   antecedentesSeleccionadosBorrador: string[] = [];
   selectorAntecedentesVisible = false;
-  antecedentesComplementarios = [this.crearAntecedenteComplementario()];
+  antecedentesComplementarios: Array<ReturnType<typeof this.crearAntecedenteComplementario>> = [];
   etapasGestion: Array<ReturnType<typeof this.crearEtapa>> = [];
 
   ngOnInit(): void {
@@ -287,6 +291,16 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     ];
   }
 
+  eliminarAntecedenteComplementario(indice: number): void {
+    if (!this.configuracionLista) {
+      return;
+    }
+
+    this.antecedentesComplementarios = this.antecedentesComplementarios.filter(
+      (_, indiceActual) => indiceActual !== indice,
+    );
+  }
+
   abrirSelectorAntecedentes(): void {
     if (!this.configuracionLista) {
       return;
@@ -359,7 +373,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.antecedentesRequeridos = [];
     this.antecedentesSeleccionadosBorrador = [];
     this.selectorAntecedentesVisible = false;
-    this.antecedentesComplementarios = [this.crearAntecedenteComplementario()];
+    this.antecedentesComplementarios = [];
     this.etapasGestion = [];
 
     if (!tipo || !this.modalidadCreacion) {

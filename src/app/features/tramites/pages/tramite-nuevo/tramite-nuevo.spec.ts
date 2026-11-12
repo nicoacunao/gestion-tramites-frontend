@@ -65,6 +65,7 @@ describe("TramiteNuevo", () => {
     expect(componente.requiereSeleccionSegundoNivel).toBe(false);
     expect(componente.configuracionLista).toBe(false);
     expect(componente.antecedentesDisponibles).toEqual([]);
+    expect(componente.antecedentesComplementarios).toEqual([]);
     expect(componente.etapasGestion).toEqual([]);
   });
 
@@ -104,18 +105,22 @@ describe("TramiteNuevo", () => {
       observacion: "",
     });
 
+    expect(componente.antecedentesComplementarios).toEqual([]);
+    componente.agregarAntecedenteComplementario();
+
     componente.antecedentesComplementarios[0].antecedente =
       "Documento complementario anterior";
     componente.onTramiteEspecificoChange("gestion-a2");
 
     expect(componente.antecedentesDisponibles).toEqual(["Documento A2"]);
-    expect(componente.antecedentesComplementarios[0].antecedente).toBe("");
+    expect(componente.antecedentesComplementarios).toEqual([]);
   });
 
   it("reinicia modalidad, gestión y documentos al cambiar o borrar el tipo", () => {
     componente.onTipoTramiteChange("tipo-a");
     componente.onModalidadChange("subtramite");
     componente.onTramiteEspecificoChange("gestion-a1");
+    componente.agregarAntecedenteComplementario();
     componente.antecedentesComplementarios[0].antecedente =
       "Documento complementario anterior";
 
@@ -125,7 +130,7 @@ describe("TramiteNuevo", () => {
     expect(componente.form.tramiteEspecifico).toBe("");
     expect(componente.configuracionLista).toBe(false);
     expect(componente.antecedentesDisponibles).toEqual([]);
-    expect(componente.antecedentesComplementarios[0].antecedente).toBe("");
+    expect(componente.antecedentesComplementarios).toEqual([]);
 
     componente.onTipoTramiteChange(null);
 
@@ -149,6 +154,23 @@ describe("TramiteNuevo", () => {
       "Documento A2",
     ]);
     expect(componente.etapasGestion).toHaveLength(7);
+  });
+
+  it("agrega antecedentes complementarios y elimina solo el seleccionado", () => {
+    componente.onTipoTramiteChange("tipo-a");
+    componente.onModalidadChange("principal");
+
+    componente.agregarAntecedenteComplementario();
+    componente.agregarAntecedenteComplementario();
+    componente.antecedentesComplementarios[0].antecedente = "Primero";
+    componente.antecedentesComplementarios[1].antecedente = "Segundo";
+
+    componente.eliminarAntecedenteComplementario(0);
+
+    expect(componente.antecedentesComplementarios).toHaveLength(1);
+    expect(componente.antecedentesComplementarios[0].antecedente).toBe(
+      "Segundo",
+    );
   });
 
   it("mantiene la estructura común de etapas para todos los tipos de trámite", () => {
@@ -188,6 +210,7 @@ describe("TramiteNuevo", () => {
     componente.onModalidadChange("principal");
     componente.antecedentesSeleccionadosBorrador = ["Documento A1"];
     componente.guardarSeleccionAntecedentes();
+    componente.agregarAntecedenteComplementario();
     componente.antecedentesComplementarios[0].antecedente =
       "Certificado extraordinario";
     componente.form.responsableInterno = "Claudio Doñas";

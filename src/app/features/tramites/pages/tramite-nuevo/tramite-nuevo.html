@@ -652,22 +652,40 @@
           <ng-template #body let-item let-i="rowIndex">
             <tr>
               <td class="antecedente-column">
-                <label class="visually-hidden" [for]="'antecedenteExtra' + i">
-                  Tipo de documento complementario {{ i + 1 }}
-                </label>
-                <p-select
-                  [inputId]="'antecedenteExtra' + i"
-                  [name]="'antecedenteExtra' + i"
-                  [(ngModel)]="item.antecedente"
-                  [options]="tiposDocumentoComplementario"
-                  placeholder="Seleccione tipo de documento"
-                  [loading]="catalogosCargando"
-                  [disabled]="catalogosCargando"
-                  [filter]="true"
-                  filterPlaceholder="Buscar tipo de documento"
-                  appendTo="body"
-                  styleClass="w-100"
-                />
+                <div class="antecedente-field-actions">
+                  <div class="antecedente-field-select">
+                    <label class="visually-hidden" [for]="'antecedenteExtra' + i">
+                      Tipo de documento complementario {{ i + 1 }}
+                    </label>
+                    <p-select
+                      [inputId]="'antecedenteExtra' + i"
+                      [name]="'antecedenteExtra' + i"
+                      [(ngModel)]="item.antecedente"
+                      [options]="tiposDocumentoComplementario"
+                      placeholder="Seleccione tipo de documento"
+                      [loading]="catalogosCargando"
+                      [disabled]="catalogosCargando"
+                      [filter]="true"
+                      filterPlaceholder="Buscar tipo de documento"
+                      appendTo="body"
+                      styleClass="w-100"
+                    />
+                  </div>
+                  <button
+                    pButton
+                    type="button"
+                    class="remove-antecedente-button"
+                    severity="danger"
+                    [text]="true"
+                    [rounded]="false"
+                    pTooltip="Eliminar antecedente complementario"
+                    tooltipPosition="top"
+                    aria-label="Eliminar antecedente complementario"
+                    (click)="eliminarAntecedenteComplementario(i)"
+                  >
+                    <svg data-p-icon="trash" aria-hidden="true"></svg>
+                  </button>
+                </div>
               </td>
 
               <td class="responsable-column">
