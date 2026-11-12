@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { ChangeDetectorRef, Component, Optional } from "@angular/core";
 import { finalize } from "rxjs";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
 import { GestionAlcanceInfo } from "../../shared/components/gestion-alcance-info/gestion-alcance-info";
@@ -34,12 +34,20 @@ export class Escritorio {
   loading = true;
   errorMessage = "";
 
-  constructor(tramitesMock: TramitesMock) {
-    tramitesMock.cargarTodos().pipe(finalize(() => { this.loading = false; })).subscribe({
+  constructor(
+    tramitesMock: TramitesMock,
+    @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
+  ) {
+    tramitesMock.cargarTodos().pipe(finalize(() => {
+      this.loading = false;
+      this.changeDetectorRef?.markForCheck();
+    })).subscribe({
       next: (tramites) => {
         this.gestiones = tramites;
       },
-      error: (error: Error) => { this.errorMessage = error.message; },
+      error: (error: Error) => {
+        this.errorMessage = error.message;
+      },
     });
   }
 }

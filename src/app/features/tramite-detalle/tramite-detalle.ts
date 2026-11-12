@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -189,6 +190,7 @@ export class TramiteDetalle {
     @Optional() private readonly identityApi: IdentityApiService | null = null,
     @Optional() private readonly bitacoraApi: BitacoraApiService | null = null,
     @Optional() private readonly catalogApi: CatalogApiService | null = null,
+    @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
   ) {}
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
@@ -324,12 +326,14 @@ export class TramiteDetalle {
 
     if (this.solicitudesDetallePendientes <= 0) {
       this.cargandoDetalle = false;
+      this.changeDetectorRef?.markForCheck();
     }
   }
 
   private cancelarCargaDetalle(): void {
     this.solicitudesDetallePendientes = 0;
     this.cargandoDetalle = false;
+    this.changeDetectorRef?.markForCheck();
   }
 
   private cargarDatosBackend(tramite: Tramite): void {

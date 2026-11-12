@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { ChangeDetectorRef, Component, Optional } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { finalize } from "rxjs";
 import { Breadcrumbs } from "../../shared/components/breadcrumbs/breadcrumbs";
@@ -37,7 +37,11 @@ export class TodasGestiones {
   readonly tramiteDetalleInicialId: string | number | null;
   readonly idEstacionInicial: string | null;
 
-  constructor(tramitesMock: TramitesMock, route?: ActivatedRoute) {
+  constructor(
+    tramitesMock: TramitesMock,
+    route?: ActivatedRoute,
+    @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
+  ) {
     const detalleParam = route?.snapshot.queryParamMap.get("detalle") ?? null;
     this.tramiteDetalleInicialId = detalleParam && /^\d+$/.test(detalleParam)
       ? Number(detalleParam)
@@ -45,14 +49,19 @@ export class TodasGestiones {
     this.idEstacionInicial =
       route?.snapshot.queryParamMap.get("estacion") ?? null;
 
-    tramitesMock.cargarTodos().pipe(finalize(() => { this.loading = false; })).subscribe({
+    tramitesMock.cargarTodos().pipe(finalize(() => {
+      this.loading = false;
+      this.changeDetectorRef?.markForCheck();
+    })).subscribe({
       next: (tramites) => {
         this.gestiones = tramites.map((tramite) => ({
           ...tramite,
           tieneDetalle: true,
         }));
       },
-      error: (error: Error) => { this.errorMessage = error.message; },
+      error: (error: Error) => {
+        this.errorMessage = error.message;
+      },
     });
   }
 
