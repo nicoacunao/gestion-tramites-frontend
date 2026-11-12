@@ -6,6 +6,7 @@ export interface AntecedenteRequeridoDetalle {
   antecedente: string;
   obligatorio: boolean;
   responsable: string;
+  responsableId?: string;
   estado: string;
   fechaCarga: string;
   archivo: string;
@@ -20,6 +21,7 @@ export interface AntecedenteComplementarioDetalle {
   tipoDocumento: string;
   solicitadoPor: string;
   responsable: string;
+  responsableId?: string;
   estado: string;
   fechaCarga: string;
   archivo: string;

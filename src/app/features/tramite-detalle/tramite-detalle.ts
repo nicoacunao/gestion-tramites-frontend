@@ -194,14 +194,14 @@ export class TramiteDetalle {
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
     this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => this.nombreAntecedente(item.backgroundId)))];
-    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
-    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
   }
 
   private aplicarEtapasBackend(items: BackendStage[]): void {
     this.etapasGestion = items.map((item, indice) => {
       const etapaEstandar = ETAPAS_ESTANDAR[indice];
-      return { id: item.id, version: item.version, etapa: etapaEstandar?.nombre ?? item.stageId, porcentaje: etapaEstandar?.porcentaje ?? 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: this.nombreResponsable(item.responsible ?? ""), observacion: item.notes ?? "" };
+      return { id: item.id, version: item.version, etapa: item.stageName || etapaEstandar?.nombre || item.stageId, porcentaje: item.percentage ?? etapaEstandar?.porcentaje ?? 0, estado: item.status, fechaEstimada: item.estimatedOn ?? "", fechaReal: item.completedOn ?? "", responsable: item.responsible ?? "", observacion: item.notes ?? "" };
     });
   }
 
@@ -340,7 +340,7 @@ export class TramiteDetalle {
     }
 
     const apiId = tramite.apiId;
-    this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; } });
+    this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; this.actualizarNombresResponsables(); } });
     this.managementApi.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
     this.managementApi.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
     this.bitacoraApi.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
@@ -364,6 +364,14 @@ export class TramiteDetalle {
     this.antecedentesRequeridos.forEach((item) => { item.antecedente = this.nombreAntecedente(item.antecedente); });
     this.antecedentesComplementarios.forEach((item) => { item.tipoDocumento = this.nombreAntecedente(item.tipoDocumento); });
     this.tiposAntecedenteAdicional = this.tiposAntecedenteAdicional.map((id) => this.nombreAntecedente(id));
+  }
+
+  private actualizarNombresResponsables(): void {
+    [...this.antecedentesRequeridos, ...this.antecedentesComplementarios].forEach((item) => {
+      if (item.responsableId) {
+        item.responsable = this.nombreResponsable(item.responsableId);
+      }
+    });
   }
 
   guardarCambios(): void {

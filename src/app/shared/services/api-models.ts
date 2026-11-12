@@ -133,6 +133,8 @@ export interface BackendStage {
   id: string;
   managementId: string;
   stageId: string;
+  stageName: string;
+  percentage: number;
   status: string;
   estimatedOn: string | null;
   completedOn: string | null;
