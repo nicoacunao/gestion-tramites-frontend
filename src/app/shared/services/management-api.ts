@@ -9,8 +9,9 @@ import {
 
 @Injectable({ providedIn: "root" })
 export class ManagementApiService extends ApiBaseService {
-  managements() {
-    return this.get<BackendManagement[]>("/gestiones/items");
+  managements(assignedToMe = false) {
+    const query = assignedToMe ? "?assignedToMe=true" : "";
+    return this.get<BackendManagement[]>(`/gestiones/items${query}`);
   }
 
   management(id: string) {

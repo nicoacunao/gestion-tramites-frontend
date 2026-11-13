@@ -171,7 +171,7 @@ export class Home {
   importRequestId = "";
 
   constructor(private readonly managementApi: ManagementApiService, private readonly stationApi: StationApiService) {
-    this.managementApi.managements().subscribe({
+    this.managementApi.managements(true).subscribe({
       next: (items) => {
         const userId = this.userSession.currentUser().id;
         this.tasks = userId

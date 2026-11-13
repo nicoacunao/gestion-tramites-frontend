@@ -13,11 +13,11 @@ export class TramitesMock {
 
   get usaApi(): boolean { return Boolean(this.api); }
 
-  cargarTodos(): Observable<Tramite[]> {
+  cargarTodos(assignedToMe = false): Observable<Tramite[]> {
     if (!this.api) {
       return throwError(() => new Error("El cliente API no está disponible."));
     }
-    return this.api.managements().pipe(
+    return this.api.managements(assignedToMe).pipe(
       map((items) => items.map((item) => this.fromBackend(item))),
       tap((items) => { this.tramites = items; }),
     );

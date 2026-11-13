@@ -40,7 +40,7 @@ export class Escritorio {
     userSession: UserSessionService,
     @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
   ) {
-    tramitesMock.cargarTodos().pipe(finalize(() => {
+    tramitesMock.cargarTodos(true).pipe(finalize(() => {
       this.loading = false;
       this.changeDetectorRef?.markForCheck();
     })).subscribe({
