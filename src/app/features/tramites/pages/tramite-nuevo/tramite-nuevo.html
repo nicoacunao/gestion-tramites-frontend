@@ -967,14 +967,32 @@
           *ngFor="let antecedente of antecedentesDisponibles; let i = index"
           class="antecedente-check-option d-flex align-items-start gap-3 border rounded-2 p-3"
           [for]="'antecedenteDisponible' + i"
+          [class.antecedente-check-option--selected]="estaSeleccionado(antecedente)"
+          [class.antecedente-check-option--partial]="estaParcialmenteSeleccionado(antecedente)"
+          [style.padding-left.px]="16 + profundidadAntecedente(antecedente) * 24"
+          [attr.aria-label]="antecedente.name + ', ' + estadoSeleccionAntecedente(antecedente)"
         >
           <p-checkbox
             class="flex-shrink-0 mt-1"
             [inputId]="'antecedenteDisponible' + i"
-            [value]="antecedente"
-            [(ngModel)]="antecedentesSeleccionadosBorrador"
+            [binary]="true"
+            [ngModel]="estaSeleccionado(antecedente)"
+            [indeterminate]="estaParcialmenteSeleccionado(antecedente)"
+            [disabled]="!puedeSeleccionarAntecedente(antecedente)"
+            (ngModelChange)="cambiarSeleccionAntecedente(antecedente, $event)"
           />
-          <span>{{ antecedente }}</span>
+          <span class="antecedente-check-label">
+            <span class="antecedente-level" [class.antecedente-level--parent]="antecedente.level === 'N2'">
+              {{ antecedente.level }}
+            </span>
+            <span>
+              <strong *ngIf="antecedente.level === 'N2'">{{ antecedente.name }}</strong>
+              <span *ngIf="antecedente.level !== 'N2'">{{ antecedente.name }}</span>
+              <small *ngIf="estaParcialmenteSeleccionado(antecedente)" class="d-block text-warning">
+                Selección parcial de hijos
+              </small>
+            </span>
+          </span>
         </label>
       </div>
     </div>

@@ -157,7 +157,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   creacionRequestId = "";
   creando = false;
   private responsablesApi: BackendUser[] = [];
-  private antecedentesCatalogoPorNombre = new Map<string, AntecedenteCatalogo>();
+  private antecedentesCatalogoPorId = new Map<string, AntecedenteCatalogo>();
   tramiteCreadoId: string | number = "";
   segundosRestantes = this.segundosRedireccion;
   mensajeCreacionVisible = false;
@@ -177,7 +177,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   };
 
   antecedentesRequeridos: Array<ReturnType<typeof this.crearAntecedente>> = [];
-  antecedentesDisponibles: string[] = [];
+  antecedentesDisponibles: AntecedenteCatalogo[] = [];
   antecedentesSeleccionadosBorrador: string[] = [];
   selectorAntecedentesVisible = false;
   antecedentesComplementarios: Array<ReturnType<typeof this.crearAntecedenteComplementario>> = [];
@@ -312,7 +312,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     }
 
     this.antecedentesSeleccionadosBorrador = this.antecedentesRequeridos.map(
-      (item) => item.antecedente,
+      (item) => item.backgroundId ?? item.antecedente,
     );
     this.selectorAntecedentesVisible = true;
   }
@@ -327,8 +327,85 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   seleccionarTodosAntecedentes(seleccionarTodos: boolean): void {
     this.antecedentesSeleccionadosBorrador = seleccionarTodos
-      ? [...this.antecedentesDisponibles]
+      ? this.antecedentesDisponibles.map(({ id }) => id)
       : [];
+  }
+
+  cambiarSeleccionAntecedente(
+    antecedente: AntecedenteCatalogo,
+    seleccionado: boolean,
+  ): void {
+    const seleccionados = new Set(this.antecedentesSeleccionadosBorrador);
+
+    if (seleccionado) {
+      this.agregarAntecedenteYPadres(antecedente, seleccionados);
+      if (antecedente.level === "N2") {
+        this.agregarDescendientes(antecedente.id, seleccionados);
+      }
+    } else {
+      this.eliminarAntecedenteYDescendientes(antecedente.id, seleccionados);
+    }
+
+    this.antecedentesSeleccionadosBorrador = this.antecedentesDisponibles
+      .filter(({ id }) => seleccionados.has(id))
+      .map(({ id }) => id);
+  }
+
+  estaSeleccionado(antecedente: AntecedenteCatalogo): boolean {
+    return this.antecedentesSeleccionadosBorrador.includes(antecedente.id);
+  }
+
+  estaParcialmenteSeleccionado(antecedente: AntecedenteCatalogo): boolean {
+    const descendientes = this.descendientesDe(antecedente.id);
+    const seleccionados = descendientes.filter(({ id }) =>
+      this.antecedentesSeleccionadosBorrador.includes(id),
+    ).length;
+
+    return (
+      descendientes.length > 0 &&
+      seleccionados > 0 &&
+      seleccionados < descendientes.length
+    );
+  }
+
+  profundidadAntecedente(antecedente: AntecedenteCatalogo): number {
+    let profundidad = 0;
+    let parentId = antecedente.parentBackgroundId;
+    const visitados = new Set<string>();
+
+    while (parentId && !visitados.has(parentId)) {
+      visitados.add(parentId);
+      profundidad += 1;
+      parentId = this.antecedentesCatalogoPorId.get(parentId)?.parentBackgroundId ?? null;
+    }
+
+    return profundidad;
+  }
+
+  estadoSeleccionAntecedente(antecedente: AntecedenteCatalogo): string {
+    if (this.estaParcialmenteSeleccionado(antecedente)) {
+      return "Parcialmente seleccionado";
+    }
+
+    return this.estaSeleccionado(antecedente)
+      ? "Seleccionado"
+      : "No seleccionado";
+  }
+
+  puedeSeleccionarAntecedente(antecedente: AntecedenteCatalogo): boolean {
+    let parentId = antecedente.parentBackgroundId;
+    const visitados = new Set<string>();
+
+    while (parentId && !visitados.has(parentId)) {
+      if (!this.antecedentesCatalogoPorId.has(parentId)) {
+        return false;
+      }
+
+      visitados.add(parentId);
+      parentId = this.antecedentesCatalogoPorId.get(parentId)?.parentBackgroundId ?? null;
+    }
+
+    return true;
   }
 
   guardarSeleccionAntecedentes(): void {
@@ -337,15 +414,14 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     }
 
     const antecedentesConfigurados = new Map(
-      this.antecedentesRequeridos.map((item) => [item.antecedente, item]),
+      this.antecedentesRequeridos.map((item) => [item.backgroundId ?? item.antecedente, item]),
     );
     const seleccionados = new Set(this.antecedentesSeleccionadosBorrador);
 
     this.antecedentesRequeridos = this.antecedentesDisponibles
-      .filter((antecedente) => seleccionados.has(antecedente))
+      .filter(({ id }) => seleccionados.has(id))
       .map(
-        (antecedente) =>
-          antecedentesConfigurados.get(antecedente) ??
+        (antecedente) => antecedentesConfigurados.get(antecedente.id) ??
           this.crearAntecedente(antecedente),
       );
     this.selectorAntecedentesVisible = false;
@@ -389,7 +465,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     const tipo = this.tipoSeleccionado;
 
     this.antecedentesDisponibles = [];
-    this.antecedentesCatalogoPorNombre = new Map();
+    this.antecedentesCatalogoPorId = new Map();
     this.antecedentesRequeridos = [];
     this.antecedentesSeleccionadosBorrador = [];
     this.selectorAntecedentesVisible = false;
@@ -411,13 +487,17 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       subtramites = tipo.tramitesEspecificos;
     }
 
-    const antecedentes = subtramites.flatMap((item) => item.antecedentes);
-    this.antecedentesCatalogoPorNombre = new Map(
-      antecedentes.map((antecedente) => [antecedente.name, antecedente]),
-    );
-    this.antecedentesDisponibles = [
-      ...new Set(antecedentes.map(({ name }) => name)),
+    const antecedentes = [
+      ...new Map(
+        subtramites
+          .flatMap((item) => item.antecedentes)
+          .map((antecedente) => [antecedente.id, antecedente]),
+      ).values(),
     ];
+    this.antecedentesCatalogoPorId = new Map(
+      antecedentes.map((antecedente) => [antecedente.id, antecedente]),
+    );
+    this.antecedentesDisponibles = antecedentes;
 
     if (!subtramites.length) {
       return;
@@ -428,14 +508,12 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     );
   }
 
-  private crearAntecedente(antecedente: string) {
-    const catalogo = this.antecedentesCatalogoPorNombre.get(antecedente);
-
+  private crearAntecedente(catalogo: AntecedenteCatalogo) {
     return {
-      antecedente,
-      backgroundId: catalogo?.id ?? null,
-      level: catalogo?.level ?? "N3",
-      parentBackgroundId: catalogo?.parentBackgroundId ?? null,
+      antecedente: catalogo.name,
+      backgroundId: catalogo.id,
+      level: catalogo.level,
+      parentBackgroundId: catalogo.parentBackgroundId,
       obligatorio: true,
       responsable: this.form.responsableInterno,
       estado: "Pendiente",
@@ -458,6 +536,62 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       archivo: null as File | null,
       archivoNombre: "",
     };
+  }
+
+  private agregarAntecedenteYPadres(
+    antecedente: AntecedenteCatalogo,
+    seleccionados: Set<string>,
+  ): void {
+    seleccionados.add(antecedente.id);
+
+    if (!antecedente.parentBackgroundId) {
+      return;
+    }
+
+    const padre = this.antecedentesCatalogoPorId.get(antecedente.parentBackgroundId);
+    if (padre) {
+      this.agregarAntecedenteYPadres(padre, seleccionados);
+    }
+  }
+
+  private agregarDescendientes(
+    antecedenteId: string,
+    seleccionados: Set<string>,
+  ): void {
+    this.antecedentesDisponibles
+      .filter(({ parentBackgroundId }) => parentBackgroundId === antecedenteId)
+      .forEach((hijo) => {
+        seleccionados.add(hijo.id);
+        this.agregarDescendientes(hijo.id, seleccionados);
+      });
+  }
+
+  private eliminarAntecedenteYDescendientes(
+    antecedenteId: string,
+    seleccionados: Set<string>,
+  ): void {
+    seleccionados.delete(antecedenteId);
+    this.antecedentesDisponibles
+      .filter(({ parentBackgroundId }) => parentBackgroundId === antecedenteId)
+      .forEach((hijo) => this.eliminarAntecedenteYDescendientes(hijo.id, seleccionados));
+  }
+
+  private descendientesDe(antecedenteId: string): AntecedenteCatalogo[] {
+    return this.antecedentesDisponibles.filter(({ parentBackgroundId }) => {
+      let currentParentId = parentBackgroundId;
+      const visitados = new Set<string>();
+
+      while (currentParentId && !visitados.has(currentParentId)) {
+        if (currentParentId === antecedenteId) {
+          return true;
+        }
+
+        visitados.add(currentParentId);
+        currentParentId = this.antecedentesCatalogoPorId.get(currentParentId)?.parentBackgroundId ?? null;
+      }
+
+      return false;
+    });
   }
 
   private crearEtapa(etapa: string, porcentaje: number) {
