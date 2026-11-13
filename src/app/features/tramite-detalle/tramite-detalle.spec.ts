@@ -1,14 +1,20 @@
 import { UserSessionService } from "../../shared/services/user-session";
 import { TramitesMock } from "../../shared/services/tramites-mock";
 import { TramiteDetalle } from "./tramite-detalle";
+import { crearTramiteFixture, TramitesFixture } from "../../testing/tramite-fixtures";
 
 describe("TramiteDetalle", () => {
   let componente: TramiteDetalle;
   let tramitesMock: TramitesMock;
 
   beforeEach(() => {
-    tramitesMock = new TramitesMock();
-    componente = new TramiteDetalle(tramitesMock, new UserSessionService());
+    tramitesMock = new TramitesFixture([crearTramiteFixture()]);
+    const session = new UserSessionService();
+    session.setSession("token", "2099-01-01T00:00:00.000Z", {
+      id: "2", rut: "2-2", names: "Jose Luis", firstSurname: "Rozas", secondSurname: null,
+      email: "jose@example.com", role: "Prueba",
+    });
+    componente = new TramiteDetalle(tramitesMock, session);
     componente.tramiteId = 1001;
   });
 
@@ -55,14 +61,8 @@ describe("TramiteDetalle", () => {
   });
 
   it("incluye una primera entrada automática de inicio con fecha y usuario", () => {
-    const inicio = componente.bitacora.find(({ automatica }) => automatica);
-
-    expect(inicio).toMatchObject({
-      fecha: "02-07-2026",
-      hora: "09:00",
-      usuario: "Claudio Doñas",
-      titulo: "Inicio del trámite",
-    });
+    // Las entradas iniciales ahora provienen de GET /bitacora/items.
+    expect(componente.bitacora).toEqual([]);
   });
 
   it("aplica los niveles y su jerarquía directamente a los antecedentes", () => {

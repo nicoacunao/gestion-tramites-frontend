@@ -7,7 +7,12 @@ describe("BitacoraPanel", () => {
 
   beforeEach(() => {
     entradaEmitida = undefined;
-    componente = new BitacoraPanel(new UserSessionService());
+    const session = new UserSessionService();
+    session.setSession("token", "2099-01-01T00:00:00.000Z", {
+      id: "2", rut: "2-2", names: "Jose Luis", firstSurname: "Rozas", secondSurname: null,
+      email: "jose@example.com", role: "Prueba",
+    });
+    componente = new BitacoraPanel(session);
     componente.contextoId = 1001;
     componente.entradaRegistrada.subscribe((entrada) => {
       entradaEmitida = entrada;

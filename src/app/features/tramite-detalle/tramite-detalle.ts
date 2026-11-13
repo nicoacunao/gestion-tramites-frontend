@@ -313,6 +313,9 @@ export class TramiteDetalle {
 
     antecedente.archivo = archivo.name;
     antecedente.fechaCarga = this.formatearFecha(new Date());
+    if ("target" in event) {
+      ((event as Event).target as HTMLInputElement).value = "";
+    }
   }
 
   actualizarEstadoEtapa(indice: number, estado: string): void {

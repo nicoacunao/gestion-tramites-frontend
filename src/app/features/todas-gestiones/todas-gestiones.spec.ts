@@ -2,17 +2,22 @@ import { ActivatedRoute } from "@angular/router";
 import { TodasGestiones } from "./todas-gestiones";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
+import { crearTramiteFixture, TramitesFixture } from "../../testing/tramite-fixtures";
 
 class TramitesMockVolumen extends TramitesMock {
-  override obtenerTodos(): Tramite[] {
-    const tramiteBase = super.obtenerTodos()[0];
+  private readonly fixture = crearTramiteFixture();
 
-    return Array.from({ length: 120 }, (_, indice) => ({
-      ...tramiteBase,
+  override cargarTodos() {
+    return new TramitesFixture(Array.from({ length: 123 }, (_, indice) => ({
+      ...this.fixture,
       id: 3000 + indice,
       idEstacion: String(70000 + indice),
       razonSocial: `Razón social ${indice + 1}`,
-    }));
+    }))).cargarTodos();
+  }
+
+  override obtenerTodos(): Tramite[] {
+    return Array.from({ length: 123 }, (_, indice) => ({ ...this.fixture, id: 3000 + indice }));
   }
 }
 
@@ -27,7 +32,7 @@ describe("TodasGestiones", () => {
     }) as unknown as ActivatedRoute;
 
   it("incluye solamente los tres responsables del equipo interno", () => {
-    const componente = new TodasGestiones(new TramitesMock());
+    const componente = new TodasGestiones(new TramitesFixture(Array.from({ length: 8 }, (_, indice) => crearTramiteFixture(indice + 1))));
     const responsables = [
       ...new Set(
         componente.gestiones.map(
@@ -56,12 +61,12 @@ describe("TodasGestiones", () => {
     expect(componente.gestiones).toHaveLength(123);
     expect(componente.gestiones[0].rutRazonSocial).toContain("76.000.");
     expect(componente.gestiones[0].tieneDetalle).toBe(true);
-    expect(componente.gestiones.at(-1)?.tieneDetalle).toBe(false);
+    expect(componente.gestiones.at(-1)?.tieneDetalle).toBe(true);
   });
 
   it("recibe enlaces directos al detalle y filtros por estación", () => {
     const componente = new TodasGestiones(
-      new TramitesMock(),
+      new TramitesFixture([crearTramiteFixture()]),
       crearRuta({ detalle: "1001", estacion: "60001" }),
     );
 

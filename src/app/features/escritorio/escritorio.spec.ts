@@ -1,23 +1,28 @@
 import { Escritorio } from "./escritorio";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
+import { crearTramiteFixture, TramitesFixture } from "../../testing/tramite-fixtures";
 
 class TramitesMockVolumen extends TramitesMock {
-  override obtenerTodos(): Tramite[] {
-    const tramiteBase = super.obtenerTodos()[0];
+  private readonly fixture = crearTramiteFixture();
 
-    return Array.from({ length: 120 }, (_, indice) => ({
-      ...tramiteBase,
+  override cargarTodos() {
+    return new TramitesFixture(Array.from({ length: 120 }, (_, indice) => ({
+      ...this.fixture,
       id: 3000 + indice,
       idEstacion: String(70000 + indice),
       razonSocial: `Razón social ${indice + 1}`,
-    }));
+    }))).cargarTodos();
+  }
+
+  override obtenerTodos(): Tramite[] {
+    return Array.from({ length: 120 }, (_, indice) => ({ ...this.fixture, id: 3000 + indice }));
   }
 }
 
 describe("Escritorio", () => {
   it("construye las gestiones asociadas al usuario", () => {
-    const componente = new Escritorio(new TramitesMock());
+    const componente = new Escritorio(new TramitesFixture(Array.from({ length: 5 }, (_, indice) => crearTramiteFixture(indice + 1))));
 
     expect(componente.gestiones).toHaveLength(5);
     expect(componente.gestiones[0].codigo).toMatch(/^N\d-/);

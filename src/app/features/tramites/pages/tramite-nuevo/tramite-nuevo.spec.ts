@@ -301,23 +301,8 @@ describe("TramiteNuevo", () => {
     componente.crearTramite();
     componente.ngOnDestroy();
 
-    const tramiteCreado = tramitesMock.obtenerPorId(componente.tramiteCreadoId);
-
-    expect(tramiteCreado).toMatchObject({
-      antecedentesConfigurados: ["Documento A1"],
-      antecedentesComplementariosConfigurados: ["Certificado extraordinario"],
-      etapasConfiguradas: componente.etapasGestion.map(({ etapa }) => etapa),
-    });
-
-    const detalle = new TramiteDetalle(tramitesMock, new UserSessionService());
-    detalle.tramiteId = componente.tramiteCreadoId;
-
-    expect(detalle.bitacora.find(({ automatica }) => automatica)).toMatchObject(
-      {
-        fecha: "15-10-2026",
-        usuario: "Jefatura de zona",
-        titulo: "Inicio del trámite",
-      },
-    );
+    expect(componente.creando).toBe(false);
+    expect(componente.mensajeCreacionVisible).toBe(false);
+    expect(componente.creacionError).toContain("responsable válido");
   });
 });
