@@ -252,33 +252,6 @@
           </div>
         </div>
 
-        <ng-container *ngFor="let campo of tipoSeleccionado?.datosAdicionales ?? []">
-          <div class="col-12 col-md-6 col-xl-4">
-            <div class="form-field">
-              <label [for]="'dato-' + campo.id">{{ campo.label }}</label>
-              <p-select
-                *ngIf="campo.tipo === 'select'; else campoTexto"
-                [inputId]="'dato-' + campo.id"
-                [name]="'dato-' + campo.id"
-                [(ngModel)]="form.datosAdicionales[campo.id]"
-                [options]="campo.opciones ?? []"
-                [required]="campo.requerido"
-                styleClass="w-100"
-              />
-              <ng-template #campoTexto>
-                <input
-                  pInputText
-                  [id]="'dato-' + campo.id"
-                  [name]="'dato-' + campo.id"
-                  [(ngModel)]="form.datosAdicionales[campo.id]"
-                  [required]="campo.requerido"
-                  class="w-100"
-                />
-              </ng-template>
-            </div>
-          </div>
-        </ng-container>
-
         <div class="col-12 col-md-6 col-xl-4">
           <div class="form-field">
             <label for="razonSocial">Razón social</label>

@@ -11,9 +11,6 @@ class TramitesMockVolumen extends TramitesMock {
       id: 3000 + indice,
       idEstacion: String(70000 + indice),
       razonSocial: `Razón social ${indice + 1}`,
-      datosAdicionales: {
-        rutRazonSocial: `76.000.${String(indice).padStart(3, "0")}-K`,
-      },
     }));
   }
 }

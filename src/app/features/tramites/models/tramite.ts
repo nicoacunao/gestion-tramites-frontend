@@ -79,7 +79,6 @@ export interface Tramite {
   concesionario: string;
   solicitanteCopec: string;
   modalidadCreacion?: "principal" | "subtramite";
-  datosAdicionales?: Record<string, string>;
   subtramitesAsociados?: string[];
   antecedentesConfigurados?: string[];
   antecedentesComplementariosConfigurados?: string[];

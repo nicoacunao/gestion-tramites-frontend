@@ -83,10 +83,6 @@ export class TramitesMock {
       fechaEstimadaTermino: item.fechaEstimadaTermino,
       fechaUltimaRevision: this.fechaParaVista(item.lastReviewedOn),
       modalidadCreacion: item.creationMode,
-      datosAdicionales: {
-        rutRazonSocial: item.rutRazonSocial,
-        representanteLegal: item.representanteLegal,
-      },
     };
   }
 

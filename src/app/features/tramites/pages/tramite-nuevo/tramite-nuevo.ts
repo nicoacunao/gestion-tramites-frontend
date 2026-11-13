@@ -55,17 +55,25 @@ interface EstacionServicio {
   rut: string;
 }
 
+type NivelAntecedente = "N2" | "N3" | "N4";
+
+interface AntecedenteCatalogo {
+  id: string;
+  name: string;
+  level: NivelAntecedente;
+  parentBackgroundId: string | null;
+}
+
 interface TramiteEspecifico {
   id: string;
   nombre: string;
-  antecedentes: string[];
+  antecedentes: AntecedenteCatalogo[];
 }
 
 interface TipoTramite {
   id: string;
   nombre: string;
   scopeCode?: string;
-  datosAdicionales?: Array<{ id: string; label: string; tipo: "text" | "select"; requerido: boolean; opciones?: string[] }>;
   segundoNivelLabel: string;
   requiereSeleccionSegundoNivelParaPrincipal: boolean;
   tramitesEspecificos: TramiteEspecifico[];
@@ -149,6 +157,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   creacionRequestId = "";
   creando = false;
   private responsablesApi: BackendUser[] = [];
+  private antecedentesCatalogoPorNombre = new Map<string, AntecedenteCatalogo>();
   tramiteCreadoId: string | number = "";
   segundosRestantes = this.segundosRedireccion;
   mensajeCreacionVisible = false;
@@ -165,7 +174,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     solicitanteCopec: "",
     fechaApertura: "",
     fechaEstimadaTermino: "",
-    datosAdicionales: {} as Record<string, string>,
   };
 
   antecedentesRequeridos: Array<ReturnType<typeof this.crearAntecedente>> = [];
@@ -219,9 +227,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.modalidadCreacion = null;
     this.form.tramiteEspecifico = "";
     this.tramitesEspecificos = this.tipoSeleccionado?.tramitesEspecificos ?? [];
-    this.form.datosAdicionales = Object.fromEntries(
-      (this.tipoSeleccionado?.datosAdicionales ?? []).map(({ id }) => [id, ""]),
-    );
     this.reconfigurarFormulario();
   }
 
@@ -384,6 +389,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     const tipo = this.tipoSeleccionado;
 
     this.antecedentesDisponibles = [];
+    this.antecedentesCatalogoPorNombre = new Map();
     this.antecedentesRequeridos = [];
     this.antecedentesSeleccionadosBorrador = [];
     this.selectorAntecedentesVisible = false;
@@ -405,10 +411,13 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       subtramites = tipo.tramitesEspecificos;
     }
 
-    const antecedentes = [
-      ...new Set(subtramites.flatMap((item) => item.antecedentes)),
+    const antecedentes = subtramites.flatMap((item) => item.antecedentes);
+    this.antecedentesCatalogoPorNombre = new Map(
+      antecedentes.map((antecedente) => [antecedente.name, antecedente]),
+    );
+    this.antecedentesDisponibles = [
+      ...new Set(antecedentes.map(({ name }) => name)),
     ];
-    this.antecedentesDisponibles = antecedentes;
 
     if (!subtramites.length) {
       return;
@@ -420,8 +429,13 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   }
 
   private crearAntecedente(antecedente: string) {
+    const catalogo = this.antecedentesCatalogoPorNombre.get(antecedente);
+
     return {
       antecedente,
+      backgroundId: catalogo?.id ?? null,
+      level: catalogo?.level ?? "N3",
+      parentBackgroundId: catalogo?.parentBackgroundId ?? null,
       obligatorio: true,
       responsable: this.form.responsableInterno,
       estado: "Pendiente",
@@ -434,6 +448,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private crearAntecedenteComplementario() {
     return {
       antecedente: "",
+      backgroundId: null,
+      level: "N2" as const,
+      parentBackgroundId: null,
       obligatorio: false,
       responsable: this.form.responsableInterno,
       estado: "Pendiente",
@@ -543,16 +560,14 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       lastReviewedOn: null, priority: this.form.prioridad || "Media",
       requesterName: this.form.solicitanteCopec || "Sin especificar", status: this.form.estado || "Borrador",
       creationMode: modalidadCreacion, specificManagementId: subtramite?.id ?? null,
-      datosAdicionales: {
-        nombreConcesionario: this.form.nombreConcesionario || "Sin especificar",
-        ...this.form.datosAdicionales,
-      },
       subtramitesAsociados: modalidadCreacion === "principal" && !subtramite ? this.tramitesEspecificos.map((item) => item.id) : subtramite ? [subtramite.id] : [],
       antecedentesConfigurados: this.antecedentesRequeridos.map((item) => item.antecedente),
       antecedentesComplementariosConfigurados: this.antecedentesComplementarios.map((item) => item.antecedente.trim()).filter(Boolean),
       etapasConfiguradas: this.etapasGestion.map((item) => item.etapa),
       requiredBackgrounds: this.antecedentesRequeridos.map((item) => ({
-        backgroundId: null,
+        backgroundId: item.backgroundId,
+        parentBackgroundId: item.parentBackgroundId,
+        level: item.level,
         name: item.antecedente,
         category: "requerido",
         required: true,
@@ -565,7 +580,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       complementaryBackgrounds: this.antecedentesComplementarios
         .filter((item) => item.antecedente.trim())
         .map((item) => ({
-          backgroundId: null,
+          backgroundId: item.backgroundId,
+          parentBackgroundId: item.parentBackgroundId,
+          level: item.level,
           name: item.antecedente.trim(),
           category: "complementario",
           required: false,
@@ -717,7 +734,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         .map((gestion) => ({
           id: gestion.id,
           nombre: gestion.name,
-          antecedentes: gestion.backgrounds?.map((background) => background.name) ?? [],
+          antecedentes: gestion.backgrounds ?? [],
         })),
     };
   }
