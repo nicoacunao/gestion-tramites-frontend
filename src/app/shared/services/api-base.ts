@@ -29,14 +29,14 @@ export abstract class ApiBaseService {
 
   protected request<T>(
     path: string,
-    options: { method: "get" | "post" | "put"; body?: object },
+    options: { method: "get" | "post" | "put"; body?: object | FormData; headers?: Record<string, string> },
   ): Observable<T> {
     const url = `${this.baseUrl}${path}`;
     const request = options.method === "get"
-      ? this.http.get<T>(url)
+      ? this.http.get<T>(url, { headers: options.headers })
       : options.method === "post"
-        ? this.http.post<T>(url, options.body)
-        : this.http.put<T>(url, options.body);
+        ? this.http.post<T>(url, options.body, { headers: options.headers })
+        : this.http.put<T>(url, options.body, { headers: options.headers });
 
     return request.pipe(
       catchError((error: HttpErrorResponse) =>
@@ -47,8 +47,17 @@ export abstract class ApiBaseService {
 
   protected createApiError(error: HttpErrorResponse): ApiClientError {
     const body = this.parseErrorBody(error.error);
+    const fallback = error.status === 401
+      ? "La sesión no es válida o ha expirado."
+      : error.status === 403
+        ? "No tienes permisos para realizar esta operación."
+        : error.status === 409
+          ? "La información cambió en otra sesión. Recarga e inténtalo nuevamente."
+          : error.status === 503
+            ? "El servicio externo de almacenamiento no está configurado."
+            : "No fue posible completar la operación.";
     return new ApiClientError(
-      body?.error?.message ?? "No fue posible completar la operación.",
+      body?.error?.message ?? fallback,
       error.status,
       body?.error?.code,
       body?.meta?.requestId,

@@ -58,4 +58,11 @@ export class ManagementApiService extends ApiBaseService {
       { method: "put", body },
     ).pipe(map(({ data }) => data));
   }
+
+  createBackground(managementId: string, body: object) {
+    return this.request<{ data: BackendBackground | null }>(
+      `/gestiones/items/${encodeURIComponent(managementId)}/backgrounds`,
+      { method: "post", body },
+    ).pipe(map(({ data }) => data));
+  }
 }

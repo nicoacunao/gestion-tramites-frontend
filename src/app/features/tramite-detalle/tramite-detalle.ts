@@ -415,7 +415,7 @@ export class TramiteDetalle {
         .map((item) => this.managementApi!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, uploadedAt: this.fechaParaApi(item.fechaCarga), version: item.version }));
       const etapas = this.etapasGestion
         .filter((item) => item.id && item.version !== undefined)
-        .map((item) => this.managementApi!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
+        .map((item) => this.managementApi!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsibleUserId: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
       this.managementApi.management(this.tramite.apiId).pipe(
         map((management) => this.managementApi!.updateManagement(this.tramite!.apiId!, {
           ...management,

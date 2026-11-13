@@ -93,8 +93,6 @@ export class Bitacora {
       registeredAt: entrada.hora,
       title: entrada.titulo,
       comment: entrada.comentario,
-      authorName: entrada.usuario,
-      authorInitials: entrada.iniciales,
       type: entrada.tipo ?? "novedad",
       automatic: entrada.automatica,
     }).subscribe({ error: () => undefined });
