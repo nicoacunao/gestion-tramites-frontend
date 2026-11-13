@@ -101,6 +101,7 @@
     </form>
   </section>
 
+  @if (entradas.length > 0) {
   <section class="history" [attr.aria-labelledby]="historialTituloId">
     <div class="history-heading">
       <h3 [id]="historialTituloId">Historial de la bitácora</h3>
@@ -137,4 +138,5 @@
       </ng-template>
     </p-timeline>
   </section>
+  }
 </div>

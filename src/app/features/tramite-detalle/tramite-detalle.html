@@ -172,13 +172,12 @@
 
         <div class="table-responsive">
           <table
-            class="table table-hover align-middle mb-0 levelled-antecedents-table"
+            class="table table-hover align-middle mb-0 levelled-antecedents-table required-antecedents-table"
           >
             <thead>
               <tr>
                 <th class="level-column">Nivel</th>
                 <th>Antecedente</th>
-                <th>Condición</th>
                 <th>Responsable</th>
                 <th>Estado</th>
                 <th>Fecha de carga</th>
@@ -209,10 +208,6 @@
                     <span>{{ fila.antecedente.antecedente }}</span>
                   </div>
                 </td>
-                <td>
-                  {{ fila.antecedente.obligatorio ? "Obligatorio" : "Opcional"
-                  }}
-                </td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
                   <p-select
@@ -225,65 +220,125 @@
                     panelStyleClass="detail-status-select-panel"
                   />
                 </td>
-                <td>{{ fila.antecedente.fechaCarga }}</td>
                 <td>
-                  @if (tieneArchivo(fila.antecedente.archivo)) {
-                  <div class="file-cell">
-                    <span class="file-name"
-                      >{{ fila.antecedente.archivo }}</span
-                    >
-                    <div class="file-actions">
-                      <button
-                        type="button"
-                        class="file-action-button"
-                        title="Descargar archivo"
-                        [attr.aria-label]="
-                          'Descargar ' + fila.antecedente.archivo
-                        "
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M12 3v12M7 10l5 5 5-5M5 20h14"></path>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="file-action-button"
-                        title="Visualizar archivo"
-                        [attr.aria-label]="
-                          'Visualizar ' + fila.antecedente.archivo
-                        "
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path
-                            d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
-                          ></path>
-                          <circle cx="12" cy="12" r="2.5"></circle>
-                        </svg>
-                      </button>
+                  <p-datepicker
+                    [inputId]="'fecha-carga-requerido-' + fila.antecedente.id"
+                    [name]="'fechaCargaRequerido' + fila.antecedente.id"
+                    [(ngModel)]="fila.antecedente.fechaCarga"
+                    dataType="string"
+                    dateFormat="dd-mm-yy"
+                    placeholder="dd-mm-aaaa"
+                    [showIcon]="true"
+                    iconDisplay="input"
+                    appendTo="body"
+                    styleClass="stage-date-input"
+                    inputStyleClass="stage-date-input"
+                  />
+                </td>
+                <td>
+                  <div
+                    class="file-cell file-cell--with-upload"
+                    [class.file-cell--has-file]="
+                      tieneArchivo(fila.antecedente.archivo)
+                    "
+                  >
+                    @if (tieneArchivo(fila.antecedente.archivo)) {
+                    <div class="file-cell__details">
+                      <span class="file-name">
+                        {{ fila.antecedente.archivo }}
+                      </span>
+                      <div class="file-actions">
+                        <button
+                          type="button"
+                          class="file-action-button"
+                          title="Descargar archivo"
+                          [attr.aria-label]="
+                            'Descargar ' + fila.antecedente.archivo
+                          "
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M12 3v12M7 10l5 5 5-5M5 20h14"
+                            ></path>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="file-action-button"
+                          title="Visualizar archivo"
+                          [attr.aria-label]="
+                            'Visualizar ' + fila.antecedente.archivo
+                          "
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                            ></path>
+                            <circle cx="12" cy="12" r="2.5"></circle>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    }
+                    <p-inputgroup class="antecedent-file-inputgroup">
+                      <p-inputgroup-addon>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="file-label-icon">
+                          <path d="M4 5v6l9 9 6-6-9-9H4Z" />
+                          <circle cx="8" cy="8" r="1.2" />
+                        </svg>
+                      </p-inputgroup-addon>
+                      <input
+                        pInputText
+                        [value]="
+                          tieneArchivo(fila.antecedente.archivo)
+                            ? fila.antecedente.archivo
+                            : ''
+                        "
+                        placeholder="Archivo"
+                        readonly
+                        [attr.aria-label]="
+                          'Archivo de ' + fila.antecedente.antecedente
+                        "
+                      />
+                      <p-inputgroup-addon>
+                        <p-fileupload
+                          mode="basic"
+                          [name]="'archivoRequerido' + fila.antecedente.id"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                          [maxFileSize]="10000000"
+                          chooseLabel="Subir"
+                          [chooseButtonProps]="{
+                            severity: 'secondary',
+                            variant: 'text'
+                          }"
+                          chooseStyleClass="antecedent-file-choose-button"
+                          [customUpload]="true"
+                          [showCancelButton]="false"
+                          [showUploadButton]="false"
+                          styleClass="antecedent-file-upload"
+                          (onSelect)="
+                            cargarArchivoAntecedente(
+                              $event,
+                              fila.antecedente
+                            )
+                          "
+                        >
+                          <ng-template #chooseicon>
+                            <svg data-p-icon="upload" aria-hidden="true"></svg>
+                          </ng-template>
+                          <ng-template #filelabel></ng-template>
+                        </p-fileupload>
+                      </p-inputgroup-addon>
+                    </p-inputgroup>
                   </div>
-                  } @else {
-                  <div class="file-upload-control">
-                    <input
-                      class="file-picker__input"
-                      type="file"
-                      [id]="'archivo-requerido-' + fila.antecedente.id"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                      (change)="
-                        cargarArchivoAntecedente($event, fila.antecedente)
-                      "
-                    />
-                    <label
-                      class="file-upload-button"
-                      [for]="'archivo-requerido-' + fila.antecedente.id"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 17V4M7 9l5-5 5 5M5 20h14"></path>
-                      </svg>
-                      Subir archivo
-                    </label>
-                  </div>
-                  }
                 </td>
                 <td>
                   <div class="table-actions">
@@ -326,6 +381,7 @@
         </div>
       </p-panel>
 
+      @if (antecedentesComplementarios.length > 0) {
       <p-panel
         header="Antecedentes complementarios"
         styleClass="detail-panel table-panel documents-panel"
@@ -462,13 +518,12 @@
 
         <div class="table-responsive">
           <table
-            class="table table-hover align-middle mb-0 levelled-antecedents-table"
+            class="table table-hover align-middle mb-0 levelled-antecedents-table complementary-antecedents-table"
           >
             <thead>
               <tr>
                 <th class="level-column">Nivel</th>
                 <th>Tipo de documento</th>
-                <th>Solicitado por</th>
                 <th>Responsable</th>
                 <th>Estado</th>
                 <th>Fecha de carga</th>
@@ -499,7 +554,6 @@
                     <span>{{ fila.antecedente.tipoDocumento }}</span>
                   </div>
                 </td>
-                <td>{{ fila.antecedente.solicitadoPor }}</td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
                   <p-select
@@ -514,63 +568,113 @@
                 </td>
                 <td>{{ fila.antecedente.fechaCarga }}</td>
                 <td>
-                  @if (tieneArchivo(fila.antecedente.archivo)) {
-                  <div class="file-cell">
-                    <span class="file-name"
-                      >{{ fila.antecedente.archivo }}</span
-                    >
-                    <div class="file-actions">
-                      <button
-                        type="button"
-                        class="file-action-button"
-                        title="Descargar archivo"
-                        [attr.aria-label]="
-                          'Descargar ' + fila.antecedente.archivo
-                        "
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M12 3v12M7 10l5 5 5-5M5 20h14"></path>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        class="file-action-button"
-                        title="Visualizar archivo"
-                        [attr.aria-label]="
-                          'Visualizar ' + fila.antecedente.archivo
-                        "
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path
-                            d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
-                          ></path>
-                          <circle cx="12" cy="12" r="2.5"></circle>
-                        </svg>
-                      </button>
+                  <div
+                    class="file-cell file-cell--with-upload"
+                    [class.file-cell--has-file]="
+                      tieneArchivo(fila.antecedente.archivo)
+                    "
+                  >
+                    @if (tieneArchivo(fila.antecedente.archivo)) {
+                    <div class="file-cell__details">
+                      <span class="file-name">
+                        {{ fila.antecedente.archivo }}
+                      </span>
+                      <div class="file-actions">
+                        <button
+                          type="button"
+                          class="file-action-button"
+                          title="Descargar archivo"
+                          [attr.aria-label]="
+                            'Descargar ' + fila.antecedente.archivo
+                          "
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M12 3v12M7 10l5 5 5-5M5 20h14"
+                            ></path>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="file-action-button"
+                          title="Visualizar archivo"
+                          [attr.aria-label]="
+                            'Visualizar ' + fila.antecedente.archivo
+                          "
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+                            ></path>
+                            <circle cx="12" cy="12" r="2.5"></circle>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    }
+                    <p-inputgroup class="antecedent-file-inputgroup">
+                      <p-inputgroup-addon>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" class="file-label-icon">
+                          <path d="M4 5v6l9 9 6-6-9-9H4Z" />
+                          <circle cx="8" cy="8" r="1.2" />
+                        </svg>
+                      </p-inputgroup-addon>
+                      <input
+                        pInputText
+                        [value]="
+                          tieneArchivo(fila.antecedente.archivo)
+                            ? fila.antecedente.archivo
+                            : ''
+                        "
+                        placeholder="Archivo"
+                        readonly
+                        [attr.aria-label]="
+                          'Archivo de ' +
+                          fila.antecedente.tipoDocumento
+                        "
+                      />
+                      <p-inputgroup-addon>
+                        <p-fileupload
+                          mode="basic"
+                          [name]="
+                            'archivoComplementario' +
+                            fila.antecedente.id
+                          "
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                          [maxFileSize]="10000000"
+                          chooseLabel="Subir"
+                          [chooseButtonProps]="{
+                            severity: 'secondary',
+                            variant: 'text'
+                          }"
+                          chooseStyleClass="antecedent-file-choose-button"
+                          [customUpload]="true"
+                          [showCancelButton]="false"
+                          [showUploadButton]="false"
+                          styleClass="antecedent-file-upload"
+                          (onSelect)="
+                            cargarArchivoAntecedente(
+                              $event,
+                              fila.antecedente
+                            )
+                          "
+                        >
+                          <ng-template #chooseicon>
+                            <svg data-p-icon="upload" aria-hidden="true"></svg>
+                          </ng-template>
+                          <ng-template #filelabel></ng-template>
+                        </p-fileupload>
+                      </p-inputgroup-addon>
+                    </p-inputgroup>
                   </div>
-                  } @else {
-                  <div class="file-upload-control">
-                    <input
-                      class="file-picker__input"
-                      type="file"
-                      [id]="'archivo-complementario-' + fila.antecedente.id"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                      (change)="
-                        cargarArchivoAntecedente($event, fila.antecedente)
-                      "
-                    />
-                    <label
-                      class="file-upload-button"
-                      [for]="'archivo-complementario-' + fila.antecedente.id"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 17V4M7 9l5-5 5 5M5 20h14"></path>
-                      </svg>
-                      Subir archivo
-                    </label>
-                  </div>
-                  }
                 </td>
                 <td>
                   <div class="table-actions">
@@ -612,6 +716,7 @@
           </table>
         </div>
       </p-panel>
+      }
 
       <p-panel
         header="Etapas del trámite"
@@ -694,7 +799,22 @@
                     inputStyleClass="stage-date-input"
                   />
                 </td>
-                <td>{{ item.fechaReal }}</td>
+                <td>
+                  <p-datepicker
+                    [inputId]="'fecha-real-etapa-' + i"
+                    [name]="'fechaRealEtapa' + i"
+                    [(ngModel)]="item.fechaReal"
+                    dataType="string"
+                    dateFormat="dd-mm-yy"
+                    placeholder="dd-mm-aaaa"
+                    [showIcon]="true"
+                    [disabled]="!puedeEditarEtapa(i)"
+                    iconDisplay="input"
+                    appendTo="body"
+                    styleClass="stage-date-input"
+                    inputStyleClass="stage-date-input"
+                  />
+                </td>
                 <td>
                   <input
                     pInputText

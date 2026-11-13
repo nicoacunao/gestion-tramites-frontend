@@ -14,7 +14,11 @@ import { finalize, forkJoin, map, switchMap } from "rxjs";
 import { ButtonDirective } from "primeng/button";
 import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
+import { FileUploadModule } from "primeng/fileupload";
+import { InputGroupModule } from "primeng/inputgroup";
+import { InputGroupAddonModule } from "primeng/inputgroupaddon";
 import { InputTextModule } from "primeng/inputtext";
+import { UploadIcon } from "primeng/icons/upload";
 import { PanelModule } from "primeng/panel";
 import { ProgressBarModule } from "primeng/progressbar";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
@@ -70,8 +74,12 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
     CommonModule,
     DatePickerModule,
     DialogModule,
+    FileUploadModule,
     FormsModule,
+    InputGroupModule,
+    InputGroupAddonModule,
     InputTextModule,
+    UploadIcon,
     PanelModule,
     ProgressBarModule,
     ProgressSpinnerModule,
@@ -203,8 +211,8 @@ export class TramiteDetalle {
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
     this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => this.nombreAntecedente(item.backgroundId)))];
-    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
-    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: item.uploadedAt ?? "", archivo: item.fileReference ?? "" }));
+    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: this.formatearFechaBackend(item.uploadedAt), archivo: item.fileReference ?? "" }));
+    this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: this.formatearFechaBackend(item.uploadedAt), archivo: item.fileReference ?? "" }));
   }
 
   private aplicarEtapasBackend(items: BackendStage[]): void {
@@ -292,20 +300,19 @@ export class TramiteDetalle {
   }
 
   cargarArchivoAntecedente(
-    event: Event,
+    event: Event | { files?: File[] },
     antecedente: AntecedenteRequeridoDetalle | AntecedenteComplementarioDetalle,
   ): void {
-    const input = event.target as HTMLInputElement;
-    const archivo = input.files?.item(0) ?? null;
+    const archivo = "files" in event
+      ? event.files?.[0] ?? null
+      : ((event as Event).target as HTMLInputElement).files?.item(0) ?? null;
 
     if (!archivo || archivo.size > 10_000_000) {
-      input.value = "";
       return;
     }
 
     antecedente.archivo = archivo.name;
     antecedente.fechaCarga = this.formatearFecha(new Date());
-    input.value = "";
   }
 
   actualizarEstadoEtapa(indice: number, estado: string): void {
@@ -405,7 +412,7 @@ export class TramiteDetalle {
       this.errorGuardado = "";
       const antecedentes = [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
         .filter((item) => item.id && item.version !== undefined)
-        .map((item) => this.managementApi!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, version: item.version }));
+        .map((item) => this.managementApi!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, uploadedAt: this.fechaParaApi(item.fechaCarga), version: item.version }));
       const etapas = this.etapasGestion
         .filter((item) => item.id && item.version !== undefined)
         .map((item) => this.managementApi!.updateStage(item.id!, { status: item.estado, estimatedOn: item.fechaEstimada || null, completedOn: item.fechaReal || null, responsible: this.resolverResponsable(item.responsable), notes: item.observacion || null, version: item.version }));
@@ -717,6 +724,31 @@ export class TramiteDetalle {
   private formatearFechaIsoComoVista(fechaIso: string): string {
     const [anio, mes, dia] = fechaIso.split("-");
     return `${dia}-${mes}-${anio}`;
+  }
+
+  private formatearFechaBackend(fecha: string | null): string {
+    if (!fecha) {
+      return "";
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const [anio, mes, dia] = fecha.split("-");
+      return `${dia}-${mes}-${anio}`;
+    }
+    return fecha;
+  }
+
+  private fechaParaApi(fecha: string): string | null {
+    if (!fecha) {
+      return null;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return fecha;
+    }
+    const [dia, mes, anio] = fecha.split(/[/-]/);
+    if (!dia || !mes || !anio) {
+      return null;
+    }
+    return `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
   }
 
   private nombreResponsable(id: string): string {

@@ -362,7 +362,7 @@
 }
 
 .file-name {
-  flex: 1 1 auto;
+  display: none;
   min-width: 0;
   overflow: hidden;
   color: #175cd3 !important;
@@ -378,16 +378,32 @@
   gap: 8px;
 }
 
+.file-cell--with-upload {
+  display: grid;
+  width: 100%;
+  min-height: 34px;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 6px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.file-cell--with-upload.file-cell--has-file {
+  grid-template-columns: minmax(0, 1fr) 36px 36px;
+}
+
+.file-cell__details {
+  display: contents;
+}
+
 .file-actions {
-  display: flex;
-  flex: 0 0 auto;
-  margin-left: auto;
-  gap: 4px;
+  display: contents;
 }
 
 .file-action-button {
   display: inline-grid;
-  width: 30px;
+  width: 100%;
+  max-width: 38px;
   height: 30px;
   padding: 0;
   place-items: center;
@@ -520,8 +536,150 @@
 
   th:nth-child(8),
   td:nth-child(8) {
-    width: 90px;
+    width: 64px;
   }
+}
+
+.required-antecedents-table,
+.complementary-antecedents-table {
+  th:last-child,
+  td:last-child {
+    width: 64px;
+  }
+
+  .table-actions {
+    justify-content: center;
+  }
+}
+
+.required-antecedents-table,
+.complementary-antecedents-table {
+  th:nth-child(6),
+  td:nth-child(6) {
+    width: 300px;
+  }
+}
+
+.antecedent-file-upload {
+  display: flex !important;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  height: 32px;
+  overflow: hidden;
+  align-items: stretch;
+  white-space: nowrap;
+
+  .p-fileupload-basic-content {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .antecedent-file-choose-button {
+    display: inline-flex;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 32px;
+    height: 32px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 6px;
+    color: #246aaa;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    justify-content: center;
+
+    .upload-icon {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentcolor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+
+    &:hover {
+      background: #eaf4ff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #246aaa;
+      outline-offset: -2px;
+    }
+  }
+}
+
+.antecedent-file-inputgroup {
+  display: inline-flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 32px;
+  flex: 1 1 auto;
+  justify-self: stretch !important;
+  align-self: center;
+  align-items: center;
+  overflow: hidden;
+
+  > .p-inputgroup-addon {
+    display: flex;
+    height: 32px;
+    padding: 0 7px;
+    align-items: center;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  > .p-inputgroup-addon:first-child {
+    width: 32px !important;
+    flex: 0 0 32px !important;
+    justify-content: center;
+
+    .file-label-icon {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentcolor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+  }
+
+  > input {
+    min-width: 0;
+    width: auto;
+    height: 32px;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > .p-inputgroup-addon:last-child {
+    width: 72px !important;
+    min-width: 0;
+    flex: 0 0 72px !important;
+    justify-content: center;
+  }
+}
+
+.file-cell--with-upload .antecedent-file-inputgroup {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.file-cell--with-upload .file-action-button:nth-child(1) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.file-cell--with-upload .file-action-button:nth-child(2) {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .antecedent-name {
