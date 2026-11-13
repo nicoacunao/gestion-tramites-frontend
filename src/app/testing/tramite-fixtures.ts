@@ -28,6 +28,7 @@ export function crearTramiteFixture(indice = 1): Tramite {
     fechaUltimaRevision: "08-07-2026",
     prioridad: "Media",
     responsableInterno: indice % 3 === 1 ? "Claudio Doñas" : indice % 3 === 2 ? "Claudio Henríquez" : "José Luis Rosa",
+    responsableUserId: String(((indice - 1) % 3) + 1),
     tramiteEspecifico: "Solicitud de patente",
     descripcion: "Solicitud de patente EDS",
     rutRazonSocial: `76.000.${indice}-0`,

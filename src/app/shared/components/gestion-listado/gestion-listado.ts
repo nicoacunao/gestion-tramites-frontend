@@ -28,6 +28,7 @@ interface OpcionFiltro<T> {
 }
 
 export interface GestionListadoItem extends GestionBitacora {
+  responsableUserId?: string;
   rutRazonSocial: string;
   fechaIngreso: string;
   fechaIngresoOrden: string;

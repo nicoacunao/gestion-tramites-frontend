@@ -172,7 +172,13 @@ export class Home {
 
   constructor(private readonly managementApi: ManagementApiService, private readonly stationApi: StationApiService) {
     this.managementApi.managements().subscribe({
-      next: (items) => { this.tasks = items.slice(0, 3).map((item) => this.toTask(item)); this.loadingTasks = false; },
+      next: (items) => {
+        const userId = this.userSession.currentUser().id;
+        this.tasks = userId
+          ? items.filter((item) => item.responsibleUserId === userId).slice(0, 3).map((item) => this.toTask(item))
+          : [];
+        this.loadingTasks = false;
+      },
       error: (error: Error) => { this.tasks = []; this.tasksError = error.message; this.loadingTasks = false; },
     });
     this.loadStations();

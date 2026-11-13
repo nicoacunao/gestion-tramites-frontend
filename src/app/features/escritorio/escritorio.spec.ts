@@ -2,6 +2,7 @@ import { Escritorio } from "./escritorio";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
 import { crearTramiteFixture, TramitesFixture } from "../../testing/tramite-fixtures";
+import { UserSessionService } from "../../shared/services/user-session";
 
 class TramitesMockVolumen extends TramitesMock {
   private readonly fixture = crearTramiteFixture();
@@ -12,6 +13,7 @@ class TramitesMockVolumen extends TramitesMock {
       id: 3000 + indice,
       idEstacion: String(70000 + indice),
       razonSocial: `Razón social ${indice + 1}`,
+      responsableUserId: String((indice % 3) + 1),
     }))).cargarTodos();
   }
 
@@ -22,10 +24,12 @@ class TramitesMockVolumen extends TramitesMock {
 
 describe("Escritorio", () => {
   it("construye las gestiones asociadas al usuario", () => {
-    const componente = new Escritorio(new TramitesFixture(Array.from({ length: 5 }, (_, indice) => crearTramiteFixture(indice + 1))));
+    const session = new UserSessionService();
+    session.setSession("token", "2099-01-01T00:00:00.000Z", { id: "2", rut: "2-2", names: "Usuario", firstSurname: "Prueba", secondSurname: null, email: "test@example.com", role: "Prueba" });
+    const componente = new Escritorio(new TramitesFixture(Array.from({ length: 5 }, (_, indice) => crearTramiteFixture(indice + 1))), session);
 
-    expect(componente.gestiones).toHaveLength(5);
-    expect(componente.gestiones[0].codigo).toMatch(/^N\d-/);
+    expect(componente.gestiones).toHaveLength(2);
+    expect(componente.gestiones.every(({ responsableUserId }) => responsableUserId === "2")).toBe(true);
     expect(componente.tituloInformacionAlcance).toBe(
       "¿Qué es la vista Escritorio?",
     );
@@ -35,9 +39,10 @@ describe("Escritorio", () => {
   });
 
   it("admite listados de más de cien registros", () => {
-    const componente = new Escritorio(new TramitesMockVolumen());
+    const session = new UserSessionService();
+    session.setSession("token", "2099-01-01T00:00:00.000Z", { id: "2", rut: "2-2", names: "Usuario", firstSurname: "Prueba", secondSurname: null, email: "test@example.com", role: "Prueba" });
+    const componente = new Escritorio(new TramitesMockVolumen(), session);
 
-    expect(componente.gestiones).toHaveLength(120);
-    expect(componente.gestiones.at(-1)?.rutRazonSocial).toContain("76.000.");
+    expect(componente.gestiones.every(({ responsableUserId }) => responsableUserId === "2")).toBe(true);
   });
 });

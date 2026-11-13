@@ -75,6 +75,7 @@ export class TramitesMock {
       estado: item.status ?? "Pendiente",
       prioridad: item.priority,
       responsableInterno: item.responsableInterno,
+      responsableUserId: item.responsibleUserId,
       solicitanteCopec: item.requesterName,
       fechaApertura: item.fechaInicio,
       fechaInicio: item.fechaInicio,

@@ -7,6 +7,7 @@ import {
   GestionListadoItem,
 } from "../../shared/components/gestion-listado/gestion-listado";
 import { TramitesMock } from "../../shared/services/tramites-mock";
+import { UserSessionService } from "../../shared/services/user-session";
 
 @Component({
   selector: "app-escritorio",
@@ -36,6 +37,7 @@ export class Escritorio {
 
   constructor(
     tramitesMock: TramitesMock,
+    userSession: UserSessionService,
     @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
   ) {
     tramitesMock.cargarTodos().pipe(finalize(() => {
@@ -43,7 +45,10 @@ export class Escritorio {
       this.changeDetectorRef?.markForCheck();
     })).subscribe({
       next: (tramites) => {
-        this.gestiones = tramites;
+        const userId = userSession.currentUser().id;
+        this.gestiones = userId
+          ? tramites.filter((tramite) => tramite.responsableUserId === userId)
+          : [];
       },
       error: (error: Error) => {
         this.errorMessage = error.message;

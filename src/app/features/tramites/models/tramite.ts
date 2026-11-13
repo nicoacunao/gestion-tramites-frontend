@@ -71,6 +71,7 @@ export interface Tramite {
   fechaUltimaRevision?: string | null;
   prioridad: string;
   responsableInterno: string;
+  responsableUserId?: string;
   tramiteEspecifico: string;
   descripcion: string;
   rutRazonSocial: string;
