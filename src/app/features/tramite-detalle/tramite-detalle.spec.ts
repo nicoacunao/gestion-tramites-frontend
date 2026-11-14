@@ -60,35 +60,25 @@ describe("TramiteDetalle", () => {
     expect(componente.antecedentesRequeridos).toEqual(antecedentesCargados);
   });
 
-  it("incluye una primera entrada automática de inicio con fecha y usuario", () => {
+  it("muestra el N2 real en la tabla y permite editarlo", () => {
+    expect(componente.antecedentesRequeridos[0].nivel).toBe("N2");
+    expect(componente.antecedentesRequeridos[0].isSpecificManagement).toBeUndefined();
+    expect(componente.antecedentesRequeridos[0].version).toBe(1);
     // Las entradas iniciales ahora provienen de GET /bitacora/items.
     expect(componente.bitacora).toEqual([]);
   });
 
-  it("aplica los niveles y su jerarquía directamente a los antecedentes", () => {
+  it("conserva los antecedentes requeridos en N3", () => {
     expect(
       componente.antecedentesRequeridosVisibles.map(
         ({ antecedente }) => antecedente.nivel,
       ),
-    ).toEqual(["N2", "N3", "N3"]);
+    ).toEqual(["N2", "N3", "N3", "N3"]);
     expect(
       componente.antecedentesComplementariosVisibles.map(
         ({ antecedente }) => antecedente.nivel,
       ),
-    ).toEqual(["N2", "N3"]);
-
-    const antecedentePadre = componente.antecedentesRequeridos[0];
-    componente.alternarAntecedente(
-      antecedentePadre,
-      componente.antecedentesRequeridos,
-    );
-
-    expect(antecedentePadre.expandido).toBe(false);
-    expect(
-      componente.antecedentesRequeridosVisibles.map(
-        ({ antecedente }) => antecedente.nivel,
-      ),
-    ).toEqual(["N2"]);
+    ).toEqual(["N3", "N3"]);
   });
 
   it("asocia un documento adicional y registra su contexto en la bitácora", () => {

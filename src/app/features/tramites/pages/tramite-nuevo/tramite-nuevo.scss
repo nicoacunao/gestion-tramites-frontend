@@ -204,6 +204,15 @@
   background: #f8fbff;
 }
 
+.hierarchy-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
 .creation-choice-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

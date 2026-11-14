@@ -84,6 +84,10 @@ export class TramitesMock {
       fechaEstimadaTermino: item.fechaEstimadaTermino,
       fechaUltimaRevision: this.fechaParaVista(item.lastReviewedOn),
       modalidadCreacion: item.creationMode,
+      specificManagementId: item.specificManagementId,
+      specificManagementName: item.specificManagementName,
+      specificManagement: item.specificManagement,
+      specificManagements: item.specificManagements,
     };
   }
 

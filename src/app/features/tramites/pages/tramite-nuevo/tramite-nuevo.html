@@ -165,7 +165,10 @@
                 (click)="onTramiteEspecificoChange(opcion.id)"
               >
                 <span class="choice-indicator" aria-hidden="true"></span>
-                <span>{{ opcion.nombre }}</span>
+                <span class="d-flex align-items-center gap-2">
+                  <span class="antecedente-level antecedente-level--parent">{{ opcion.level }}</span>
+                  <span>{{ opcion.nombre }}</span>
+                </span>
               </button>
             </div>
 
@@ -204,6 +207,12 @@
               <strong>{{ etapasGestion.length }}</strong>
               etapas estándar
             </span>
+          </div>
+
+          <div *ngIf="gestionEspecificaSeleccionada" class="hierarchy-summary" role="status">
+            <span class="antecedente-level antecedente-level--parent">{{ gestionEspecificaSeleccionada.level }}</span>
+            <strong>{{ gestionEspecificaSeleccionada.nombre }}</strong>
+            <span>→ antecedentes asociados</span>
           </div>
 
           <p *ngIf="!modalidadCreacion" class="configuration-pending">

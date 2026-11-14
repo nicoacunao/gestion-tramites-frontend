@@ -10,7 +10,11 @@ export interface AntecedenteRequeridoDetalle {
   estado: string;
   fechaCarga: string;
   archivo: string;
+  observaciones?: string;
   version?: number;
+  isSpecificManagement?: boolean;
+  specificManagementId?: string | null;
+  specificManagementCode?: string;
 }
 
 export interface AntecedenteComplementarioDetalle {
@@ -80,6 +84,17 @@ export interface Tramite {
   concesionario: string;
   solicitanteCopec: string;
   modalidadCreacion?: "principal" | "subtramite";
+  specificManagementId?: string | null;
+  specificManagementName?: string | null;
+  specificManagement?: {
+    id: string;
+    name: string;
+    code: string;
+    level: "N2";
+    managementTypeId: string;
+    managementTypeName?: string | null;
+  } | null;
+  specificManagements?: Array<NonNullable<Tramite["specificManagement"]>>;
   subtramitesAsociados?: string[];
   antecedentesConfigurados?: string[];
   antecedentesComplementariosConfigurados?: string[];

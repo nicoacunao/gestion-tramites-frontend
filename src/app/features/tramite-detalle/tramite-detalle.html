@@ -210,6 +210,9 @@
                 </td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
+                  @if (fila.antecedente.isSpecificManagement) {
+                  <span>—</span>
+                  } @else {
                   <p-select
                     [inputId]="'estado-requerido-' + fila.antecedente.id"
                     [name]="'estadoRequerido' + fila.antecedente.id"
@@ -219,8 +222,12 @@
                     styleClass="antecedent-status-select"
                     panelStyleClass="detail-status-select-panel"
                   />
+                  }
                 </td>
                 <td>
+                  @if (fila.antecedente.isSpecificManagement) {
+                  <span>—</span>
+                  } @else {
                   <p-datepicker
                     [inputId]="'fecha-carga-requerido-' + fila.antecedente.id"
                     [name]="'fechaCargaRequerido' + fila.antecedente.id"
@@ -234,8 +241,12 @@
                     styleClass="stage-date-input"
                     inputStyleClass="stage-date-input"
                   />
+                  }
                 </td>
                 <td>
+                  @if (fila.antecedente.isSpecificManagement) {
+                  <span>—</span>
+                  } @else {
                   <div
                     class="file-cell file-cell--with-upload"
                     [class.file-cell--has-file]="
@@ -339,6 +350,7 @@
                       </p-inputgroup-addon>
                     </p-inputgroup>
                   </div>
+                  }
                 </td>
                 <td>
                   <div class="table-actions">

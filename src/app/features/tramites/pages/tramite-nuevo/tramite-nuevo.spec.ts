@@ -41,12 +41,20 @@ describe("TramiteNuevo", () => {
           {
             id: "gestion-a1",
             nombre: "Gestión A1",
-            antecedentes: [antecedente("a1", "Documento A1", "N3", "a0")],
+            level: "N2",
+            antecedentes: [
+              antecedente("gestion-a1", "Gestión A1", "N2"),
+              antecedente("a1", "Documento A1", "N3", "gestion-a1"),
+            ],
           },
           {
             id: "gestion-a2",
             nombre: "Gestión A2",
-            antecedentes: [antecedente("a2", "Documento A2", "N3", "a0")],
+            level: "N2",
+            antecedentes: [
+              antecedente("gestion-a2", "Gestión A2", "N2"),
+              antecedente("a2", "Documento A2", "N3", "gestion-a2"),
+            ],
           },
         ],
       },
@@ -59,7 +67,11 @@ describe("TramiteNuevo", () => {
           {
             id: "gestion-b1",
             nombre: "Gestión B1",
-            antecedentes: [antecedente("b1", "Documento B1", "N3", "b0")],
+            level: "N2",
+            antecedentes: [
+              antecedente("gestion-b1", "Gestión B1", "N2"),
+              antecedente("b1", "Documento B1", "N3", "gestion-b1"),
+            ],
           },
         ],
       },
@@ -101,7 +113,12 @@ describe("TramiteNuevo", () => {
     componente.onTramiteEspecificoChange("gestion-a1");
 
     expect(componente.configuracionLista).toBe(true);
+    expect(componente.gestionEspecificaSeleccionada).toMatchObject({
+      id: "gestion-a1",
+      level: "N2",
+    });
     expect(componente.antecedentesDisponibles.map(({ name }) => name)).toEqual([
+      "Gestión A1",
       "Documento A1",
     ]);
     expect(componente.etapasGestion).toHaveLength(7);
@@ -122,6 +139,7 @@ describe("TramiteNuevo", () => {
     componente.onTramiteEspecificoChange("gestion-a2");
 
     expect(componente.antecedentesDisponibles.map(({ name }) => name)).toEqual([
+      "Gestión A2",
       "Documento A2",
     ]);
     expect(componente.antecedentesComplementarios).toEqual([]);
@@ -161,7 +179,9 @@ describe("TramiteNuevo", () => {
     expect(componente.requiereSeleccionSegundoNivel).toBe(false);
     expect(componente.configuracionLista).toBe(true);
     expect(componente.antecedentesDisponibles.map(({ name }) => name)).toEqual([
+      "Gestión A1",
       "Documento A1",
+      "Gestión A2",
       "Documento A2",
     ]);
     expect(componente.etapasGestion).toHaveLength(7);
@@ -192,7 +212,12 @@ describe("TramiteNuevo", () => {
 
     componente.seleccionarTodosAntecedentes(true);
 
-    expect(componente.antecedentesSeleccionadosBorrador).toEqual(["a1", "a2"]);
+    expect(componente.antecedentesSeleccionadosBorrador).toEqual([
+      "gestion-a1",
+      "a1",
+      "gestion-a2",
+      "a2",
+    ]);
     expect(componente.todosAntecedentesSeleccionados).toBe(true);
 
     componente.seleccionarTodosAntecedentes(false);
@@ -212,8 +237,10 @@ describe("TramiteNuevo", () => {
           {
             id: "gestion-jerarquia",
             nombre: "Gestión jerárquica",
+            level: "N2",
             antecedentes: [
-              antecedente("padre", "Antecedente padre", "N2"),
+              antecedente("gestion-jerarquia", "Gestión jerárquica", "N2"),
+              antecedente("padre", "Antecedente padre", "N3", "gestion-jerarquia"),
               antecedente("hijo", "Antecedente hijo", "N3", "padre"),
               antecedente("nieto", "Antecedente nieto", "N4", "hijo"),
             ],
@@ -225,11 +252,13 @@ describe("TramiteNuevo", () => {
     componente.onTipoTramiteChange("tipo-jerarquia");
     componente.onModalidadChange("principal");
 
-    const padre = componente.antecedentesDisponibles[0];
-    const hijo = componente.antecedentesDisponibles[1];
-    componente.cambiarSeleccionAntecedente(padre, true);
+    const gestion = componente.antecedentesDisponibles.find(({ id }) => id === "gestion-jerarquia")!;
+    const padre = componente.antecedentesDisponibles.find(({ id }) => id === "padre")!;
+    const hijo = componente.antecedentesDisponibles.find(({ id }) => id === "hijo")!;
+    componente.cambiarSeleccionAntecedente(gestion, true);
 
     expect(componente.antecedentesSeleccionadosBorrador).toEqual([
+      "gestion-jerarquia",
       "padre",
       "hijo",
       "nieto",
@@ -237,19 +266,24 @@ describe("TramiteNuevo", () => {
 
     componente.cambiarSeleccionAntecedente(hijo, false);
 
-    expect(componente.antecedentesSeleccionadosBorrador).toEqual(["padre"]);
-    expect(componente.estaParcialmenteSeleccionado(padre)).toBe(false);
+    expect(componente.antecedentesSeleccionadosBorrador).toEqual([
+      "gestion-jerarquia",
+      "padre",
+    ]);
+    expect(componente.estaParcialmenteSeleccionado(gestion)).toBe(true);
 
     componente.cambiarSeleccionAntecedente(hijo, true);
     expect(componente.antecedentesSeleccionadosBorrador).toEqual([
+      "gestion-jerarquia",
       "padre",
       "hijo",
     ]);
-    expect(componente.estaParcialmenteSeleccionado(padre)).toBe(true);
+    expect(componente.estaParcialmenteSeleccionado(gestion)).toBe(true);
 
     componente.guardarSeleccionAntecedentes();
     expect(componente.antecedentesRequeridos).toMatchObject([
-      { backgroundId: "padre", level: "N2", parentBackgroundId: null },
+      { backgroundId: "gestion-jerarquia", level: "N2" },
+      { backgroundId: "padre", level: "N3", parentBackgroundId: "gestion-jerarquia" },
       { backgroundId: "hijo", level: "N3", parentBackgroundId: "padre" },
     ]);
   });

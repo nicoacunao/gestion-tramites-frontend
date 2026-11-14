@@ -62,11 +62,13 @@ interface AntecedenteCatalogo {
   name: string;
   level: NivelAntecedente;
   parentBackgroundId: string | null;
+  isSpecificManagement?: boolean;
 }
 
 interface TramiteEspecifico {
   id: string;
   nombre: string;
+  level: "N2";
   antecedentes: AntecedenteCatalogo[];
 }
 
@@ -193,6 +195,12 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   get tipoSeleccionado(): TipoTramite | undefined {
     return this.tiposTramite.find((tipo) => tipo.id === this.form.tipoTramite);
+  }
+
+  get gestionEspecificaSeleccionada(): TramiteEspecifico | undefined {
+    return this.tiposTramite
+      .find((tipo) => tipo.id === this.form.tipoTramite)
+      ?.tramitesEspecificos.find((item) => item.id === this.form.tramiteEspecifico);
   }
 
   get requiereSeleccionSegundoNivel(): boolean {
@@ -487,13 +495,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       subtramites = tipo.tramitesEspecificos;
     }
 
-    const antecedentes = [
-      ...new Map(
-        subtramites
-          .flatMap((item) => item.antecedentes)
-          .map((antecedente) => [antecedente.id, antecedente]),
-      ).values(),
-    ];
+    const antecedentes = this.construirAntecedentesDisponibles(subtramites);
     this.antecedentesCatalogoPorId = new Map(
       antecedentes.map((antecedente) => [antecedente.id, antecedente]),
     );
@@ -508,6 +510,12 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     );
   }
 
+  private construirAntecedentesDisponibles(
+    subtramites: TramiteEspecifico[],
+  ): AntecedenteCatalogo[] {
+    return subtramites.flatMap((gestion) => gestion.antecedentes);
+  }
+
   private crearAntecedente(catalogo: AntecedenteCatalogo) {
     return {
       antecedente: catalogo.name,
@@ -520,6 +528,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       observaciones: "",
       archivo: null as File | null,
       archivoNombre: "",
+      isSpecificManagement: catalogo.isSpecificManagement ?? false,
     };
   }
 
@@ -527,7 +536,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     return {
       antecedente: "",
       backgroundId: null,
-      level: "N2" as const,
+      level: "N3" as const,
       parentBackgroundId: null,
       obligatorio: false,
       responsable: this.form.responsableInterno,
@@ -694,7 +703,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       creationMode: modalidadCreacion, specificManagementId: subtramite?.id ?? null,
       subtramitesAsociados: modalidadCreacion === "principal" && !subtramite ? this.tramitesEspecificos.map((item) => item.id) : subtramite ? [subtramite.id] : [],
       ...(subtramite ? {} : {
-        requiredBackgrounds: this.antecedentesRequeridos.map((item) => ({
+        requiredBackgrounds: this.antecedentesRequeridos
+          .filter((item) => !item.isSpecificManagement)
+          .map((item) => ({
         backgroundId: item.backgroundId,
         parentBackgroundId: item.parentBackgroundId,
         level: item.level,
@@ -704,7 +715,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
         status: item.estado,
         observations: item.observaciones || null,
-        })),
+          })),
         complementaryBackgrounds: this.antecedentesComplementarios
         .filter((item) => item.antecedente.trim())
         .map((item) => ({
@@ -860,6 +871,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
         .map((gestion) => ({
           id: gestion.id,
           nombre: gestion.name,
+          level: gestion.level,
           antecedentes: gestion.backgrounds ?? [],
         })),
     };

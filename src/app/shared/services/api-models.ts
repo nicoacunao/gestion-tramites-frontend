@@ -56,6 +56,7 @@ export interface BackendSpecificManagement {
   managementTypeId: string;
   code: string;
   name: string;
+  level: "N2";
   active: boolean;
   backgrounds?: Array<{
     id: string;
@@ -63,6 +64,15 @@ export interface BackendSpecificManagement {
     level: "N2" | "N3" | "N4";
     parentBackgroundId: string | null;
   }>;
+}
+
+export interface BackendSpecificManagementReference {
+  id: string;
+  name: string;
+  code: string;
+  level: "N2";
+  managementTypeId: string;
+  managementTypeName?: string | null;
 }
 
 export interface BackendCatalogBackground {
@@ -117,6 +127,9 @@ export interface BackendManagement {
   legalRepresentative?: string | null;
   creationMode?: "principal" | "subtramite";
   specificManagementId?: string | null;
+  specificManagementName?: string | null;
+  specificManagement?: BackendSpecificManagementReference | null;
+  specificManagements?: BackendSpecificManagementReference[];
 }
 
 export interface BackendBackground {
@@ -125,12 +138,15 @@ export interface BackendBackground {
   parentManagementBackgroundId: string | null;
   managementTypeId: string;
   backgroundId: string;
+  specificManagementId?: string | null;
   level: "N2" | "N3" | "N4";
+  category?: "requerido" | "complementario" | "adicional" | null;
   required: boolean;
   responsibleUserId: string;
   status: string;
   fileReference: string | null;
   uploadedAt: string | null;
+  observations?: string | null;
   version: number;
 }
 

@@ -37,15 +37,26 @@ export function crearTramiteFixture(indice = 1): Tramite {
     concesionario: "Comercial Los Pinos",
     solicitanteCopec: "Jefatura de zona",
     modalidadCreacion: "principal",
+    specificManagementId: "specific-1",
+    specificManagementName: "Solicitud de patente",
+    specificManagement: {
+      id: "specific-1",
+      name: "Solicitud de patente",
+      code: "solicitud-patente",
+      level: "N2",
+      managementTypeId: "patente-comercial",
+      managementTypeName: "Patente comercial",
+    },
     detalleEditable: {
       antecedentesRequeridos: [
-        { id: "bg-1", nivel: "N2", padreId: null, expandido: true, antecedente: "Documento A", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
-        { id: "bg-2", nivel: "N3", padreId: "bg-1", expandido: true, antecedente: "Documento B", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
-        { id: "bg-3", nivel: "N3", padreId: "bg-1", expandido: true, antecedente: "Documento C", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-n2-1", nivel: "N2", padreId: null, expandido: true, antecedente: "Solicitud de patente", obligatorio: true, responsable: "Claudio Doñas", responsableId: "1", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-1", nivel: "N3", padreId: "bg-n2-1", expandido: true, antecedente: "Documento A", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-2", nivel: "N3", padreId: "bg-n2-1", expandido: true, antecedente: "Documento B", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-3", nivel: "N3", padreId: "bg-n2-1", expandido: true, antecedente: "Documento C", obligatorio: true, responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
       ],
       antecedentesComplementarios: [
-        { id: "bg-4", nivel: "N2", padreId: null, expandido: true, tipoDocumento: "Complementario A", solicitadoPor: "Durante la gestión", responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
-        { id: "bg-5", nivel: "N3", padreId: "bg-4", expandido: true, tipoDocumento: "Complementario B", solicitadoPor: "Durante la gestión", responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-4", nivel: "N3", padreId: null, expandido: true, tipoDocumento: "Complementario A", solicitadoPor: "Durante la gestión", responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
+        { id: "bg-5", nivel: "N3", padreId: null, expandido: true, tipoDocumento: "Complementario B", solicitadoPor: "Durante la gestión", responsable: "María González", responsableId: "2", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },
       ],
       etapas: [
         "Consulta y definición de antecedentes",

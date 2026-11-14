@@ -211,8 +211,36 @@ export class TramiteDetalle {
 
   private aplicarAntecedentesBackend(items: BackendBackground[]): void {
     this.tiposAntecedenteAdicional = [...new Set(items.filter((item) => !item.required).map((item) => this.nombreAntecedente(item.backgroundId)))];
-    this.antecedentesRequeridos = items.filter((item) => item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: this.formatearFechaBackend(item.uploadedAt), archivo: item.fileReference ?? "" }));
+    const antecedentesFisicos = items
+      .filter((item) => item.required)
+      .map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, antecedente: this.nombreAntecedente(item.backgroundId), obligatorio: item.required, responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: this.formatearFechaBackend(item.uploadedAt), archivo: item.fileReference ?? "", specificManagementId: item.specificManagementId }));
+    this.antecedentesRequeridos = this.ordenarAntecedentesFisicos(antecedentesFisicos);
     this.antecedentesComplementarios = items.filter((item) => !item.required).map((item) => ({ id: item.id, version: item.version, nivel: item.level, padreId: item.parentManagementBackgroundId, expandido: true, tipoDocumento: this.nombreAntecedente(item.backgroundId), solicitadoPor: "", responsableId: item.responsibleUserId, responsable: this.nombreResponsable(item.responsibleUserId), estado: item.status, fechaCarga: this.formatearFechaBackend(item.uploadedAt), archivo: item.fileReference ?? "" }));
+  }
+
+  private ordenarAntecedentesFisicos<T extends { id: string; padreId: string | null }>(
+    antecedentes: T[],
+  ): T[] {
+    const hijos = new Map<string, T[]>();
+    antecedentes.forEach((antecedente) => {
+      if (!antecedente.padreId) return;
+      const grupo = hijos.get(antecedente.padreId) ?? [];
+      grupo.push(antecedente);
+      hijos.set(antecedente.padreId, grupo);
+    });
+
+    const visitados = new Set<string>();
+    const resultado: T[] = [];
+    const agregarConDescendientes = (antecedente: T): void => {
+      if (visitados.has(antecedente.id)) return;
+      visitados.add(antecedente.id);
+      resultado.push(antecedente);
+      (hijos.get(antecedente.id) ?? []).forEach(agregarConDescendientes);
+    };
+
+    antecedentes.filter(({ padreId }) => !padreId).forEach(agregarConDescendientes);
+    antecedentes.forEach(agregarConDescendientes);
+    return resultado;
   }
 
   private aplicarEtapasBackend(items: BackendStage[]): void {
@@ -414,7 +442,7 @@ export class TramiteDetalle {
       this.guardando = true;
       this.errorGuardado = "";
       const antecedentes = [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
-        .filter((item) => item.id && item.version !== undefined)
+        .filter((item) => item.id && item.version !== undefined && !("isSpecificManagement" in item && item.isSpecificManagement))
         .map((item) => this.managementApi!.updateBackground(item.id, { responsibleUserId: this.resolverResponsable(item.responsable), status: item.estado, fileReference: item.archivo || null, uploadedAt: this.fechaParaApi(item.fechaCarga), version: item.version }));
       const etapas = this.etapasGestion
         .filter((item) => item.id && item.version !== undefined)
