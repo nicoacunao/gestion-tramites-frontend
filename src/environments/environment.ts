@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: "http://localhost:8787/api/v1",
+  // Reemplaza únicamente esta URL cuando tengas el dominio real de producción.
+  apiUrl: "https://gestion-tramites-api.nicoacunao.workers.dev",
 };

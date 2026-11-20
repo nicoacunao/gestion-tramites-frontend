@@ -64,6 +64,18 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "staging": {
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ],
+              "outputHashing": "all"
             }
           },
           "defaultConfiguration": "production"
@@ -76,6 +88,9 @@
             },
             "development": {
               "buildTarget": "gestion-tramites:build:development"
+            },
+            "staging": {
+              "buildTarget": "gestion-tramites:build:staging"
             }
           },
           "defaultConfiguration": "development"
