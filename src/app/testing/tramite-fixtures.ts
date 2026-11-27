@@ -36,17 +36,6 @@ export function crearTramiteFixture(indice = 1): Tramite {
     rutRepresentanteLegal: "11.111.111-1",
     concesionario: "Comercial Los Pinos",
     solicitanteCopec: "Jefatura de zona",
-    modalidadCreacion: "principal",
-    specificManagementId: "specific-1",
-    specificManagementName: "Solicitud de patente",
-    specificManagement: {
-      id: "specific-1",
-      name: "Solicitud de patente",
-      code: "solicitud-patente",
-      level: "N2",
-      managementTypeId: "patente-comercial",
-      managementTypeName: "Patente comercial",
-    },
     detalleEditable: {
       antecedentesRequeridos: [
         { id: "bg-n2-1", nivel: "N2", padreId: null, expandido: true, antecedente: "Solicitud de patente", obligatorio: true, responsable: "Claudio Doñas", responsableId: "1", estado: "Pendiente", fechaCarga: "—", archivo: "—", version: 1 },

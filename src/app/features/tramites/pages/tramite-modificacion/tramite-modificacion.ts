@@ -125,7 +125,7 @@ export class TramiteModificacion {
           prioridad: management.priority,
           estado: management.status ?? this.tramite.estado,
           responsableInterno: management.responsibleName ?? management.responsibleUserId,
-          tipoTramite: management.managementTypeName ?? management.managementTypeId,
+          tipoTramite: management.managementTypeName ?? "",
           solicitanteCopec: management.requesterName,
           fechaApertura: this.toDisplayDate(management.openedOn),
           fechaEstimadaTermino: management.estimatedCompletionOn ? this.toDisplayDate(management.estimatedCompletionOn) : "",

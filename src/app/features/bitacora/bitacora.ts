@@ -13,7 +13,7 @@ export type EstadoSemaforoBitacora = "al-dia" | "proximo-vencer" | "atrasado";
 export interface GestionBitacora {
   id: string | number;
   codigo: string;
-  nivel: `N${number}`;
+  nivel: string;
   idEstacion: string;
   estacionServicio: string;
   direccion: string;

@@ -50,14 +50,20 @@ export interface DetalleEditableTramite {
   etapas: EtapaDetalle[];
 }
 
+/**
+ * Modelo de vista de una gestión. Se construye desde el contrato vigente con
+ * `gestionATramite` (shared/services/management-presentation.ts).
+ */
 export interface Tramite {
   id: string | number;
   apiId?: string;
+  /** Código de presentación del backend (`N1-MUN-001`) o `Gestión <id>` si no tiene. */
   codigo: string;
-  nivel: `N${number}`;
+  /** Nivel (`N1`, `N2`…); vacío si el backend no lo informa. */
+  nivel: string;
   ambito: string;
   codigoAmbito: string;
-  correlativo: number;
+  correlativo: number | null;
   semaforo: "al-dia" | "proximo-vencer" | "atrasado";
   semaforoEtiqueta: string;
   idEstacion: string;
@@ -67,9 +73,11 @@ export interface Tramite {
   comuna: string;
   direccion: string;
   estado: string;
+  /** Fechas en formato `DD-MM-YYYY` para mostrar. */
   fechaApertura: string;
   fechaInicio: string;
   fechaIngreso: string;
+  /** Fecha `YYYY-MM-DD` usada para ordenar. */
   fechaIngresoOrden: string;
   fechaEstimadaTermino: string;
   fechaUltimaRevision?: string | null;
@@ -83,21 +91,5 @@ export interface Tramite {
   rutRepresentanteLegal: string;
   concesionario: string;
   solicitanteCopec: string;
-  modalidadCreacion?: "principal" | "subtramite";
-  specificManagementId?: string | null;
-  specificManagementName?: string | null;
-  specificManagement?: {
-    id: string;
-    name: string;
-    code: string;
-    level: "N2";
-    managementTypeId: string;
-    managementTypeName?: string | null;
-  } | null;
-  specificManagements?: Array<NonNullable<Tramite["specificManagement"]>>;
-  subtramitesAsociados?: string[];
-  antecedentesConfigurados?: string[];
-  antecedentesComplementariosConfigurados?: string[];
-  etapasConfiguradas?: string[];
   detalleEditable?: DetalleEditableTramite;
 }

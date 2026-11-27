@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Observable, map, tap, throwError } from "rxjs";
 import { Tramite } from "../../features/tramites/models/tramite";
-import { BackendManagement } from "./api-models";
+import { gestionATramite } from "./management-presentation";
 import { ManagementApiService } from "./management-api";
 
 /** Adaptador de gestiones del backend; no contiene datos locales. */
@@ -18,7 +18,7 @@ export class TramitesMock {
       return throwError(() => new Error("El cliente API no está disponible."));
     }
     return this.api.managements(assignedToMe).pipe(
-      map((items) => items.map((item) => this.fromBackend(item))),
+      map((items) => items.map(gestionATramite)),
       tap((items) => { this.tramites = items; }),
     );
   }
@@ -30,7 +30,7 @@ export class TramitesMock {
       return throwError(() => new Error("El cliente API no está disponible."));
     }
     return this.api.management(String(id)).pipe(
-      map((item) => this.fromBackend(item)),
+      map(gestionATramite),
       tap((item) => this.guardar(item)),
     );
   }
@@ -47,56 +47,5 @@ export class TramitesMock {
       return;
     }
     this.tramites.push({ ...tramite });
-  }
-
-  private fromBackend(item: BackendManagement): Tramite {
-    return {
-      id: item.id,
-      apiId: item.id,
-      codigo: item.codigo,
-      nivel: item.nivel,
-      ambito: item.ambito,
-      codigoAmbito: item.codigoAmbito,
-      correlativo: item.correlativo,
-      semaforo: item.semaforo,
-      semaforoEtiqueta: item.semaforoEtiqueta,
-      idEstacion: item.idEstacion,
-      tipoTramite: item.managementTypeName ?? item.managementTypeId,
-      tramiteEspecifico: item.descripcion,
-      descripcion: item.descripcion,
-      estacionServicio: item.estacionServicio,
-      razonSocial: item.razonSocial,
-      comuna: item.comuna,
-      direccion: item.direccion,
-      rutRazonSocial: item.rutRazonSocial,
-      representanteLegal: item.representanteLegal,
-      rutRepresentanteLegal: item.rutRepresentanteLegal,
-      concesionario: item.concesionario,
-      estado: item.status ?? "Pendiente",
-      prioridad: item.priority,
-      responsableInterno: item.responsableInterno,
-      responsableUserId: item.responsibleUserId,
-      solicitanteCopec: item.requesterName,
-      fechaApertura: item.fechaInicio,
-      fechaInicio: item.fechaInicio,
-      fechaIngreso: item.fechaIngreso,
-      fechaIngresoOrden: item.fechaIngresoOrden,
-      fechaEstimadaTermino: item.fechaEstimadaTermino,
-      fechaUltimaRevision: this.fechaParaVista(item.lastReviewedOn),
-      modalidadCreacion: item.creationMode,
-      specificManagementId: item.specificManagementId,
-      specificManagementName: item.specificManagementName,
-      specificManagement: item.specificManagement,
-      specificManagements: item.specificManagements,
-    };
-  }
-
-  private fechaParaVista(fecha: string | null): string | null {
-    if (!fecha) {
-      return null;
-    }
-
-    const [anio, mes, dia] = fecha.slice(0, 10).split("-");
-    return anio?.length === 4 ? `${dia}-${mes}-${anio}` : fecha;
   }
 }

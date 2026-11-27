@@ -148,46 +148,7 @@ export interface ManagementContract {
   semaforoEtiqueta?: string;
 }
 
-/**
- * Campos del contrato anterior que todavía lee el adaptador `TramitesMock`.
- * El backend ya no los envía; se eliminan al adaptar el listado (fase 3).
- * @deprecated
- */
-export interface LegacyManagementFields {
-  // Tipado del contrato anterior (no nulos); el contrato vigente los permite nulos.
-  codigo: string;
-  nivel: `N${number}`;
-  ambito: string;
-  codigoAmbito: string;
-  correlativo: number;
-  semaforo: TrafficLight;
-  semaforoEtiqueta: string;
-  managementTypeId: string;
-  version: number;
-  fechaInicio: string;
-  fechaIngreso: string;
-  fechaIngresoOrden: string;
-  fechaEstimadaTermino: string;
-  responsableInterno: string;
-  idEstacion: string;
-  estacionServicio: string;
-  direccion: string;
-  comuna: string;
-  rutRazonSocial: string;
-  razonSocial: string;
-  representanteLegal: string;
-  rutRepresentanteLegal: string;
-  concesionario: string;
-  descripcion: string;
-  managementTypeCode?: string | null;
-  creationMode?: "principal" | "subtramite";
-  specificManagementId?: string | null;
-  specificManagementName?: string | null;
-  specificManagement?: BackendSpecificManagementReference | null;
-  specificManagements?: BackendSpecificManagementReference[];
-}
-
-export type BackendManagement = ManagementContract & LegacyManagementFields;
+export type BackendManagement = ManagementContract;
 
 export interface BackendBackground {
   id: string;
