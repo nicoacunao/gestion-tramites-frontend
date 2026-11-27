@@ -1,15 +1,27 @@
-export interface ApiEnvelope<T> {
-  data: T;
-  meta: {
-    requestId: string;
-    page?: number;
-    pageSize?: number;
-    total?: number;
-    totalPages?: number;
-  };
+/** Metadatos comunes de toda respuesta del API (`ApiMeta` en OpenAPI). */
+export interface ApiMeta {
+  requestId: string;
 }
 
+/** Metadatos de colecciones paginadas por el servidor. */
+export interface ApiPageMeta extends ApiMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+/** Respuesta exitosa: los datos viajan en `mensaje`. */
+export interface ApiEnvelope<T, M extends ApiMeta = ApiMeta> {
+  exito: true;
+  mensaje: T;
+  meta: M;
+}
+
+/** Respuesta de error (`ApiError` en OpenAPI). */
 export interface ApiErrorBody {
+  exito?: false;
+  mensaje?: string;
   error?: { code?: string; message?: string; details?: unknown };
   meta?: { requestId?: string };
 }
@@ -212,11 +224,11 @@ export interface BackendStationPage {
   allData?: BackendStation[];
 }
 
-export interface ImportStationsMeta {
-  requestId: string;
+export interface ImportStationsMeta extends ApiMeta {
   created: number;
   updated: number;
   rejected: number;
+  rejectedRows?: unknown[];
 }
 
 export interface ImportStationsResponse {

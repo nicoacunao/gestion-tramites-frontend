@@ -23,9 +23,9 @@ export interface EditableUserProfile {
   description: string;
 }
 
-const ACCESS_TOKEN_KEY = "gestion-tramites.access-token";
-const USER_KEY = "gestion-tramites.user";
-const EXPIRES_AT_KEY = "gestion-tramites.expires-at";
+export const ACCESS_TOKEN_KEY = "gestion-tramites.access-token";
+export const USER_KEY = "gestion-tramites.user";
+export const EXPIRES_AT_KEY = "gestion-tramites.expires-at";
 
 @Injectable({ providedIn: "root" })
 export class UserSessionService {

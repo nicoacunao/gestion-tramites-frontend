@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { map } from "rxjs";
 import { ApiBaseService } from "./api-base";
 import {
   BackendBackground,
@@ -10,28 +9,22 @@ import {
 @Injectable({ providedIn: "root" })
 export class ManagementApiService extends ApiBaseService {
   managements(assignedToMe = false) {
-    const query = assignedToMe ? "?assignedToMe=true" : "";
-    return this.get<BackendManagement[]>(`/gestiones/items${query}`);
-  }
-
-  management(id: string) {
-    return this.get<BackendManagement>(
-      `/gestiones/items/${encodeURIComponent(id)}`,
+    return this.get<BackendManagement[]>(
+      "/gestiones/items",
+      assignedToMe ? { assignedToMe: true } : undefined,
     );
   }
 
+  management(id: string) {
+    return this.get<BackendManagement>(`/gestiones/items/${encodeURIComponent(id)}`);
+  }
+
   createManagement(body: object) {
-    return this.request<{ data: BackendManagement }>("/gestiones/items", {
-      method: "post",
-      body,
-    }).pipe(map(({ data }) => data));
+    return this.post<BackendManagement>("/gestiones/items", body);
   }
 
   updateManagement(id: string, body: object) {
-    return this.request<{ data: BackendManagement }>(
-      `/gestiones/items/${encodeURIComponent(id)}`,
-      { method: "put", body },
-    ).pipe(map(({ data }) => data));
+    return this.put<BackendManagement>(`/gestiones/items/${encodeURIComponent(id)}`, body);
   }
 
   backgrounds(id: string) {
@@ -41,29 +34,21 @@ export class ManagementApiService extends ApiBaseService {
   }
 
   stages(id: string) {
-    return this.get<BackendStage[]>(
-      `/gestiones/items/${encodeURIComponent(id)}/stages`,
-    );
+    return this.get<BackendStage[]>(`/gestiones/items/${encodeURIComponent(id)}/stages`);
   }
 
   updateBackground(id: string, body: object) {
-    return this.request<{ data: BackendBackground }>(
-      `/gestiones/backgrounds/${encodeURIComponent(id)}`,
-      { method: "put", body },
-    ).pipe(map(({ data }) => data));
+    return this.put<BackendBackground>(`/gestiones/backgrounds/${encodeURIComponent(id)}`, body);
   }
 
   updateStage(id: string, body: object) {
-    return this.request<{ data: BackendStage }>(
-      `/gestiones/stages/${encodeURIComponent(id)}`,
-      { method: "put", body },
-    ).pipe(map(({ data }) => data));
+    return this.put<BackendStage>(`/gestiones/stages/${encodeURIComponent(id)}`, body);
   }
 
   createBackground(managementId: string, body: object) {
-    return this.request<{ data: BackendBackground | null }>(
+    return this.post<BackendBackground>(
       `/gestiones/items/${encodeURIComponent(managementId)}/backgrounds`,
-      { method: "post", body },
-    ).pipe(map(({ data }) => data));
+      body,
+    );
   }
 }

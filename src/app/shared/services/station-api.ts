@@ -1,12 +1,13 @@
-import { HttpErrorResponse, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { catchError, map, throwError } from "rxjs";
+import { map } from "rxjs";
 import { ApiBaseService } from "./api-base";
 import {
-  ApiEnvelope,
+  ApiMeta,
+  ApiPageMeta,
   BackendStation,
   BackendStationPage,
   BackendStationSummary,
+  ImportStationsMeta,
   ImportStationsResponse,
 } from "./api-models";
 
@@ -17,12 +18,11 @@ export class StationApiService extends ApiBaseService {
   }
 
   stations(page = 1, pageSize = 5) {
-    const params = { page, pageSize };
-    return this.http.get<ApiEnvelope<BackendStation[]>>(
-      `${this.baseUrl}/consultas/stations`,
-      { params },
-    ).pipe(
-      map(({ data, meta }) => {
+    return this.requestEnvelope<BackendStation[], ApiMeta & Partial<Omit<ApiPageMeta, "requestId">>>("/consultas/stations", {
+      method: "get",
+      params: { page, pageSize },
+    }).pipe(
+      map(({ mensaje: data, meta }) => {
         const total = meta.total ?? data.length;
         const returnedPage = meta.page ?? page;
         const returnedPageSize = meta.pageSize ?? pageSize;
@@ -42,13 +42,10 @@ export class StationApiService extends ApiBaseService {
             pageSize: returnedPageSize,
             total,
             totalPages: meta.totalPages
-              ?? Math.max(1, Math.ceil(total / pageSize)),
+              ?? Math.max(1, Math.ceil(total / returnedPageSize)),
           },
         } satisfies BackendStationPage;
       }),
-      catchError((error: HttpErrorResponse) =>
-        throwError(() => this.createApiError(error)),
-      ),
     );
   }
 
@@ -56,14 +53,11 @@ export class StationApiService extends ApiBaseService {
     const body = new FormData();
     body.append("file", file, file.name);
 
-    return this.http.post<ImportStationsResponse>(
-      `${this.baseUrl}/consultas/stations/import`,
-      body,
-      { headers: new HttpHeaders({ Accept: "application/json" }) },
+    return this.requestEnvelope<BackendStation[], ImportStationsMeta>(
+      "/consultas/stations/import",
+      { method: "post", body },
     ).pipe(
-      catchError((error: HttpErrorResponse) =>
-        throwError(() => this.createApiError(error)),
-      ),
+      map(({ mensaje, meta }): ImportStationsResponse => ({ data: mensaje, meta })),
     );
   }
 }

@@ -18,20 +18,16 @@ export class CatalogApiService extends ApiBaseService {
   }
 
   specificManagements(managementTypeId?: string) {
-    const query = managementTypeId
-      ? `?managementTypeId=${encodeURIComponent(managementTypeId)}`
-      : "";
     return this.get<BackendSpecificManagement[]>(
-      `/gestiones-especificas/items${query}`,
+      "/gestiones-especificas/items",
+      managementTypeId ? { managementTypeId } : undefined,
     );
   }
 
   backgroundCatalog(category?: "requerido" | "complementario") {
-    const query = category
-      ? `?categoria=${encodeURIComponent(category)}`
-      : "";
     return this.get<BackendCatalogBackground[]>(
-      `/antecedentes/items${query}`,
+      "/antecedentes/items",
+      category ? { categoria: category } : undefined,
     );
   }
 }
