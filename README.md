@@ -138,6 +138,10 @@ alineados con ese archivo.
   `ApiBaseService` (`shared/services/api-base.ts`) extrae `mensaje`, rechaza
   respuestas fuera de contrato y convierte los errores en `ApiClientError`
   con un mensaje seguro para mostrar, el código, el `requestId` y los detalles.
+- **Tiempo máximo de espera.** Si el servidor no responde, la solicitud se
+  cancela y se muestra "El servidor no respondió a tiempo" (código `TIMEOUT`):
+  30 segundos para solicitudes JSON y 120 segundos para cargas y descargas de
+  archivos (`API_TIMEOUT_MS` y `API_TRANSFER_TIMEOUT_MS` en `api-base.ts`).
 - **Sesión.** El login guarda el token y su expiración en `localStorage`. El
   interceptor agrega `Authorization: Bearer` a cada solicitud y, ante un 401
   (salvo en el propio login), cierra la sesión y redirige a

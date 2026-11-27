@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { catchError, from, map, Observable, switchMap, throwError } from "rxjs";
+import { catchError, from, map, Observable, switchMap, throwError, timeout } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { ApiEnvelope, ApiErrorBody, ApiMeta } from "./api-models";
 
@@ -21,6 +21,16 @@ export class ApiClientError extends Error {
 export const UNEXPECTED_RESPONSE_CODE = "UNEXPECTED_RESPONSE";
 /** Código asignado cuando no hubo respuesta HTTP (sin red, CORS, servidor caído). */
 export const NETWORK_ERROR_CODE = "NETWORK_ERROR";
+/** Código asignado cuando el servidor no responde dentro del tiempo máximo. */
+export const TIMEOUT_CODE = "TIMEOUT";
+
+/** Tiempo máximo de espera de una solicitud JSON. */
+export const API_TIMEOUT_MS = 30_000;
+/** Tiempo máximo para cargas y descargas de archivos, que pueden ser más lentas. */
+export const API_TRANSFER_TIMEOUT_MS = 120_000;
+
+const MENSAJE_TIMEOUT =
+  "El servidor no respondió a tiempo. Revisa tu conexión e inténtalo nuevamente.";
 
 /**
  * Mensaje seguro para mostrar: el del API si viene de un `ApiClientError`;
@@ -88,8 +98,10 @@ export abstract class ApiBaseService {
         ? this.http.post<unknown>(url, options.body, { params })
         : this.http.put<unknown>(url, options.body, { params });
 
+    const esTransferencia = typeof FormData !== "undefined" && options.body instanceof FormData;
     return request.pipe(
       catchError((error: HttpErrorResponse) => throwError(() => this.createApiError(error))),
+      this.conTiempoMaximo(esTransferencia ? API_TRANSFER_TIMEOUT_MS : API_TIMEOUT_MS),
       map((body) => this.assertEnvelope<T, M>(body)),
     );
   }
@@ -111,7 +123,19 @@ export abstract class ApiBaseService {
             )
           : throwError(() => this.createApiError(error)),
       ),
+      this.conTiempoMaximo(API_TRANSFER_TIMEOUT_MS),
     );
+  }
+
+  /**
+   * Corta la espera si el servidor no responde: cancela la solicitud HTTP y
+   * emite un `ApiClientError` con código `TIMEOUT` (estado 0).
+   */
+  private conTiempoMaximo<R>(milisegundos: number) {
+    return timeout<R, Observable<never>>({
+      first: milisegundos,
+      with: () => throwError(() => new ApiClientError(MENSAJE_TIMEOUT, 0, TIMEOUT_CODE)),
+    });
   }
 
   protected createApiError(error: HttpErrorResponse): ApiClientError {

@@ -3,7 +3,15 @@ import { TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
 import { HttpTestingController, provideHttpClientTesting } from "@angular/common/http/testing";
 import { environment } from "../../../environments/environment";
-import { ApiBaseService, ApiClientError, NETWORK_ERROR_CODE, UNEXPECTED_RESPONSE_CODE } from "./api-base";
+import {
+  API_TIMEOUT_MS,
+  API_TRANSFER_TIMEOUT_MS,
+  ApiBaseService,
+  ApiClientError,
+  NETWORK_ERROR_CODE,
+  TIMEOUT_CODE,
+  UNEXPECTED_RESPONSE_CODE,
+} from "./api-base";
 
 @Injectable()
 class TestApiService extends ApiBaseService {
@@ -26,7 +34,10 @@ describe("ApiBaseService", () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    vi.useRealTimers();
+    http.verify();
+  });
 
   it("devuelve los datos de `mensaje` y codifica los parámetros", () => {
     let result: unknown;
@@ -110,5 +121,47 @@ describe("ApiBaseService", () => {
     );
 
     expect(await result).toMatchObject({ status: 404, code: "RESOURCE_NOT_FOUND", message: "El archivo no existe.", requestId: "req-5" });
+  });
+
+  it("corta la espera si el servidor no responde y cancela la solicitud", () => {
+    vi.useFakeTimers();
+    let error: ApiClientError | undefined;
+    api.create({ rut: "1" }).subscribe({ error: (value: ApiClientError) => { error = value; } });
+    const request = http.expectOne(url);
+
+    vi.advanceTimersByTime(API_TIMEOUT_MS - 1);
+    expect(error).toBeUndefined();
+
+    vi.advanceTimersByTime(1);
+    expect(error).toMatchObject({ status: 0, code: TIMEOUT_CODE });
+    expect(error?.message).toContain("no respondió a tiempo");
+    expect(request.cancelled).toBe(true);
+  });
+
+  it("da más tiempo a las cargas de archivos", () => {
+    vi.useFakeTimers();
+    let error: ApiClientError | undefined;
+    let result: unknown;
+    api.create(new FormData()).subscribe({ next: (value) => { result = value; }, error: (value: ApiClientError) => { error = value; } });
+    const request = http.expectOne(url);
+
+    vi.advanceTimersByTime(API_TIMEOUT_MS + 1);
+    expect(error).toBeUndefined();
+    request.flush({ exito: true, mensaje: { id: "1" }, meta: { requestId: "req-6" } });
+
+    expect(result).toEqual({ id: "1" });
+    expect(API_TRANSFER_TIMEOUT_MS).toBeGreaterThan(API_TIMEOUT_MS);
+  });
+
+  it("aplica el tiempo máximo de transferencia a las descargas", () => {
+    vi.useFakeTimers();
+    let error: ApiClientError | undefined;
+    api.blob().subscribe({ error: (value: ApiClientError) => { error = value; } });
+    const request = http.expectOne(`${url}/descarga`);
+
+    vi.advanceTimersByTime(API_TRANSFER_TIMEOUT_MS);
+
+    expect(error).toMatchObject({ code: TIMEOUT_CODE });
+    expect(request.cancelled).toBe(true);
   });
 });
