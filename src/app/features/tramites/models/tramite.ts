@@ -1,6 +1,9 @@
+/** Nivel de un antecedente (`N2`, `N3`…); el N1 es el tipo principal de la gestión. */
+export type NivelAntecedente = string;
+
 export interface AntecedenteRequeridoDetalle {
   id: string;
-  nivel: "N2" | "N3" | "N4";
+  nivel: NivelAntecedente;
   padreId: string | null;
   expandido: boolean;
   antecedente: string;
@@ -8,18 +11,18 @@ export interface AntecedenteRequeridoDetalle {
   responsable: string;
   responsableId?: string;
   estado: string;
+  /** `DD-MM-YYYY` de la última carga de archivo, o vacío. */
   fechaCarga: string;
+  /** Nombre legible del archivo, o vacío si no tiene. */
   archivo: string;
+  /** Referencia de almacenamiento que exige el backend al actualizar (N2+). */
+  referenciaArchivo?: string | null;
   observaciones?: string;
-  version?: number;
-  isSpecificManagement?: boolean;
-  specificManagementId?: string | null;
-  specificManagementCode?: string;
 }
 
 export interface AntecedenteComplementarioDetalle {
   id: string;
-  nivel: "N2" | "N3" | "N4";
+  nivel: NivelAntecedente;
   padreId: string | null;
   expandido: boolean;
   tipoDocumento: string;
@@ -29,18 +32,24 @@ export interface AntecedenteComplementarioDetalle {
   estado: string;
   fechaCarga: string;
   archivo: string;
-  version?: number;
+  referenciaArchivo?: string | null;
 }
 
 export interface EtapaDetalle {
+  /** Id de `etapa_gestion`; vacío si la etapa todavía no existe en la gestión. */
   id?: string;
-  version?: number;
+  /** Id de la etapa del catálogo. */
+  stageId?: string;
   etapa: string;
   porcentaje: number;
   estado: string;
+  /** `DD-MM-YYYY` */
   fechaEstimada: string;
+  /** `DD-MM-YYYY` */
   fechaReal: string;
+  /** Nombre para mostrar del responsable. */
   responsable: string;
+  responsableId?: string | null;
   observacion: string;
 }
 

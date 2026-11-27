@@ -63,6 +63,20 @@
     [attr.aria-busy]="cargandoDetalle"
     [attr.aria-label]="'Detalle del trámite ' + tramite.id"
   >
+    @if (erroresCarga.length) {
+    <div class="detail-alert detail-alert--error" role="alert">
+      @for (error of erroresCarga; track $index) { <p>{{ error }}</p> }
+    </div>
+    }
+    @if (mensajeArchivo) {
+    <div
+      class="detail-alert"
+      [class.detail-alert--error]="mensajeArchivoEsError"
+      [attr.role]="mensajeArchivoEsError ? 'alert' : 'status'"
+    >
+      <p>{{ mensajeArchivo }}</p>
+    </div>
+    }
     <section class="general-card" aria-labelledby="general-title">
       <header class="general-card__header">
         <div class="general-card__title">
@@ -210,43 +224,20 @@
                 </td>
                 <td>{{ fila.antecedente.responsable }}</td>
                 <td>
-                  @if (fila.antecedente.isSpecificManagement) {
-                  <span>—</span>
-                  } @else {
                   <p-select
                     [inputId]="'estado-requerido-' + fila.antecedente.id"
                     [name]="'estadoRequerido' + fila.antecedente.id"
                     [(ngModel)]="fila.antecedente.estado"
                     [options]="estadosAntecedente"
+                    [disabled]="!tieneArchivo(fila.antecedente.archivo)"
+                    [ariaLabel]="'Estado de ' + fila.antecedente.antecedente"
                     appendTo="body"
                     styleClass="antecedent-status-select"
                     panelStyleClass="detail-status-select-panel"
                   />
-                  }
                 </td>
+                <td>{{ fila.antecedente.fechaCarga || "—" }}</td>
                 <td>
-                  @if (fila.antecedente.isSpecificManagement) {
-                  <span>—</span>
-                  } @else {
-                  <p-datepicker
-                    [inputId]="'fecha-carga-requerido-' + fila.antecedente.id"
-                    [name]="'fechaCargaRequerido' + fila.antecedente.id"
-                    [(ngModel)]="fila.antecedente.fechaCarga"
-                    dataType="string"
-                    dateFormat="dd-mm-yy"
-                    placeholder="dd-mm-aaaa"
-                    [showIcon]="true"
-                    iconDisplay="input"
-                    appendTo="body"
-                    styleClass="stage-date-input"
-                    inputStyleClass="stage-date-input"
-                  />
-                  }
-                </td>
-                <td>
-                  @if (fila.antecedente.isSpecificManagement) {
-                  <span>—</span>
-                  } @else {
                   <div
                     class="file-cell file-cell--with-upload"
                     [class.file-cell--has-file]="
@@ -263,6 +254,8 @@
                           type="button"
                           class="file-action-button"
                           title="Descargar archivo"
+                          [disabled]="archivoEnCursoId !== null"
+                          (click)="descargarArchivo(fila.antecedente)"
                           [attr.aria-label]="
                             'Descargar ' + fila.antecedente.archivo
                           "
@@ -281,6 +274,8 @@
                           type="button"
                           class="file-action-button"
                           title="Visualizar archivo"
+                          [disabled]="archivoEnCursoId !== null"
+                          (click)="descargarArchivo(fila.antecedente, true)"
                           [attr.aria-label]="
                             'Visualizar ' + fila.antecedente.archivo
                           "
@@ -332,6 +327,7 @@
                           }"
                           chooseStyleClass="antecedent-file-choose-button"
                           [customUpload]="true"
+                          [disabled]="archivoEnCursoId !== null"
                           [showCancelButton]="false"
                           [showUploadButton]="false"
                           styleClass="antecedent-file-upload"
@@ -349,8 +345,10 @@
                         </p-fileupload>
                       </p-inputgroup-addon>
                     </p-inputgroup>
+                    @if (archivoEnCursoId === fila.antecedente.id) {
+                    <small class="file-progress" role="status">Procesando archivo…</small>
+                    }
                   </div>
-                  }
                 </td>
                 <td>
                   <div class="table-actions">
@@ -573,12 +571,14 @@
                     [name]="'estadoComplementario' + fila.antecedente.id"
                     [(ngModel)]="fila.antecedente.estado"
                     [options]="estadosAntecedente"
+                    [disabled]="!tieneArchivo(fila.antecedente.archivo)"
+                    [ariaLabel]="'Estado de ' + fila.antecedente.tipoDocumento"
                     appendTo="body"
                     styleClass="antecedent-status-select"
                     panelStyleClass="detail-status-select-panel"
                   />
                 </td>
-                <td>{{ fila.antecedente.fechaCarga }}</td>
+                <td>{{ fila.antecedente.fechaCarga || "—" }}</td>
                 <td>
                   <div
                     class="file-cell file-cell--with-upload"
@@ -596,6 +596,8 @@
                           type="button"
                           class="file-action-button"
                           title="Descargar archivo"
+                          [disabled]="archivoEnCursoId !== null"
+                          (click)="descargarArchivo(fila.antecedente)"
                           [attr.aria-label]="
                             'Descargar ' + fila.antecedente.archivo
                           "
@@ -614,6 +616,8 @@
                           type="button"
                           class="file-action-button"
                           title="Visualizar archivo"
+                          [disabled]="archivoEnCursoId !== null"
+                          (click)="descargarArchivo(fila.antecedente, true)"
                           [attr.aria-label]="
                             'Visualizar ' + fila.antecedente.archivo
                           "
@@ -669,6 +673,7 @@
                           }"
                           chooseStyleClass="antecedent-file-choose-button"
                           [customUpload]="true"
+                          [disabled]="archivoEnCursoId !== null"
                           [showCancelButton]="false"
                           [showUploadButton]="false"
                           styleClass="antecedent-file-upload"
@@ -686,6 +691,9 @@
                         </p-fileupload>
                       </p-inputgroup-addon>
                     </p-inputgroup>
+                    @if (archivoEnCursoId === fila.antecedente.id) {
+                    <small class="file-progress" role="status">Procesando archivo…</small>
+                    }
                   </div>
                 </td>
                 <td>
@@ -801,8 +809,8 @@
                     [name]="'fechaEstimadaEtapa' + i"
                     [(ngModel)]="item.fechaEstimada"
                     dataType="string"
-                    dateFormat="dd/mm/yy"
-                    placeholder="dd/mm/yyyy"
+                    dateFormat="dd-mm-yy"
+                    placeholder="dd-mm-aaaa"
                     [showIcon]="true"
                     [disabled]="!puedeEditarEtapa(i)"
                     iconDisplay="input"
@@ -828,14 +836,21 @@
                   />
                 </td>
                 <td>
-                  <input
-                    pInputText
-                    [id]="'responsable-etapa-' + i"
+                  <p-select
+                    [inputId]="'responsable-etapa-' + i"
                     [name]="'responsableEtapa' + i"
-                    [(ngModel)]="item.responsable"
+                    [(ngModel)]="item.responsableId"
+                    [options]="opcionesResponsables"
+                    optionLabel="label"
+                    optionValue="value"
+                    [showClear]="true"
+                    [filter]="opcionesResponsables.length > 8"
+                    [placeholder]="item.responsable || 'Sin responsable'"
                     [disabled]="!puedeEditarEtapa(i)"
-                    maxlength="150"
-                    class="stage-owner-input"
+                    [ariaLabel]="'Responsable de ' + item.etapa"
+                    appendTo="body"
+                    styleClass="stage-owner-input"
+                    panelStyleClass="detail-status-select-panel"
                   />
                 </td>
                 <td>
@@ -885,6 +900,9 @@
   }
 
   <ng-template #footer>
+    @if (errorGuardado) {
+    <p class="detail-save-error" role="alert">{{ errorGuardado }}</p>
+    }
     @if (tramite && !cargandoDetalle) {
     <button pButton type="button" [disabled]="guardando || cargandoDetalle" (click)="guardarCambios()">
       @if (guardando) {

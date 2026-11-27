@@ -67,8 +67,6 @@ describe("TramiteDetalle", () => {
 
   it("muestra el N2 real en la tabla y permite editarlo", () => {
     expect(componente.antecedentesRequeridos[0].nivel).toBe("N2");
-    expect(componente.antecedentesRequeridos[0].isSpecificManagement).toBeUndefined();
-    expect(componente.antecedentesRequeridos[0].version).toBe(1);
   });
 
   it("conserva los antecedentes requeridos en N3", () => {
@@ -182,23 +180,15 @@ describe("TramiteDetalle", () => {
     expect(componente.porcentajeAvance).toBe(20);
   });
 
-  it("genera la fecha de carga al subir un archivo pendiente", () => {
+  it("sin servicio de archivos informa que la carga no está disponible y limpia el input", () => {
     const antecedente = componente.antecedentesRequeridos[2];
-    const archivo = new File(["contenido"], "formulario-ingreso.pdf", {
-      type: "application/pdf",
-    });
-    const input = {
-      files: { item: () => archivo },
-      value: "archivo-seleccionado",
-    };
+    const archivo = new File(["contenido"], "formulario-ingreso.pdf", { type: "application/pdf" });
+    const input = { files: { item: () => archivo }, value: "archivo-seleccionado" };
 
-    componente.cargarArchivoAntecedente(
-      { target: input } as unknown as Event,
-      antecedente,
-    );
+    componente.cargarArchivoAntecedente({ target: input } as unknown as Event, antecedente);
 
-    expect(antecedente.archivo).toBe("formulario-ingreso.pdf");
-    expect(antecedente.fechaCarga).not.toBe("—");
+    expect(antecedente.archivo).toBe("—");
+    expect(componente.mensajeArchivoEsError).toBe(true);
     expect(input.value).toBe("");
   });
 

@@ -5,12 +5,17 @@ import {
   BackendCatalogStation,
   BackendManagementType,
   BackendSpecificManagement,
+  StageCatalogItem,
 } from "./api-models";
 
 @Injectable({ providedIn: "root" })
 export class CatalogApiService extends ApiBaseService {
   catalogStations() {
     return this.get<BackendCatalogStation[]>("/catalogos/items");
+  }
+
+  stageCatalog() {
+    return this.get<StageCatalogItem[]>("/catalogos/stages");
   }
 
   managementTypes() {

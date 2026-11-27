@@ -26,9 +26,9 @@ import {
   resolverSeveridadEstado,
   TagSeverity,
 } from "../../models/estado-tramite";
-import { BackendManagement } from "../../../../shared/services/api-models";
+import { BackendManagement, ManagementPriority, ManagementStatus } from "../../../../shared/services/api-models";
 import { IdentityApiService } from "../../../../shared/services/identity-api";
-import { ManagementApiService } from "../../../../shared/services/management-api";
+import { aManagementWrite, ManagementApiService } from "../../../../shared/services/management-api";
 
 @Component({
   selector: "app-tramite-modificacion",
@@ -157,14 +157,10 @@ export class TramiteModificacion {
   grabar(): void {
     if (this.backendManagement) {
       this.managementApi.updateManagement(this.tramiteId, {
-        ...this.backendManagement,
-        priority: this.tramite.prioridad,
-        status: this.tramite.estado,
-        responsibleUserId: this.backendManagement.responsibleUserId,
+        ...aManagementWrite(this.backendManagement),
+        priority: this.tramite.prioridad as ManagementPriority,
+        status: this.tramite.estado as ManagementStatus,
         requesterName: this.tramite.solicitanteCopec,
-        openedOn: this.backendManagement.openedOn,
-        estimatedCompletionOn: this.backendManagement.estimatedCompletionOn,
-        lastReviewedOn: this.backendManagement.lastReviewedOn,
       }).subscribe({
         next: () => this.navegarTrasGuardar(),
         error: (error: Error) => { this.errorMessage = error.message; },

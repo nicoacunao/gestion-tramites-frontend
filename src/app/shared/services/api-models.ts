@@ -150,24 +150,48 @@ export interface ManagementContract {
 
 export type BackendManagement = ManagementContract;
 
+/**
+ * Antecedente de una gestión (`ManagementBackground` en OpenAPI). Cada uno es
+ * una gestión específica (`gestion_especifica`) con, a lo sumo, un archivo.
+ */
 export interface BackendBackground {
   id: string;
   managementId: string;
   parentManagementBackgroundId: string | null;
   managementTypeId: string;
   backgroundId: string;
-  specificManagementId?: string | null;
-  level: "N2" | "N3" | "N4";
-  category?: "requerido" | "complementario" | "adicional" | null;
+  managementTypeName: string;
+  /** `N1`, `N2`… (N1 es el tipo principal de la gestión). */
+  level: string;
   required: boolean;
   responsibleUserId: string;
   status: string;
+  /** Referencia de almacenamiento del archivo; `null` si no tiene. */
   fileReference: string | null;
-  uploadedAt: string | null;
-  observations?: string | null;
-  version: number;
+  uploadedAt: string;
 }
 
+/** Cuerpo de `PUT /gestiones/backgrounds/{id}`. */
+export interface BackgroundUpdate {
+  responsibleUserId: string | null;
+  /** 1 a 30 caracteres. */
+  status: string;
+  /** Obligatorio para antecedentes de nivel mayor que 1. */
+  fileReference: string | null;
+}
+
+/** Cuerpo de `POST /gestiones/items/{id}/backgrounds`. */
+export interface BackgroundCreate {
+  managementTypeId: string;
+  responsibleUserId?: string | null;
+  status?: string;
+  fileReference?: string | null;
+}
+
+export const STAGE_STATUSES = ["Pendiente", "En curso", "Completado"] as const;
+export type StageStatus = (typeof STAGE_STATUSES)[number];
+
+/** Etapa de una gestión (`ManagementStage` en OpenAPI). */
 export interface BackendStage {
   id: string;
   managementId: string;
@@ -175,11 +199,49 @@ export interface BackendStage {
   stageName: string;
   percentage: number;
   status: string;
+  /** `YYYY-MM-DD` */
   estimatedOn: string | null;
+  /** `YYYY-MM-DD` */
   completedOn: string | null;
   responsible: string | null;
+  responsibleUserId: string | null;
   notes: string | null;
-  version: number;
+}
+
+/** Cuerpo de `PUT /gestiones/stages/{id}`. `completedOn` no puede ser anterior a `estimatedOn`. */
+export interface StageUpdate {
+  status: StageStatus;
+  estimatedOn: string | null;
+  completedOn: string | null;
+  responsibleUserId: string | null;
+  /** Hasta 300 caracteres. */
+  notes: string | null;
+}
+
+/** Cuerpo de `POST /gestiones/items/{id}/stages`. */
+export interface StageCreate extends Partial<StageUpdate> {
+  stageId: string;
+}
+
+/** Etapa del catálogo (`StageCatalogItem`). */
+export interface StageCatalogItem {
+  id: string;
+  name: string;
+  percentage: number;
+  order: number;
+}
+
+/** Cuerpo de `POST/PUT /gestiones/items` (`ManagementWrite`). */
+export interface ManagementWrite {
+  stationId: string;
+  responsibleUserId: string;
+  openedOn: string;
+  estimatedCompletionOn: string | null;
+  lastReviewedOn: string | null;
+  priority: ManagementPriority;
+  status: ManagementStatus;
+  /** 1 a 150 caracteres. */
+  requesterName: string;
 }
 
 export type LogEntryType = "inicio" | "novedad" | "seguimiento" | "contacto";
