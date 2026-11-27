@@ -11,8 +11,6 @@ export class TramitesMock {
 
   constructor(private readonly api?: ManagementApiService) {}
 
-  get usaApi(): boolean { return Boolean(this.api); }
-
   cargarTodos(assignedToMe = false): Observable<Tramite[]> {
     if (!this.api) {
       return throwError(() => new Error("El cliente API no está disponible."));

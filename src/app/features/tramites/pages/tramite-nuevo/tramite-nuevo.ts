@@ -50,7 +50,6 @@ import { BitacoraApiService } from "../../../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../../../shared/services/catalog-api";
 import { IdentityApiService } from "../../../../shared/services/identity-api";
 import { ManagementApiService } from "../../../../shared/services/management-api";
-import { UserSessionService } from "../../../../shared/services/user-session";
 
 interface EstacionServicio {
   codigo: string;
@@ -156,7 +155,6 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private readonly managementApi = inject(ManagementApiService);
   private readonly bitacoraApi = inject(BitacoraApiService);
   private readonly filesApi = inject(FilesApiService);
-  private readonly userSession = inject(UserSessionService);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
   readonly segundosRedireccion = 6;

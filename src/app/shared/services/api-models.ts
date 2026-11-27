@@ -45,15 +45,6 @@ export interface BackendUser {
   organization?: string | null;
 }
 
-export interface BackendCatalogStation {
-  id: string;
-  name?: string | null;
-  address: string;
-  commune: string;
-  legalName: string;
-  companyRut: string;
-}
-
 /** Nodo del catálogo jerárquico de tipos de gestión (`ManagementType`). */
 export interface ManagementTypeNode {
   id: string;
@@ -80,45 +71,6 @@ export interface CatalogStation {
   legalRepresentative?: string | null;
   legalRepresentativeRut?: string | null;
   estado: string;
-}
-
-/** @deprecated Contrato anterior; usar `ManagementTypeNode`. */
-export interface BackendManagementType {
-  id: string;
-  name: string;
-  version: number;
-  secondLevelLabel?: string;
-  requiresSpecificSelection?: boolean;
-}
-
-export interface BackendSpecificManagement {
-  id: string;
-  managementTypeId: string;
-  code: string;
-  name: string;
-  level: "N2";
-  active: boolean;
-  backgrounds?: Array<{
-    id: string;
-    name: string;
-    level: "N2" | "N3" | "N4";
-    parentBackgroundId: string | null;
-  }>;
-}
-
-export interface BackendSpecificManagementReference {
-  id: string;
-  name: string;
-  code: string;
-  level: "N2";
-  managementTypeId: string;
-  managementTypeName?: string | null;
-}
-
-export interface BackendCatalogBackground {
-  id: string;
-  name: string;
-  version: number;
 }
 
 export const MANAGEMENT_STATUSES = [

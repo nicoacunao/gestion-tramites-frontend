@@ -53,14 +53,13 @@ import {
   StageStatus,
 } from "../../shared/services/api-models";
 import { FILE_MAX_BYTES, FilesApiService, nombreDeArchivo } from "../../shared/services/files-api";
-import { fechaIsoAVista, gestionATramite } from "../../shared/services/management-presentation";
+import { fechaIsoAVista, fechaVistaAIso, gestionATramite } from "../../shared/services/management-presentation";
 import { mensajeDeError } from "../../shared/services/api-base";
 import { BitacoraApiService, LOG_COMMENT_MAX, LOG_TITLE_MAX } from "../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../shared/services/catalog-api";
 import { IdentityApiService } from "../../shared/services/identity-api";
 import { aManagementWrite, ManagementApiService } from "../../shared/services/management-api";
 
-type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
 const PRIORIDADES: readonly ManagementPriority[] = ["Alta", "Media", "Baja"];
 /** Estados que exigen archivo asociado en antecedentes N2+. */
@@ -1050,15 +1049,6 @@ export class TramiteDetalle {
       });
   }
 
-  private obtenerIniciales(nombre: string): string {
-    return nombre
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte.charAt(0).toLocaleUpperCase("es-CL"))
-      .join("");
-  }
-
   private registrarUltimaRevision(): void {
     if (!this.tramite) {
       return;
@@ -1108,11 +1098,6 @@ export class TramiteDetalle {
     return `${anio}-${mes}-${dia}`;
   }
 
-  private convertirFechaAIso(fecha: string): string {
-    const [dia, mes, anio] = fecha.split("-");
-    return `${anio}-${mes}-${dia}`;
-  }
-
   private formatearFecha(fecha: Date): string {
     return new Intl.DateTimeFormat("es-CL", {
       day: "2-digit",
@@ -1145,20 +1130,9 @@ export class TramiteDetalle {
 
   /** `DD-MM-YYYY` o `DD/MM/YYYY` → `YYYY-MM-DD`; `null` si está vacía o no es válida. */
   private fechaParaApi(fecha: string | null | undefined): string | null {
-    if (!fecha) {
-      return null;
-    }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      return fecha;
-    }
-    const [dia, mes, anio] = fecha.split(/[/-]/);
-    if (!/^\d{1,2}$/.test(dia ?? "") || !/^\d{1,2}$/.test(mes ?? "") || !/^\d{4}$/.test(anio ?? "")) {
-      return null;
-    }
-    const iso = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
-    const valida = new Date(`${iso}T00:00:00Z`);
-    return Number.isNaN(valida.getTime()) || valida.toISOString().slice(0, 10) !== iso ? null : iso;
+    return fechaVistaAIso(fecha);
   }
+
 
   private nombreResponsable(id: string | null | undefined): string {
     if (!id) return "";
