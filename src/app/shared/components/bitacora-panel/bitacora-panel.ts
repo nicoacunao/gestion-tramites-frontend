@@ -33,7 +33,6 @@ export interface EntradaBitacora {
   automatica: boolean;
 }
 
-const ZONA_HORARIA = "America/Santiago";
 const AUTOR_DESCONOCIDO = "Usuario del sistema";
 
 /**
@@ -204,20 +203,16 @@ export class BitacoraPanel implements OnDestroy {
       return;
     }
 
-    const ahora = new Date();
     const gestionId = this._gestionId;
     this.guardando = true;
     this.mensajeValidacion = "";
     this.actualizarVista();
-    // Se envían fecha y hora de Chile: el backend interpreta ambos valores en
-    // America/Santiago. El autor lo asigna el backend desde la sesión.
+    // Fecha, hora (America/Santiago) y autor los asigna el backend.
     this.guardado = this.api.createLog({
       managementId: gestionId,
       title: titulo,
       comment: comentario,
       type: "novedad",
-      registeredOn: this.formatearFechaIso(ahora),
-      registeredAt: this.formatearHora(ahora, true),
     }).subscribe({
       next: (registrada) => {
         this.guardando = false;
@@ -294,28 +289,5 @@ export class BitacoraPanel implements OnDestroy {
 
   private actualizarVista(): void {
     this.changeDetectorRef?.markForCheck();
-  }
-
-  private formatearFechaIso(fecha: Date): string {
-    const partes = new Intl.DateTimeFormat("en-CA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: ZONA_HORARIA,
-    }).formatToParts(fecha);
-    const valor = (tipo: Intl.DateTimeFormatPartTypes) =>
-      partes.find(({ type }) => type === tipo)?.value ?? "";
-
-    return `${valor("year")}-${valor("month")}-${valor("day")}`;
-  }
-
-  private formatearHora(fecha: Date, conSegundos = false): string {
-    return new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      ...(conSegundos ? { second: "2-digit" as const } : {}),
-      hourCycle: "h23",
-      timeZone: ZONA_HORARIA,
-    }).format(fecha);
   }
 }

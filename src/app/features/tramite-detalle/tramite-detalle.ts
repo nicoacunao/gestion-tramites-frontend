@@ -887,12 +887,11 @@ export class TramiteDetalle {
     this.registrarDocumentoEnBitacora(
       tipoDocumento,
       contexto || `Se incorporó el archivo ${archivo} como evidencia del trámite.`,
-      ahora,
     );
   }
 
   /** Registra la recepción del documento en la bitácora (`POST /bitacora/items`). */
-  private registrarDocumentoEnBitacora(tipoDocumento: string, comentario: string, ahora: Date): void {
+  private registrarDocumentoEnBitacora(tipoDocumento: string, comentario: string): void {
     const managementId = this.tramite?.apiId;
     if (!this.bitacoraApi || !managementId) return;
 
@@ -901,9 +900,7 @@ export class TramiteDetalle {
       title: `Documento incorporado: ${tipoDocumento}`.slice(0, LOG_TITLE_MAX),
       comment: comentario.slice(0, LOG_COMMENT_MAX),
       type: "novedad",
-      // Fecha y hora de Chile: el backend las interpreta en America/Santiago.
-      registeredOn: this.formatearFechaIso(ahora),
-      registeredAt: this.formatearHora(ahora),
+      // Fecha, hora (America/Santiago) y autor los asigna el backend.
     }).subscribe({
       next: () => {
         this.mensajeDocumento =
@@ -1107,19 +1104,6 @@ export class TramiteDetalle {
     })
       .format(fecha)
       .replaceAll("/", "-");
-  }
-
-  private formatearFechaIso(fecha: Date): string {
-    const partes = new Intl.DateTimeFormat("en-CA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: "America/Santiago",
-    }).formatToParts(fecha);
-    const valor = (tipo: Intl.DateTimeFormatPartTypes) =>
-      partes.find(({ type }) => type === tipo)?.value ?? "";
-
-    return `${valor("year")}-${valor("month")}-${valor("day")}`;
   }
 
   /** Fecha o instante del backend (`YYYY-MM-DD…`) → `DD-MM-YYYY`; vacío si no hay. */

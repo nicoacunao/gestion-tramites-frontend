@@ -114,9 +114,9 @@ describe("TramiteDetalle", () => {
       title: "Documento incorporado: Informe técnico",
       comment: "La municipalidad entregó el informe y se coordinó su revisión.",
       type: "novedad",
-      registeredOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-      registeredAt: expect.stringMatching(/^\d{2}:\d{2}$/),
     }));
+    expect(createLog.mock.calls[0][0].registeredOn).toBeUndefined();
+    expect(createLog.mock.calls[0][0].registeredAt).toBeUndefined();
     expect(cargar).toHaveBeenCalled();
     expect(detalle.mensajeDocumento).toContain("registrada en la bitácora");
   });

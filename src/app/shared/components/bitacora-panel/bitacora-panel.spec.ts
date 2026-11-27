@@ -124,8 +124,9 @@ describe("BitacoraPanel", () => {
       type: "novedad",
     });
     expect(body.userId).toBeUndefined();
-    expect(body.registeredOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(body.registeredAt).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    // La fecha y hora las asigna el backend.
+    expect(body.registeredOn).toBeUndefined();
+    expect(body.registeredAt).toBeUndefined();
     expect(componente.guardando).toBe(true);
     expect(componente.entradas).toHaveLength(1);
     expect(componente.mensajeConfirmacion).toBe("");
