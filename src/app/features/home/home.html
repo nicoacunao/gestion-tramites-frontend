@@ -157,69 +157,99 @@
             class="user-profile-form"
             [formGroup]="userForm"
             (ngSubmit)="saveUserData()"
+            [attr.aria-busy]="savingProfile"
             novalidate
           >
+            @let namesCtrl = userForm.controls.names;
             <div class="profile-field">
-              <label for="profile-full-name">Nombre completo</label>
+              <label for="profile-names">Nombres <span aria-hidden="true">*</span></label>
               <input
                 pInputText
-                id="profile-full-name"
+                id="profile-names"
                 type="text"
-                formControlName="fullName"
-                autocomplete="name"
-                maxlength="80"
-                [attr.aria-describedby]="
-                      userForm.controls.fullName.touched &&
-                      userForm.controls.fullName.invalid
-                        ? 'profile-full-name-error'
-                        : null
-                    "
-                [attr.aria-invalid]="
-                      userForm.controls.fullName.touched &&
-                      userForm.controls.fullName.invalid
-                    "
+                formControlName="names"
+                autocomplete="given-name"
+                required
+                [attr.maxlength]="profileLimits.names"
+                [attr.aria-describedby]="namesCtrl.touched && namesCtrl.invalid ? 'profile-names-error' : null"
+                [attr.aria-invalid]="namesCtrl.touched && namesCtrl.invalid"
               />
-              @if ( userForm.controls.fullName.touched &&
-              userForm.controls.fullName.invalid ) {
-              <small
-                id="profile-full-name-error"
-                class="field-error"
-                role="alert"
-              >
-                Ingresa un nombre de al menos 3 caracteres.
+              @if (namesCtrl.touched && namesCtrl.invalid) {
+              <small id="profile-names-error" class="field-error" role="alert">
+                @if (namesCtrl.hasError("required")) { Ingresa tus nombres. }
+                @else { Los nombres no pueden superar los {{ profileLimits.names }} caracteres. }
               </small>
               }
             </div>
 
+            @let firstSurnameCtrl = userForm.controls.firstSurname;
             <div class="profile-field">
-              <label for="profile-email">Correo electrónico</label>
+              <label for="profile-first-surname">Primer apellido <span aria-hidden="true">*</span></label>
+              <input
+                pInputText
+                id="profile-first-surname"
+                type="text"
+                formControlName="firstSurname"
+                autocomplete="family-name"
+                required
+                [attr.maxlength]="profileLimits.firstSurname"
+                [attr.aria-describedby]="firstSurnameCtrl.touched && firstSurnameCtrl.invalid ? 'profile-first-surname-error' : null"
+                [attr.aria-invalid]="firstSurnameCtrl.touched && firstSurnameCtrl.invalid"
+              />
+              @if (firstSurnameCtrl.touched && firstSurnameCtrl.invalid) {
+              <small id="profile-first-surname-error" class="field-error" role="alert">
+                @if (firstSurnameCtrl.hasError("required")) { Ingresa tu primer apellido. }
+                @else { El apellido no puede superar los {{ profileLimits.firstSurname }} caracteres. }
+              </small>
+              }
+            </div>
+
+            @let secondSurnameCtrl = userForm.controls.secondSurname;
+            <div class="profile-field">
+              <label for="profile-second-surname">Segundo apellido <span class="field-optional">(opcional)</span></label>
+              <input
+                pInputText
+                id="profile-second-surname"
+                type="text"
+                formControlName="secondSurname"
+                autocomplete="additional-name"
+                [attr.maxlength]="profileLimits.secondSurname"
+                [attr.aria-describedby]="secondSurnameCtrl.touched && secondSurnameCtrl.invalid ? 'profile-second-surname-error' : null"
+                [attr.aria-invalid]="secondSurnameCtrl.touched && secondSurnameCtrl.invalid"
+              />
+              @if (secondSurnameCtrl.touched && secondSurnameCtrl.invalid) {
+              <small id="profile-second-surname-error" class="field-error" role="alert">
+                El apellido no puede superar los {{ profileLimits.secondSurname }} caracteres.
+              </small>
+              }
+            </div>
+
+            @let emailCtrl = userForm.controls.email;
+            <div class="profile-field">
+              <label for="profile-email">Correo electrónico <span aria-hidden="true">*</span></label>
               <input
                 pInputText
                 id="profile-email"
                 type="email"
                 formControlName="email"
                 autocomplete="email"
-                [attr.aria-describedby]="
-                      userForm.controls.email.touched &&
-                      userForm.controls.email.invalid
-                        ? 'profile-email-error'
-                        : null
-                    "
-                [attr.aria-invalid]="
-                      userForm.controls.email.touched &&
-                      userForm.controls.email.invalid
-                    "
+                required
+                [attr.maxlength]="profileLimits.email"
+                [attr.aria-describedby]="emailCtrl.touched && emailCtrl.invalid ? 'profile-email-error' : null"
+                [attr.aria-invalid]="emailCtrl.touched && emailCtrl.invalid"
               />
-              @if ( userForm.controls.email.touched &&
-              userForm.controls.email.invalid ) {
+              @if (emailCtrl.touched && emailCtrl.invalid) {
               <small id="profile-email-error" class="field-error" role="alert">
-                Ingresa un correo electrónico válido.
+                @if (emailCtrl.hasError("required")) { Ingresa tu correo electrónico. }
+                @else if (emailCtrl.hasError("conflict")) { Este correo ya está registrado por otro usuario. }
+                @else { Ingresa un correo electrónico válido. }
               </small>
               }
             </div>
 
+            @let phoneCtrl = userForm.controls.phone;
             <div class="profile-field">
-              <label for="profile-phone">Teléfono</label>
+              <label for="profile-phone">Teléfono <span class="field-optional">(opcional)</span></label>
               <input
                 pInputText
                 id="profile-phone"
@@ -228,30 +258,23 @@
                 formControlName="phone"
                 autocomplete="tel"
                 placeholder="+56 9 1234 5678"
-                [attr.aria-describedby]="
-                      userForm.controls.phone.touched &&
-                      userForm.controls.phone.invalid
-                        ? 'profile-phone-error'
-                        : null
-                    "
-                [attr.aria-invalid]="
-                      userForm.controls.phone.touched &&
-                      userForm.controls.phone.invalid
-                    "
+                [attr.maxlength]="profileLimits.phone"
+                [attr.aria-describedby]="phoneCtrl.touched && phoneCtrl.invalid ? 'profile-phone-error' : null"
+                [attr.aria-invalid]="phoneCtrl.touched && phoneCtrl.invalid"
               />
-              @if ( userForm.controls.phone.touched &&
-              userForm.controls.phone.invalid ) {
+              @if (phoneCtrl.touched && phoneCtrl.invalid) {
               <small id="profile-phone-error" class="field-error" role="alert">
-                Ingresa un teléfono válido.
+                Ingresa un teléfono válido, por ejemplo +56 9 1234 5678.
               </small>
               }
             </div>
 
+            @let descriptionCtrl = userForm.controls.description;
             <div class="profile-field profile-field--wide">
               <div class="field-label-row">
-                <label for="profile-description">Descripción breve</label>
-                <span
-                  >{{ userForm.controls.description.value.length }}/140</span
+                <label for="profile-description">Descripción breve <span class="field-optional">(opcional)</span></label>
+                <span id="profile-description-count" aria-live="polite"
+                  >{{ descriptionCtrl.value.length }}/{{ profileLimits.description }}</span
                 >
               </div>
               <textarea
@@ -259,26 +282,13 @@
                 id="profile-description"
                 formControlName="description"
                 rows="3"
-                maxlength="140"
-                [attr.aria-describedby]="
-                      userForm.controls.description.touched &&
-                      userForm.controls.description.invalid
-                        ? 'profile-description-error'
-                        : null
-                    "
-                [attr.aria-invalid]="
-                      userForm.controls.description.touched &&
-                      userForm.controls.description.invalid
-                    "
+                [attr.maxlength]="profileLimits.description"
+                [attr.aria-describedby]="descriptionCtrl.touched && descriptionCtrl.invalid ? 'profile-description-error profile-description-count' : 'profile-description-count'"
+                [attr.aria-invalid]="descriptionCtrl.touched && descriptionCtrl.invalid"
               ></textarea>
-              @if ( userForm.controls.description.touched &&
-              userForm.controls.description.invalid ) {
-              <small
-                id="profile-description-error"
-                class="field-error"
-                role="alert"
-              >
-                Ingresa una descripción breve.
+              @if (descriptionCtrl.touched && descriptionCtrl.invalid) {
+              <small id="profile-description-error" class="field-error" role="alert">
+                La descripción no puede superar los {{ profileLimits.description }} caracteres.
               </small>
               }
             </div>
@@ -289,11 +299,14 @@
                 type="button"
                 severity="secondary"
                 [outlined]="true"
+                [disabled]="savingProfile || userForm.pristine"
                 (click)="resetUserData()"
               >
                 Descartar cambios
               </button>
-              <button pButton type="submit">Guardar cambios</button>
+              <button pButton type="submit" [disabled]="savingProfile" [loading]="savingProfile">
+                {{ savingProfile ? "Guardando…" : "Guardar cambios" }}
+              </button>
             </div>
           </form>
         </p-card>

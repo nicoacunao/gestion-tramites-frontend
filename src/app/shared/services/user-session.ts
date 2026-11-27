@@ -1,9 +1,14 @@
 import { Injectable, Optional, signal } from "@angular/core";
+import { map, Observable, throwError } from "rxjs";
 import { BackendUser } from "./api-models";
 import { IdentityApiService } from "./identity-api";
 
 export interface ConnectedUser {
   id?: string;
+  /** Nombres, primer y segundo apellido tal como los administra el backend. */
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   firstName: string;
   fullName: string;
   initials: string;
@@ -15,12 +20,30 @@ export interface ConnectedUser {
   organization: string;
 }
 
+/** Campos editables del perfil (`PUT /identidad/profile`). */
 export interface EditableUserProfile {
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   email: string;
   phone: string;
   description: string;
 }
+
+const EMPTY_USER: ConnectedUser = {
+  names: "",
+  firstSurname: "",
+  secondSurname: "",
+  firstName: "",
+  fullName: "",
+  initials: "",
+  role: "",
+  description: "",
+  email: "",
+  phone: "",
+  rut: "",
+  organization: "",
+};
 
 export const ACCESS_TOKEN_KEY = "gestion-tramites.access-token";
 export const USER_KEY = "gestion-tramites.user";
@@ -28,17 +51,7 @@ export const EXPIRES_AT_KEY = "gestion-tramites.expires-at";
 
 @Injectable({ providedIn: "root" })
 export class UserSessionService {
-  private readonly userState = signal<ConnectedUser>({
-    firstName: "",
-    fullName: "",
-    initials: "",
-    role: "",
-    description: "",
-    email: "",
-    phone: "",
-    rut: "",
-    organization: "",
-  });
+  private readonly userState = signal<ConnectedUser>(EMPTY_USER);
 
   readonly currentUser = this.userState.asReadonly();
 
@@ -89,29 +102,31 @@ export class UserSessionService {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(EXPIRES_AT_KEY);
-    this.userState.set({ firstName: "", fullName: "", initials: "", role: "", description: "", email: "", phone: "", rut: "", organization: "" });
+    this.userState.set(EMPTY_USER);
   }
 
-  updateProfile(profile: EditableUserProfile): void {
-    const fullName = profile.fullName.trim();
+  /**
+   * Guarda el perfil en el backend y actualiza la sesión solo cuando el servidor
+   * confirma el cambio. Los campos opcionales vacíos se envían como `null`.
+   */
+  updateProfile(profile: EditableUserProfile): Observable<ConnectedUser> {
+    if (!this.api) {
+      return throwError(() => new Error("El cliente API no está disponible."));
+    }
 
-    this.api?.updateProfile({
-      names: fullName.split(/\s+/)[0] ?? fullName,
-      firstSurname: fullName.split(/\s+/).slice(1).join(" ") || fullName,
-      secondSurname: null,
+    return this.api.updateProfile({
+      names: profile.names.trim(),
+      firstSurname: profile.firstSurname.trim(),
+      secondSurname: this.optionalText(profile.secondSurname),
       email: profile.email.trim().toLowerCase(),
-      phone: profile.phone.trim(),
-      description: profile.description.trim(),
-    }).subscribe({ next: (user) => this.setUser(user), error: () => undefined });
-    this.userState.update((user) => ({
-      ...user,
-      firstName: fullName.split(/\s+/)[0],
-      fullName,
-      initials: this.createInitials(fullName),
-      email: profile.email.trim().toLowerCase(),
-      phone: profile.phone.trim(),
-      description: profile.description.trim(),
-    }));
+      phone: this.optionalText(profile.phone),
+      description: this.optionalText(profile.description),
+    }).pipe(
+      map((user) => {
+        this.setUser(user);
+        return this.userState();
+      }),
+    );
   }
 
   private setUser(user: BackendUser): void {
@@ -122,7 +137,12 @@ export class UserSessionService {
 
   private toConnectedUser(user: BackendUser): ConnectedUser {
     const fullName = [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" ");
-    return { id: user.id, firstName: user.names, fullName, initials: this.createInitials(fullName), role: user.role, description: user.description ?? "", email: user.email, phone: user.phone ?? "", rut: user.rut, organization: user.organization ?? "" };
+    return { id: user.id, names: user.names, firstSurname: user.firstSurname, secondSurname: user.secondSurname ?? "", firstName: user.names, fullName, initials: this.createInitials(fullName), role: user.role, description: user.description ?? "", email: user.email, phone: user.phone ?? "", rut: user.rut, organization: user.organization ?? "" };
+  }
+
+  private optionalText(value: string): string | null {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
   }
 
   private createInitials(fullName: string): string {

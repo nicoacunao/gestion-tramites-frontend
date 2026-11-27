@@ -1,6 +1,8 @@
 import {
   ChangeDetectorRef,
   Component,
+  DestroyRef,
+  effect,
   ElementRef,
   inject,
   QueryList,
@@ -29,7 +31,8 @@ import { SkeletonModule } from "primeng/skeleton";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
 import { Subscription } from "rxjs";
-import { UserSessionService } from "../../shared/services/user-session";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { ConnectedUser, EditableUserProfile, UserSessionService } from "../../shared/services/user-session";
 import { ApiClientError } from "../../shared/services/api-base";
 import { BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-models";
 import { ManagementApiService } from "../../shared/services/management-api";
@@ -100,31 +103,48 @@ export class Home {
 
   readonly user = this.userSession.currentUser;
 
+  /** Límites tomados de `PUT /identidad/profile`. */
+  readonly profileLimits = {
+    names: 100,
+    firstSurname: 80,
+    secondSurname: 80,
+    email: 254,
+    phone: 30,
+    description: 500,
+  } as const;
+
   readonly userForm = new FormGroup({
-    fullName: new FormControl(this.user().fullName, {
+    names: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(this.profileLimits.names)],
+    }),
+    firstSurname: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(this.profileLimits.firstSurname)],
+    }),
+    secondSurname: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.maxLength(this.profileLimits.secondSurname)],
+    }),
+    email: new FormControl("", {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email, Validators.maxLength(this.profileLimits.email)],
+    }),
+    phone: new FormControl("", {
       nonNullable: true,
       validators: [
-        Validators.required,
-        Validators.minLength(3),
-        Validators.maxLength(80),
-      ],
-    }),
-    email: new FormControl(this.user().email, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    phone: new FormControl(this.user().phone, {
-      nonNullable: true,
-      validators: [
-        Validators.required,
+        Validators.maxLength(this.profileLimits.phone),
         Validators.pattern(/^\+?[0-9][0-9\s-]{7,17}$/),
       ],
     }),
-    description: new FormControl(this.user().description, {
+    description: new FormControl("", {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(140)],
+      validators: [Validators.maxLength(this.profileLimits.description)],
     }),
   });
+
+  savingProfile = false;
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly quickAccesses: QuickAccess[] = [
     {
@@ -171,6 +191,14 @@ export class Home {
   importRequestId = "";
 
   constructor(private readonly managementApi: ManagementApiService, private readonly stationApi: StationApiService) {
+    // El perfil completo puede llegar después de construir la vista: se refleja
+    // en el formulario mientras la persona no haya empezado a editarlo.
+    effect(() => {
+      const user = this.user();
+      if (!this.userForm.dirty && !this.savingProfile) {
+        this.userForm.reset(this.profileFormValue(user));
+      }
+    });
     this.managementApi.managements(true).subscribe({
       next: (items) => {
         const userId = this.userSession.currentUser().id;
@@ -305,29 +333,81 @@ export class Home {
   }
 
   resetUserData(): void {
-    this.userForm.reset({
-      fullName: this.user().fullName,
-      email: this.user().email,
-      phone: this.user().phone,
-      description: this.user().description,
-    });
+    this.userForm.reset(this.profileFormValue(this.user()));
   }
 
   saveUserData(): void {
+    if (this.savingProfile) {
+      return;
+    }
+
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;
     }
 
-    this.userSession.updateProfile(this.userForm.getRawValue());
-    this.userForm.markAsPristine();
+    this.savingProfile = true;
+    this.userForm.disable({ emitEvent: false });
+    this.userSession.updateProfile(this.userForm.getRawValue()).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (user) => {
+        this.endProfileSave();
+        this.userForm.reset(this.profileFormValue(user));
+        this.messageService.add({
+          severity: "success",
+          summary: "Datos actualizados",
+          detail: "Los cambios de tu perfil se guardaron correctamente.",
+          life: 4500,
+        });
+      },
+      error: (error: unknown) => {
+        // Se rehabilita antes de marcar errores: `enable()` recalcula la validez
+        // y borraría un error asignado con anterioridad.
+        this.endProfileSave();
+        this.handleProfileError(error);
+      },
+    });
+  }
+
+  private endProfileSave(): void {
+    this.savingProfile = false;
+    this.userForm.enable({ emitEvent: false });
+    this.changeDetector.markForCheck();
+  }
+
+  private handleProfileError(error: unknown): void {
+    const apiError = error instanceof ApiClientError ? error : undefined;
+
+    // 401 lo resuelve el interceptor redirigiendo al login.
+    if (apiError?.status === 401) {
+      return;
+    }
+
+    if (apiError?.status === 409) {
+      const email = this.userForm.controls.email;
+      email.setErrors({ ...email.errors, conflict: true });
+      email.markAsTouched();
+      return;
+    }
 
     this.messageService.add({
-      severity: "success",
-      summary: "Datos actualizados",
-      detail: "Los cambios de tu perfil se guardaron correctamente.",
-      life: 4500,
+      severity: "error",
+      summary: "No se guardaron los cambios",
+      detail: apiError?.message ?? "No fue posible guardar tu perfil. Inténtalo nuevamente.",
+      life: 6000,
     });
+  }
+
+  private profileFormValue(user: ConnectedUser): EditableUserProfile {
+    return {
+      names: user.names,
+      firstSurname: user.firstSurname,
+      secondSurname: user.secondSurname,
+      email: user.email,
+      phone: user.phone,
+      description: user.description,
+    };
   }
 
   openImportDialog(): void {

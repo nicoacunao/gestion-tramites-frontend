@@ -22,8 +22,12 @@ const perfilCompleto: BackendUser = {
 
 function crearApi() {
   const perfil = new Subject<BackendUser>();
-  const api = { profile: vi.fn(() => perfil.asObservable()) };
-  return { api, perfil, servicio: new UserSessionService(api as unknown as IdentityApiService) };
+  const actualizado = new Subject<BackendUser>();
+  const api = {
+    profile: vi.fn(() => perfil.asObservable()),
+    updateProfile: vi.fn((_body: object) => actualizado.asObservable()),
+  };
+  return { api, perfil, actualizado, servicio: new UserSessionService(api as unknown as IdentityApiService) };
 }
 
 describe("UserSessionService", () => {
@@ -63,5 +67,48 @@ describe("UserSessionService", () => {
 
     expect(api.profile).not.toHaveBeenCalled();
     expect(localStorage.getItem("gestion-tramites.access-token")).toBeNull();
+  });
+
+  it("envía el perfil con apellidos separados y opcionales vacíos como null", () => {
+    const { api, actualizado, servicio } = crearApi();
+    servicio.setSession("token", "2099-01-01T00:00:00.000Z", usuarioLogin);
+    let resultado: unknown;
+
+    servicio.updateProfile({
+      names: "  Ana María ",
+      firstSurname: "Pérez",
+      secondSurname: " ",
+      email: " ANA@Example.com ",
+      phone: "",
+      description: "  ",
+    }).subscribe((user) => { resultado = user; });
+
+    expect(api.updateProfile).toHaveBeenCalledWith({
+      names: "Ana María",
+      firstSurname: "Pérez",
+      secondSurname: null,
+      email: "ana@example.com",
+      phone: null,
+      description: null,
+    });
+    // Sin confirmación del servidor la sesión no cambia.
+    expect(servicio.currentUser().names).toBe("Ana");
+
+    actualizado.next({ ...perfilCompleto, names: "Ana María", secondSurname: "Soto" });
+    expect(servicio.currentUser()).toMatchObject({ names: "Ana María", secondSurname: "Soto", fullName: "Ana María Pérez Soto", initials: "AM" });
+    expect(resultado).toMatchObject({ names: "Ana María" });
+  });
+
+  it("no modifica la sesión si el servidor rechaza el perfil", () => {
+    const { actualizado, servicio } = crearApi();
+    servicio.setSession("token", "2099-01-01T00:00:00.000Z", usuarioLogin);
+    let error: unknown;
+
+    servicio.updateProfile({ names: "Otra", firstSurname: "Persona", secondSurname: "", email: "x@y.cl", phone: "", description: "" })
+      .subscribe({ error: (value) => { error = value; } });
+    actualizado.error(new Error("409"));
+
+    expect(error).toBeInstanceOf(Error);
+    expect(servicio.currentUser()).toMatchObject({ names: "Ana", email: "ana@example.com" });
   });
 });
