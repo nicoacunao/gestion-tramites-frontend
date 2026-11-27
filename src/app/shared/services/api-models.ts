@@ -198,36 +198,36 @@ export interface BackendStationSummary {
   overallStatus: string;
 }
 
+/** Estación en `GET /consultas/stations` y en la importación. */
 export interface BackendStation {
   stationId: string;
   legalName: string;
   address: string;
   comuna: string;
-  zoneManager: string;
-  commercialManager: string;
-  companyRut: string;
-  legalRepresentative: string;
-  legalRepresentativeRut: string;
-  status: string;
+  zoneManager: string | null;
+  commercialManager: string | null;
+  companyRut: string | null;
+  legalRepresentative: string | null;
+  legalRepresentativeRut: string | null;
+  estado: string;
 }
 
 export interface BackendStationPage {
   data: BackendStation[];
-  meta: {
-    requestId: string;
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-  allData?: BackendStation[];
+  meta: ApiPageMeta;
+}
+
+/** Fila rechazada en una importación de estaciones. */
+export interface StationImportRowError {
+  row: number;
+  message: string;
 }
 
 export interface ImportStationsMeta extends ApiMeta {
   created: number;
   updated: number;
   rejected: number;
-  rejectedRows?: unknown[];
+  rejectedRows?: StationImportRowError[];
 }
 
 export interface ImportStationsResponse {

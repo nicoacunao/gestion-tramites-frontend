@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import { map } from "rxjs";
 import { ApiBaseService } from "./api-base";
 import {
-  ApiMeta,
   ApiPageMeta,
   BackendStation,
   BackendStationPage,
@@ -11,41 +10,22 @@ import {
   ImportStationsResponse,
 } from "./api-models";
 
+/** Máximo de filas por página aceptado por `GET /consultas/stations`. */
+export const STATION_MAX_PAGE_SIZE = 100;
+
 @Injectable({ providedIn: "root" })
 export class StationApiService extends ApiBaseService {
   stationSummary() {
     return this.get<BackendStationSummary[]>("/consultas/stations/summary");
   }
 
+  /** Página de estaciones; el backend pagina y entrega los totales en `meta`. */
   stations(page = 1, pageSize = 5) {
-    return this.requestEnvelope<BackendStation[], ApiMeta & Partial<Omit<ApiPageMeta, "requestId">>>("/consultas/stations", {
+    return this.requestEnvelope<BackendStation[], ApiPageMeta>("/consultas/stations", {
       method: "get",
-      params: { page, pageSize },
+      params: { page, pageSize: Math.min(pageSize, STATION_MAX_PAGE_SIZE) },
     }).pipe(
-      map(({ mensaje: data, meta }) => {
-        const total = meta.total ?? data.length;
-        const returnedPage = meta.page ?? page;
-        const returnedPageSize = meta.pageSize ?? pageSize;
-        const hasServerPagination = meta.total !== undefined
-          || meta.totalPages !== undefined
-          || meta.page !== undefined;
-        const pageData = hasServerPagination
-          ? data
-          : data.slice((page - 1) * pageSize, page * pageSize);
-
-        return {
-          data: pageData,
-          allData: hasServerPagination ? undefined : data,
-          meta: {
-            requestId: meta.requestId,
-            page: returnedPage,
-            pageSize: returnedPageSize,
-            total,
-            totalPages: meta.totalPages
-              ?? Math.max(1, Math.ceil(total / returnedPageSize)),
-          },
-        } satisfies BackendStationPage;
-      }),
+      map(({ mensaje, meta }): BackendStationPage => ({ data: mensaje, meta })),
     );
   }
 

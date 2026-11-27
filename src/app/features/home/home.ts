@@ -34,7 +34,7 @@ import { Subscription } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ConnectedUser, EditableUserProfile, UserSessionService } from "../../shared/services/user-session";
 import { ApiClientError } from "../../shared/services/api-base";
-import { BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-models";
+import { BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse, StationImportRowError } from "../../shared/services/api-models";
 import { ManagementApiService } from "../../shared/services/management-api";
 import { StationApiService } from "../../shared/services/station-api";
 
@@ -63,7 +63,16 @@ interface HomeTask {
   queryParams: { detalle: number };
 }
 
-type ImportState = "idle" | "selected" | "verified" | "importing";
+type ImportState = "idle" | "selected" | "verified" | "importing" | "completed";
+
+/** Tamaño máximo aceptado por `POST /consultas/stations/import`. */
+const IMPORT_MAX_BYTES = 10 * 1024 * 1024;
+const IMPORT_ROWS_PREVIEW = 10;
+
+interface ImportResult {
+  detail: string;
+  rejectedRows: StationImportRowError[];
+}
 
 @Component({
   selector: "app-home",
@@ -177,10 +186,11 @@ export class Home {
   readonly stationPageSize = 5;
   stationsTotal = 0;
   stationsPage = 1;
-  private allStationsCache: BackendStation[] | null = null;
   private readonly stationPageCache = new Map<number, BackendStation[]>();
   private stationRequestPage: number | null = null;
   private stationRequest?: Subscription;
+  /** Página que falló, para reintentarla. */
+  private stationsFailedPage = 1;
   stationsLoading = true;
   stationsError = "";
   importDialogVisible = false;
@@ -189,6 +199,8 @@ export class Home {
   importError = "";
   importSummary = "";
   importRequestId = "";
+  importErrorRows: StationImportRowError[] = [];
+  importResult: ImportResult | null = null;
 
   constructor(private readonly managementApi: ManagementApiService, private readonly stationApi: StationApiService) {
     // El perfil completo puede llegar después de construir la vista: se refleja
@@ -212,14 +224,14 @@ export class Home {
     this.loadStations();
   }
 
+  /** `true` mientras no se ha cargado ninguna página (se muestra el skeleton). */
+  get stationsInitialLoading(): boolean {
+    return this.stationsLoading && this.stations.length === 0;
+  }
+
   loadStations(page = 1, force = false): void {
     if (!force && this.stationRequestPage === page) return;
-    if (!force && this.stationsPage === page && this.stations.length > 0) return;
-    if (!force && this.allStationsCache) {
-      this.setStationPage(this.allStationsCache, page);
-      this.changeDetector.markForCheck();
-      return;
-    }
+    if (!force && this.stationsPage === page && this.stations.length > 0 && !this.stationsError) return;
     const cachedPage = this.stationPageCache.get(page);
     if (!force && cachedPage) {
       this.stations = cachedPage;
@@ -229,18 +241,20 @@ export class Home {
       this.changeDetector.markForCheck();
       return;
     }
+    // Se conservan las filas actuales mientras carga otra página; la tabla
+    // muestra su propio indicador de carga y el paginador no desaparece.
     this.stationsLoading = true;
     this.stationsError = "";
-    this.stations = [];
     this.changeDetector.markForCheck();
     this.stationRequest?.unsubscribe();
     this.stationRequestPage = page;
-    this.stationRequest = this.stationApi.stations(page, this.stationPageSize).subscribe({
+    this.stationRequest = this.stationApi.stations(page, this.stationPageSize).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: (response: BackendStationPage) => {
         this.stationRequestPage = null;
         this.stationRequest = undefined;
-        if (response.allData) this.allStationsCache = response.allData;
-        else this.stationPageCache.set(response.meta.page, response.data);
+        this.stationPageCache.set(response.meta.page, response.data);
         this.stations = response.data;
         this.stationsPage = response.meta.page;
         this.stationsTotal = response.meta.total;
@@ -250,28 +264,23 @@ export class Home {
       error: (error: Error) => {
         this.stationRequestPage = null;
         this.stationRequest = undefined;
-        this.stations = [];
-        this.stationsTotal = 0;
-        this.stationsError = error.message;
+        this.stationsFailedPage = page;
+        this.stationsError = error instanceof ApiClientError
+          ? error.message
+          : "No fue posible cargar las estaciones. Inténtalo nuevamente.";
         this.stationsLoading = false;
         this.changeDetector.markForCheck();
       },
     });
   }
 
+  retryStations(): void {
+    this.loadStations(this.stationsFailedPage, true);
+  }
+
   onStationsPage(event: TablePageEvent): void {
     const pageSize = event.rows || this.stationPageSize;
     this.loadStations(Math.floor(event.first / pageSize) + 1);
-  }
-
-  private setStationPage(items: BackendStation[], page: number, total = items.length): void {
-    const start = (page - 1) * this.stationPageSize;
-    this.stations = items.slice(start, start + this.stationPageSize);
-    this.stationsPage = page;
-    this.stationsTotal = total;
-    this.stationsError = "";
-    this.stationsLoading = false;
-    this.changeDetector.markForCheck();
   }
 
   private toTask(item: BackendManagement): HomeTask {
@@ -423,7 +432,9 @@ export class Home {
     const file = event.files?.[0] ?? null;
     this.selectedImportFile = file;
     this.importError = "";
+    this.importErrorRows = [];
     this.importSummary = "";
+    this.importResult = null;
     this.importState = file ? "selected" : "idle";
   }
 
@@ -438,6 +449,10 @@ export class Home {
       this.importError = "El archivo está vacío. Selecciona un archivo con registros.";
       return;
     }
+    if (this.selectedImportFile.size > IMPORT_MAX_BYTES) {
+      this.importError = "El archivo supera el máximo permitido de 10 MB.";
+      return;
+    }
     this.importError = "";
     this.importSummary = extension === "csv"
       ? "Formato CSV reconocido. Se validarán las columnas y los IDs antes de guardar."
@@ -449,23 +464,40 @@ export class Home {
     if (!this.selectedImportFile || this.importState !== "verified") return;
     this.importState = "importing";
     this.importError = "";
-    this.stationApi.importStations(this.selectedImportFile).subscribe({
+    this.importErrorRows = [];
+    this.stationApi.importStations(this.selectedImportFile).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: ({ data, meta }: ImportStationsResponse) => {
-        this.importState = "verified";
         this.importRequestId = meta.requestId;
-        this.importDialogVisible = false;
-        this.messageService.add({ severity: "success", summary: "Importación completada", detail: `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`, life: 6000 });
-        this.allStationsCache = null;
+        const rejectedRows = meta.rejectedRows ?? [];
+        const detail = `${data.length} estaciones procesadas: ${meta.created} nuevas, ${meta.updated} actualizadas${meta.rejected ? ` y ${meta.rejected} rechazadas` : ""}.`;
         this.stationPageCache.clear();
         this.loadStations(1, true);
+
+        if (meta.rejected > 0) {
+          // Se mantiene el diálogo abierto para que la persona vea qué filas corregir.
+          this.importState = "completed";
+          this.importSummary = "";
+          this.importResult = { detail, rejectedRows };
+          this.changeDetector.markForCheck();
+          return;
+        }
+
+        this.importState = "verified";
+        this.importDialogVisible = false;
+        this.messageService.add({ severity: "success", summary: "Importación completada", detail, life: 6000 });
+        this.changeDetector.markForCheck();
       },
-      error: (error: Error) => {
+      error: (error: unknown) => {
         this.importState = "verified";
         const apiError = error instanceof ApiClientError ? error : undefined;
         this.importRequestId = apiError?.requestId ?? "";
+        this.importErrorRows = this.extractImportRowErrors(apiError?.details);
         this.importError = apiError?.code === "INVALID_MULTIPART"
-          ? `El servidor indicó: ${error.message} Vuelve a seleccionar el archivo e inténtalo nuevamente.`
-          : error.message;
+          ? `El servidor indicó: ${apiError.message} Vuelve a seleccionar el archivo e inténtalo nuevamente.`
+          : apiError?.message ?? "No fue posible importar el archivo. Inténtalo nuevamente.";
+        this.changeDetector.markForCheck();
       },
     });
   }
@@ -474,11 +506,37 @@ export class Home {
     this.selectedImportFile = null;
     this.importState = "idle";
     this.importError = "";
+    this.importErrorRows = [];
     this.importSummary = "";
     this.importRequestId = "";
+    this.importResult = null;
   }
 
-  stationStatusSeverity(status: string): "success" | "warn" | "secondary" {
-    return status.toLowerCase() === "no" ? "success" : status.toLowerCase().includes("pendiente") ? "warn" : "secondary";
+  /** Filas mostradas en el diálogo; el resto se resume con un contador. */
+  visibleImportRows(rows: StationImportRowError[]): StationImportRowError[] {
+    return rows.slice(0, IMPORT_ROWS_PREVIEW);
   }
+
+  hiddenImportRowsCount(rows: StationImportRowError[]): number {
+    return Math.max(0, rows.length - IMPORT_ROWS_PREVIEW);
+  }
+
+  stationStatusSeverity(status: string | null | undefined): "success" | "warn" | "secondary" {
+    const normalized = (status ?? "").toLowerCase();
+    return normalized === "no" ? "success" : normalized.includes("pendiente") ? "warn" : "secondary";
+  }
+
+  /** `details.errors` de `INVALID_IMPORT_ROWS` (422): fila y motivo de cada rechazo. */
+  private extractImportRowErrors(details: unknown): StationImportRowError[] {
+    const errors = typeof details === "object" && details !== null
+      ? (details as { errors?: unknown }).errors
+      : undefined;
+    if (!Array.isArray(errors)) return [];
+    return errors.filter((item): item is StationImportRowError =>
+      typeof item === "object"
+      && item !== null
+      && typeof (item as StationImportRowError).row === "number"
+      && typeof (item as StationImportRowError).message === "string");
+  }
+
 }

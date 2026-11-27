@@ -1010,6 +1010,43 @@
   small { color: #874b4b; font-size: 10px; line-height: 1.4; }
 }
 
+.import-partial {
+  display: grid;
+  margin: 0;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff8eb;
+
+  strong { color: #8a5a00; font-size: 12px; }
+  p { margin: 0; color: #6f4a00; font-size: 11px; line-height: 1.45; }
+  small { color: #7a5a24; font-size: 10px; line-height: 1.4; }
+}
+
+.import-row-errors {
+  display: grid;
+  margin: 2px 0;
+  padding-left: 18px;
+  gap: 2px;
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.4;
+
+  strong { font-size: 11px; }
+}
+
+.stations-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+
+  .field-error { margin: 0; }
+}
+
 @media (min-width: 1280px) {
   .home-page {
     --desktop-panel-height: clamp(526px, calc(100dvh - 220px), 860px);

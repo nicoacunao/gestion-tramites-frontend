@@ -354,7 +354,7 @@
             </button>
           </div>
 
-          @if (stationsLoading) {
+          @if (stationsInitialLoading) {
           <div class="stations-skeleton" role="status" aria-label="Cargando estaciones">
             @for (row of [1, 2, 3, 4, 5]; track row) {
             <div class="stations-skeleton-row">
@@ -373,15 +373,22 @@
             </div>
           </div>
           }
-          @if (stationsError) { <p class="field-error" role="alert">{{ stationsError }}</p> }
+          @if (stationsError) {
+          <div class="stations-error" role="alert">
+            <p class="field-error">{{ stationsError }}</p>
+            <button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="retryStations()">
+              Reintentar
+            </button>
+          </div>
+          }
           @if (stations.length === 0 && !stationsLoading && !stationsError) {
           <div class="home-empty-state" role="status">
             <span class="home-empty-state__icon" aria-hidden="true">○</span>
             <strong>No hay estaciones disponibles para mostrar en este momento.</strong>
           </div>
           }
-          @if (!stationsLoading && stations.length > 0) {
-          <div class="stations-table-wrap">
+          @if (stations.length > 0) {
+          <div class="stations-table-wrap" [attr.aria-busy]="stationsLoading">
             <p-table
               [value]="stations"
               [loading]="stationsLoading"
@@ -408,8 +415,8 @@
                   <td class="station-name">{{ station.legalName }}</td>
                   <td>{{ station.address }}</td>
                   <td>{{ station.comuna }}</td>
-                  <td>{{ station.zoneManager }}</td>
-                  <td><p-tag [value]="station.status" [severity]="stationStatusSeverity(station.status)" /></td>
+                  <td>{{ station.zoneManager || "—" }}</td>
+                  <td><p-tag [value]="station.estado || 'Sin estado'" [severity]="stationStatusSeverity(station.estado)" /></td>
                 </tr>
               </ng-template>
               <ng-template #emptymessage><tr><td colspan="6">No hay estaciones para mostrar.</td></tr></ng-template>
@@ -417,10 +424,10 @@
           </div>
           }
         </p-card>
-        <p-dialog [(visible)]="importDialogVisible" [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: 'min(560px, calc(100vw - 32px))' }" header="Importar estaciones" (onHide)="resetImport()">
+        <p-dialog [(visible)]="importDialogVisible" [modal]="true" [draggable]="false" [resizable]="false" [closable]="importState !== 'importing'" [closeOnEscape]="importState !== 'importing'" [style]="{ width: 'min(560px, calc(100vw - 32px))' }" header="Importar estaciones" (onHide)="resetImport()">
           <div class="import-dialog-content">
             <p class="import-dialog-lead">Carga la base de estaciones para validarla antes de actualizar la información.</p>
-            <div class="import-step"><span>1</span><div><strong>Selecciona el archivo</strong><small>Formatos admitidos: .xlsx y .csv. Tamaño máximo sugerido: 10 MB.</small></div></div>
+            <div class="import-step"><span>1</span><div><strong>Selecciona el archivo</strong><small>Formatos admitidos: .xlsx y .csv. Tamaño máximo: 10 MB.</small></div></div>
             <p-fileUpload mode="basic" name="file" accept=".xlsx,.csv" [auto]="false" [customUpload]="true" [multiple]="false" chooseLabel="Seleccionar archivo" (onSelect)="onImportFileSelect($event)" [disabled]="importState === 'importing'" />
             @if (selectedImportFile) { <div class="selected-file"><span class="selected-file__icon">✓</span><div><strong>{{ selectedImportFile.name }}</strong><small>{{ (selectedImportFile.size / 1024).toFixed(1) }} KB</small></div></div> }
             <div class="import-step"><span>2</span><div><strong>Verifica la información</strong><small>Se revisará la estructura, las columnas requeridas y la existencia de IDs EDS.</small></div></div>
@@ -428,14 +435,43 @@
             @if (importError) {
               <div class="import-error" role="alert">
                 <strong>No se pudo importar el archivo</strong>
-                <p>{{ importError }}</p>
+                @if (importErrorRows.length) {
+                  <p>Ninguna fila pudo importarse. Corrige estas filas y vuelve a intentarlo:</p>
+                  <ul class="import-row-errors">
+                    @for (rowError of visibleImportRows(importErrorRows); track $index) {
+                      <li><strong>Fila {{ rowError.row }}:</strong> {{ rowError.message }}</li>
+                    }
+                  </ul>
+                  @if (hiddenImportRowsCount(importErrorRows) > 0) { <small>Y {{ hiddenImportRowsCount(importErrorRows) }} filas más con errores.</small> }
+                } @else {
+                  <p>{{ importError }}</p>
+                }
                 <small>Revisa el formato y vuelve a intentarlo. Si el problema continúa, comparte este identificador con soporte: {{ importRequestId || 'no disponible' }}</small>
+              </div>
+            }
+            @if (importResult) {
+              <div class="import-partial" role="status">
+                <strong>Importación completada con filas rechazadas</strong>
+                <p>{{ importResult.detail }}</p>
+                @if (importResult.rejectedRows.length) {
+                  <ul class="import-row-errors">
+                    @for (rowError of visibleImportRows(importResult.rejectedRows); track $index) {
+                      <li><strong>Fila {{ rowError.row }}:</strong> {{ rowError.message }}</li>
+                    }
+                  </ul>
+                  @if (hiddenImportRowsCount(importResult.rejectedRows) > 0) { <small>Y {{ hiddenImportRowsCount(importResult.rejectedRows) }} filas rechazadas más.</small> }
+                }
+                <small>Corrige las filas rechazadas en el archivo y vuelve a importarlo para incorporarlas.</small>
               </div>
             }
           </div>
           <ng-template #footer>
-            <button pButton type="button" severity="secondary" [outlined]="true" (click)="closeImportDialog()" [disabled]="importState === 'importing'">Cancelar</button>
-            @if (importState !== 'verified' && importState !== 'importing') { <button pButton type="button" (click)="verifyImportFile()" [disabled]="!selectedImportFile">Verificar archivo</button> }
+            @if (importState === 'completed') {
+              <button pButton type="button" (click)="closeImportDialog()">Cerrar</button>
+            } @else {
+              <button pButton type="button" severity="secondary" [outlined]="true" (click)="closeImportDialog()" [disabled]="importState === 'importing'">Cancelar</button>
+            }
+            @if (importState === 'idle' || importState === 'selected') { <button pButton type="button" (click)="verifyImportFile()" [disabled]="!selectedImportFile">Verificar archivo</button> }
             @if (importState === 'verified') { <button pButton type="button" (click)="confirmImport()">Confirmar importación</button> }
             @if (importState === 'importing') { <button pButton type="button" [loading]="true">Importando…</button> }
           </ng-template>
