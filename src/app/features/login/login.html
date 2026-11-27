@@ -31,8 +31,11 @@
       </header>
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        @if (sessionNotice) {
+        <p class="session-notice" role="status">{{ sessionNotice }}</p>
+        }
         @if (errorMessage) {
-        <small class="field-error" role="alert">{{ errorMessage }}</small>
+        <small id="login-error" class="field-error" role="alert">{{ errorMessage }}</small>
         }
         <div class="field-group">
           <label for="login-rut">RUT</label>
@@ -69,10 +72,10 @@
               autocomplete="current-password" placeholder="Ingresa tu contraseña" ariaLabelledBy="password-label"
               [feedback]="false" [toggleMask]="true" />
           </div>
-          @if ( form.controls.password.touched &&
-          form.controls.password.hasError("required") ) {
+          @if (form.controls.password.touched && form.controls.password.errors) {
           <small id="password-error" class="field-error" role="alert">
-            Ingresa tu contraseña.
+            @if (form.controls.password.hasError("required")) { Ingresa tu contraseña. }
+            @else { La contraseña no puede superar los 200 caracteres. }
           </small>
           }
         </div>

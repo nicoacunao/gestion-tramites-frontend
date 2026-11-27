@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Output } from "@angular/core";
+import { Component, DestroyRef, EventEmitter, inject, Output } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
   FormControl,
@@ -8,11 +9,12 @@ import {
   ValidationErrors,
   Validators,
 } from "@angular/forms";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ButtonDirective, ButtonLabel } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { ApiClientError } from "../../shared/services/api-base";
 import { IdentityApiService } from "../../shared/services/identity-api";
 import { UserSessionService } from "../../shared/services/user-session";
 
@@ -20,6 +22,9 @@ export interface LoginCredentials {
   rut: string;
   password: string;
 }
+
+const MENSAJE_SESION_EXPIRADA = "Tu sesión expiró. Ingresa nuevamente para continuar.";
+const MENSAJE_ERROR_LOGIN = "No fue posible iniciar sesión. Inténtalo nuevamente.";
 
 function limpiarRut(value: string): string {
   return value.replace(/[^0-9kK]/g, "").toUpperCase();
@@ -78,14 +83,32 @@ export class Login {
     }),
     password: new FormControl("", {
       nonNullable: true,
-      validators: [Validators.required],
+      // El backend acepta contraseñas de hasta 200 caracteres.
+      validators: [Validators.required, Validators.maxLength(200)],
     }),
   });
 
   loading = false;
   errorMessage = "";
+  sessionNotice = "";
 
-  constructor(private readonly router: Router, private readonly api: IdentityApiService, private readonly userSession: UserSessionService) { }
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor(
+    private readonly router: Router,
+    private readonly api: IdentityApiService,
+    private readonly userSession: UserSessionService,
+    route: ActivatedRoute,
+  ) {
+    if (route.snapshot.queryParamMap.get("reason") === "session-expired") {
+      this.sessionNotice = MENSAJE_SESION_EXPIRADA;
+    }
+
+    // Un error anterior deja de ser relevante en cuanto se corrigen las credenciales.
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.errorMessage = "";
+    });
+  }
 
   formatRut(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -107,6 +130,10 @@ export class Login {
   }
 
   submit(): void {
+    if (this.loading) {
+      return;
+    }
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -115,16 +142,19 @@ export class Login {
     const credentials = this.form.getRawValue();
     this.loading = true;
     this.errorMessage = "";
-    this.api.login(limpiarRut(credentials.rut), credentials.password).subscribe({
+    this.sessionNotice = "";
+    this.api.login(limpiarRut(credentials.rut), credentials.password).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: ({ accessToken, expiresAt, user }) => {
         this.userSession.setSession(accessToken, expiresAt, user);
         this.submitted.emit({ rut: limpiarRut(credentials.rut), password: credentials.password });
         this.loading = false;
         void this.router.navigate(["/home"]);
       },
-      error: (error: Error) => {
+      error: (error: unknown) => {
         this.loading = false;
-        this.errorMessage = error.message;
+        this.errorMessage = error instanceof ApiClientError ? error.message : MENSAJE_ERROR_LOGIN;
       },
     });
   }

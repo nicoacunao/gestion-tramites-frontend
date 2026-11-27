@@ -43,7 +43,6 @@ export interface BackendUser {
   description?: string | null;
   role: string;
   organization?: string | null;
-  version?: number;
 }
 
 export interface BackendCatalogStation {

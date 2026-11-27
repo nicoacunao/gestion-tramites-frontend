@@ -13,7 +13,6 @@ export interface ConnectedUser {
   phone: string;
   rut: string;
   organization: string;
-  version?: number;
 }
 
 export interface EditableUserProfile {
@@ -53,9 +52,7 @@ export class UserSessionService {
     if (stored) {
       try { this.userState.set(this.toConnectedUser(JSON.parse(stored) as BackendUser)); } catch { /* ignore invalid local cache */ }
     }
-    if (typeof localStorage !== "undefined" && localStorage.getItem(ACCESS_TOKEN_KEY)) {
-      this.api?.profile().subscribe({ next: (user) => this.setUser(user) });
-    }
+    this.refreshProfile();
   }
 
   hasValidSession(): boolean {
@@ -69,6 +66,22 @@ export class UserSessionService {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(EXPIRES_AT_KEY, expiresAt);
     this.setUser(user);
+    // El login solo entrega datos básicos; teléfono, descripción y organización
+    // vienen del perfil completo.
+    this.refreshProfile();
+  }
+
+  /** Completa los datos del usuario con `GET /identidad/profile`. */
+  refreshProfile(): void {
+    if (!this.hasValidSession()) return;
+    this.api?.profile().subscribe({
+      next: (user) => {
+        // La respuesta puede llegar después de cerrar sesión: no restaurar datos.
+        if (this.hasValidSession()) this.setUser(user);
+      },
+      // Se conservan los datos del login; un 401 lo resuelve el interceptor.
+      error: () => undefined,
+    });
   }
 
   clearSession(): void {
@@ -82,7 +95,6 @@ export class UserSessionService {
   updateProfile(profile: EditableUserProfile): void {
     const fullName = profile.fullName.trim();
 
-    const current = this.userState();
     this.api?.updateProfile({
       names: fullName.split(/\s+/)[0] ?? fullName,
       firstSurname: fullName.split(/\s+/).slice(1).join(" ") || fullName,
@@ -90,7 +102,6 @@ export class UserSessionService {
       email: profile.email.trim().toLowerCase(),
       phone: profile.phone.trim(),
       description: profile.description.trim(),
-      version: current.version ?? 0,
     }).subscribe({ next: (user) => this.setUser(user), error: () => undefined });
     this.userState.update((user) => ({
       ...user,
@@ -111,7 +122,7 @@ export class UserSessionService {
 
   private toConnectedUser(user: BackendUser): ConnectedUser {
     const fullName = [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" ");
-    return { id: user.id, firstName: user.names, fullName, initials: this.createInitials(fullName), role: user.role, description: user.description ?? "", email: user.email, phone: user.phone ?? "", rut: user.rut, organization: user.organization ?? "", version: user.version };
+    return { id: user.id, firstName: user.names, fullName, initials: this.createInitials(fullName), role: user.role, description: user.description ?? "", email: user.email, phone: user.phone ?? "", rut: user.rut, organization: user.organization ?? "" };
   }
 
   private createInitials(fullName: string): string {
