@@ -15,8 +15,12 @@
     </div>
   </header>
 
-  @if (errorMessage) { <p class="field-error" role="alert">{{ errorMessage }}</p> }
-
+  @if (errorMessage) {
+  <div class="page-error" role="alert">
+    <p>{{ errorMessage }}</p>
+    <button type="button" class="page-error__retry" (click)="cargar()">Reintentar</button>
+  </div>
+  } @else {
   <app-gestion-listado
     [gestiones]="gestiones"
     [loading]="loading"
@@ -26,5 +30,7 @@
     [mostrarResponsableInterno]="true"
     [detalleInicialId]="tramiteDetalleInicialId"
     [idEstacionInicial]="idEstacionInicial"
+    mensajeSinGestiones="No hay gestiones registradas."
   />
+  }
 </section>

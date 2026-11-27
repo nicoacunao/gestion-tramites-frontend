@@ -13,14 +13,20 @@
       </div>
     </div>
 
+    @if (!loading && !errorMessage) {
     <div class="heading-summary" aria-label="Resumen del escritorio">
       <strong>{{ gestiones.length }}</strong>
-      <span>gestiones asociadas</span>
+      <span>{{ gestiones.length === 1 ? "gestión asociada" : "gestiones asociadas" }}</span>
     </div>
+    }
   </header>
 
-  @if (errorMessage) { <p class="field-error" role="alert">{{ errorMessage }}</p> }
-
+  @if (errorMessage) {
+  <div class="page-error" role="alert">
+    <p>{{ errorMessage }}</p>
+    <button type="button" class="page-error__retry" (click)="cargar()">Reintentar</button>
+  </div>
+  } @else {
   <app-gestion-listado
     [gestiones]="gestiones"
     [loading]="loading"
@@ -29,5 +35,7 @@
     ariaLabelTabla="Tabla de gestiones asociadas"
     [mostrarCantidadResultados]="true"
     [bitacoraPersonal]="true"
+    mensajeSinGestiones="No tienes gestiones asignadas."
   />
+  }
 </section>

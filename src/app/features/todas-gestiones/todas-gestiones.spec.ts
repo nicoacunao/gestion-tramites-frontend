@@ -1,4 +1,6 @@
 import { ActivatedRoute } from "@angular/router";
+import { of, throwError } from "rxjs";
+import { ApiClientError } from "../../shared/services/api-base";
 import { TodasGestiones } from "./todas-gestiones";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
@@ -70,7 +72,37 @@ describe("TodasGestiones", () => {
       crearRuta({ detalle: "1001", estacion: "60001" }),
     );
 
-    expect(componente.tramiteDetalleInicialId).toBe(1001);
+    expect(componente.tramiteDetalleInicialId).toBe("1001");
     expect(componente.idEstacionInicial).toBe("60001");
+  });
+
+  it("ignora un parámetro de detalle que no es un id válido", () => {
+    const componente = new TodasGestiones(
+      new TramitesFixture([crearTramiteFixture()]),
+      crearRuta({ detalle: "abc" }),
+    );
+
+    expect(componente.tramiteDetalleInicialId).toBeNull();
+  });
+
+  it("muestra el mensaje del API y permite reintentar", () => {
+    let intentos = 0;
+    class TramitesConError extends TramitesMock {
+      override cargarTodos() {
+        intentos += 1;
+        return intentos === 1
+          ? throwError(() => new ApiClientError("No tienes permisos para gestionar gestiones.", 403, "FORBIDDEN"))
+          : of([crearTramiteFixture()]);
+      }
+    }
+    const componente = new TodasGestiones(new TramitesConError());
+
+    expect(componente.errorMessage).toBe("No tienes permisos para gestionar gestiones.");
+    expect(componente.gestiones).toEqual([]);
+    expect(componente.loading).toBe(false);
+
+    componente.cargar();
+    expect(componente.errorMessage).toBe("");
+    expect(componente.gestiones).toHaveLength(1);
   });
 });

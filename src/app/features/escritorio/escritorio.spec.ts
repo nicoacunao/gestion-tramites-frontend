@@ -2,7 +2,7 @@ import { Escritorio } from "./escritorio";
 import { Tramite } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
 import { crearTramiteFixture, TramitesFixture } from "../../testing/tramite-fixtures";
-import { UserSessionService } from "../../shared/services/user-session";
+import { of, throwError } from "rxjs";
 
 class TramitesMockVolumen extends TramitesMock {
   private readonly fixture = crearTramiteFixture();
@@ -23,13 +23,15 @@ class TramitesMockVolumen extends TramitesMock {
 }
 
 describe("Escritorio", () => {
-  it("construye las gestiones asociadas al usuario", () => {
-    const session = new UserSessionService();
-    session.setSession("token", "2099-01-01T00:00:00.000Z", { id: "2", rut: "2-2", names: "Usuario", firstSurname: "Prueba", secondSurname: null, email: "test@example.com", role: "Prueba" });
-    const componente = new Escritorio(new TramitesFixture(Array.from({ length: 5 }, (_, indice) => crearTramiteFixture(indice + 1))), session);
+  it("muestra todas las gestiones que entrega el backend con assignedToMe", () => {
+    const fixture = new TramitesFixture(Array.from({ length: 5 }, (_, indice) => crearTramiteFixture(indice + 1)));
+    const cargarTodos = vi.spyOn(fixture, "cargarTodos");
+    const componente = new Escritorio(fixture);
 
-    expect(componente.gestiones).toHaveLength(2);
-    expect(componente.gestiones.every(({ responsableUserId }) => responsableUserId === "2")).toBe(true);
+    expect(cargarTodos).toHaveBeenCalledWith(true);
+    // El backend ya filtró por usuario autenticado: no se descarta nada en el cliente.
+    expect(componente.gestiones).toHaveLength(5);
+    expect(componente.loading).toBe(false);
     expect(componente.tituloInformacionAlcance).toBe(
       "¿Qué es la vista Escritorio?",
     );
@@ -39,10 +41,25 @@ describe("Escritorio", () => {
   });
 
   it("admite listados de más de cien registros", () => {
-    const session = new UserSessionService();
-    session.setSession("token", "2099-01-01T00:00:00.000Z", { id: "2", rut: "2-2", names: "Usuario", firstSurname: "Prueba", secondSurname: null, email: "test@example.com", role: "Prueba" });
-    const componente = new Escritorio(new TramitesMockVolumen(), session);
+    const componente = new Escritorio(new TramitesMockVolumen());
 
-    expect(componente.gestiones.every(({ responsableUserId }) => responsableUserId === "2")).toBe(true);
+    expect(componente.gestiones).toHaveLength(120);
+  });
+
+  it("muestra un mensaje genérico ante errores no controlados y permite reintentar", () => {
+    let intentos = 0;
+    class TramitesConError extends TramitesMock {
+      override cargarTodos() {
+        intentos += 1;
+        return intentos === 1 ? throwError(() => new Error("detalle interno")) : of([crearTramiteFixture()]);
+      }
+    }
+    const componente = new Escritorio(new TramitesConError());
+
+    expect(componente.errorMessage).toBe("No fue posible cargar tus gestiones. Inténtalo nuevamente.");
+
+    componente.cargar();
+    expect(componente.errorMessage).toBe("");
+    expect(componente.gestiones).toHaveLength(1);
   });
 });

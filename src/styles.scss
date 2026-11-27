@@ -43,3 +43,35 @@ body {
   font-size: 12px;
   line-height: 1.25;
 }
+
+/* Error de carga de una página con opción de reintentar (Escritorio, Todas las gestiones). */
+.page-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid #f3c7c7;
+  border-radius: 10px;
+  background: #fff4f4;
+  color: #9f2d2d;
+  font-size: 14px;
+
+  p { margin: 0; }
+}
+
+.page-error__retry {
+  padding: 6px 14px;
+  border: 1px solid #c02b2b;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #c02b2b;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #fff0f0; }
+  &:focus-visible { outline: 2px solid #c02b2b; outline-offset: 2px; }
+}

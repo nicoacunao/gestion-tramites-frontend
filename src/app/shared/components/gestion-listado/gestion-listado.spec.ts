@@ -96,4 +96,22 @@ describe("GestionListado", () => {
     expect(componente.detalleTramiteVisible).toBe(true);
     expect(componente.tramiteDetalleId).toBe(GESTION_BASE.id);
   });
+
+  it("abre el detalle cuando el id llega como texto desde la URL y el de la gestión es string", () => {
+    componente.gestiones = [{ ...GESTION_BASE, id: "15" }];
+    componente.detalleInicialId = "15";
+
+    expect(componente.detalleTramiteVisible).toBe(true);
+    expect(componente.tramiteDetalleId).toBe("15");
+  });
+
+  it("aplica el detalle aunque las gestiones lleguen después del parámetro", () => {
+    const listado = new GestionListado();
+    listado.detalleInicialId = "15";
+    expect(listado.detalleTramiteVisible).toBe(false);
+
+    listado.gestiones = [{ ...GESTION_BASE, id: "15" }];
+
+    expect(listado.detalleTramiteVisible).toBe(true);
+  });
 });

@@ -517,6 +517,9 @@
                 <path d="m16 16 4 4"></path>
               </svg>
             </span>
+            @if (gestiones.length === 0) {
+            <strong>{{ mensajeSinGestiones }}</strong>
+            } @else {
             <strong>No encontramos gestiones</strong>
             <span
               >Prueba con otro criterio o limpia los filtros aplicados.</span
@@ -524,6 +527,7 @@
             <button type="button" (click)="limpiarFiltros()">
               Limpiar filtros
             </button>
+            }
           </td>
         </tr>
       </ng-template>

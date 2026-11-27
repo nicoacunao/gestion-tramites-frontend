@@ -65,6 +65,8 @@ export class GestionListado {
   @Input() mostrarResponsableInterno = false;
   @Input() bitacoraPersonal = false;
   @Input() loading = false;
+  /** Texto cuando la vista no tiene ninguna gestión (sin filtros aplicados). */
+  @Input() mensajeSinGestiones = "No hay gestiones para mostrar.";
 
   private _gestiones: GestionListadoItem[] = [];
   private _detalleInicialId: string | number | null = null;
@@ -216,9 +218,9 @@ export class GestionListado {
       return;
     }
 
-    const gestion = this.gestiones.find(
-      ({ id }) => id === this._detalleInicialId,
-    );
+    // Los ids del backend son strings; el parámetro de la URL también.
+    const detalleId = String(this._detalleInicialId);
+    const gestion = this.gestiones.find(({ id }) => String(id) === detalleId);
 
     if (gestion?.tieneDetalle !== false) {
       this.tramiteDetalleId = gestion?.id ?? null;

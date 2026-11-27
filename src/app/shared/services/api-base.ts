@@ -22,6 +22,14 @@ export const UNEXPECTED_RESPONSE_CODE = "UNEXPECTED_RESPONSE";
 /** Código asignado cuando no hubo respuesta HTTP (sin red, CORS, servidor caído). */
 export const NETWORK_ERROR_CODE = "NETWORK_ERROR";
 
+/**
+ * Mensaje seguro para mostrar: el del API si viene de un `ApiClientError`;
+ * en otro caso, el texto de respaldo (sin exponer detalles internos).
+ */
+export function mensajeDeError(error: unknown, respaldo: string): string {
+  return error instanceof ApiClientError && error.message ? error.message : respaldo;
+}
+
 type HttpMethod = "get" | "post" | "put";
 type QueryParams = Record<string, string | number | boolean>;
 

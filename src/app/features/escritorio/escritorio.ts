@@ -6,8 +6,8 @@ import {
   GestionListado,
   GestionListadoItem,
 } from "../../shared/components/gestion-listado/gestion-listado";
+import { mensajeDeError } from "../../shared/services/api-base";
 import { TramitesMock } from "../../shared/services/tramites-mock";
-import { UserSessionService } from "../../shared/services/user-session";
 
 @Component({
   selector: "app-escritorio",
@@ -36,22 +36,33 @@ export class Escritorio {
   errorMessage = "";
 
   constructor(
-    tramitesMock: TramitesMock,
-    userSession: UserSessionService,
+    private readonly tramitesMock: TramitesMock,
     @Optional() private readonly changeDetectorRef: ChangeDetectorRef | null = null,
   ) {
-    tramitesMock.cargarTodos(true).pipe(finalize(() => {
+    this.cargar();
+  }
+
+  /**
+   * `assignedToMe=true`: el backend devuelve solo las gestiones del usuario
+   * autenticado, por lo que no se vuelve a filtrar en el cliente.
+   */
+  cargar(): void {
+    this.loading = true;
+    this.errorMessage = "";
+    this.changeDetectorRef?.markForCheck();
+    this.tramitesMock.cargarTodos(true).pipe(finalize(() => {
       this.loading = false;
       this.changeDetectorRef?.markForCheck();
     })).subscribe({
       next: (tramites) => {
-        const userId = userSession.currentUser().id;
-        this.gestiones = userId
-          ? tramites.filter((tramite) => tramite.responsableUserId === userId)
-          : [];
+        this.gestiones = tramites;
       },
-      error: (error: Error) => {
-        this.errorMessage = error.message;
+      error: (error: unknown) => {
+        this.gestiones = [];
+        this.errorMessage = mensajeDeError(
+          error,
+          "No fue posible cargar tus gestiones. Inténtalo nuevamente.",
+        );
       },
     });
   }
