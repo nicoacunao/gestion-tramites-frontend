@@ -227,4 +227,84 @@ describe("TramiteDetalle con API", () => {
     expect(download).toHaveBeenCalledWith("3");
     expect(detalle.mensajeArchivo).toBe("El archivo no existe.");
   });
+
+  describe("edición de datos generales", () => {
+    it("precarga los valores actuales y deja vacías las fechas sin especificar", () => {
+      const { detalle } = crear({ management: { management: vi.fn(() => of({ ...gestion, estimatedCompletionOn: null })) } });
+
+      detalle.iniciarEdicionCabecera();
+
+      expect(detalle.editandoCabecera).toBe(true);
+      expect(detalle.cabecera).toEqual({
+        estado: "En tramitación",
+        prioridad: "Alta",
+        responsableId: "3",
+        solicitante: "Jefatura de zona",
+        fechaApertura: "02-07-2026",
+        fechaEstimada: "",
+      });
+    });
+
+    it("valida las reglas de ManagementWrite sin enviar nada", () => {
+      const { detalle, management } = crear();
+      detalle.iniciarEdicionCabecera();
+      detalle.cabecera.solicitante = "   ";
+      detalle.cabecera.fechaEstimada = "01-07-2026";
+      detalle.cabecera.responsableId = "";
+
+      detalle.guardarCambios();
+
+      expect(detalle.erroresCabecera).toMatchObject({
+        solicitante: "Ingresa el solicitante.",
+        fechaEstimada: "La fecha estimada de término no puede ser anterior a la de apertura.",
+        responsableId: "Selecciona un responsable.",
+      });
+      expect(detalle.errorGuardado).toContain("datos generales");
+      expect(management.updateManagement).not.toHaveBeenCalled();
+
+      detalle.limpiarErrorCabecera("solicitante");
+      expect(detalle.erroresCabecera.solicitante).toBeUndefined();
+    });
+
+    it("envía los datos editados, refresca con la respuesta y avisa al listado", () => {
+      const guardada: ManagementContract = { ...gestion, status: "Observado", priority: "Baja", responsibleUserId: "4", responsibleName: "Luis Soto", requesterName: "Gerencia", estimatedCompletionOn: null };
+      const { detalle, management } = crear({ management: { updateManagement: vi.fn(() => of(guardada)) } });
+      let emitido: unknown;
+      detalle.tramiteActualizado.subscribe((tramite) => { emitido = tramite; });
+      detalle.iniciarEdicionCabecera();
+      Object.assign(detalle.cabecera, {
+        estado: "Observado",
+        prioridad: "Baja",
+        responsableId: "4",
+        solicitante: "  Gerencia ",
+        fechaEstimada: "",
+      });
+
+      detalle.guardarCambios();
+
+      expect(vi.mocked(management.updateManagement)).toHaveBeenCalledWith("15", expect.objectContaining({
+        stationId: "60123",
+        status: "Observado",
+        priority: "Baja",
+        responsibleUserId: "4",
+        requesterName: "Gerencia",
+        openedOn: "2026-07-02",
+        estimatedCompletionOn: null,
+      }));
+      expect(detalle.editandoCabecera).toBe(false);
+      expect(detalle.tramite).toMatchObject({ estado: "Observado", responsableInterno: "Luis Soto", fechaEstimadaTermino: "Sin especificar" });
+      expect(emitido).toMatchObject({ id: "15", estado: "Observado" });
+    });
+
+    it("descarta la edición sin modificar el trámite", () => {
+      const { detalle } = crear();
+      detalle.iniciarEdicionCabecera();
+      detalle.cabecera.estado = "Rechazado";
+
+      detalle.cancelarEdicionCabecera();
+
+      expect(detalle.editandoCabecera).toBe(false);
+      expect(detalle.tramite?.estado).toBe("En tramitación");
+    });
+  });
 });

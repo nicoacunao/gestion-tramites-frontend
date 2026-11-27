@@ -192,6 +192,16 @@ export class GestionListado {
     this.detalleTramiteVisible = true;
   }
 
+  /** Refleja en la tabla la gestión guardada desde el detalle. */
+  actualizarGestion(actualizada: GestionListadoItem): void {
+    const id = String(actualizada.id);
+    if (!this._gestiones.some((gestion) => String(gestion.id) === id)) return;
+    this._gestiones = this._gestiones.map((gestion) =>
+      String(gestion.id) === id ? { ...gestion, ...actualizada, tieneDetalle: gestion.tieneDetalle } : gestion,
+    );
+    this.actualizarOpcionesFiltros();
+  }
+
   pageChange(event: TablePageEvent): void {
     this.first = event.first;
     this.rows = event.rows;

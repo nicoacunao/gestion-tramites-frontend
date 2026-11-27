@@ -45,11 +45,15 @@ import {
   BackendBackground,
   BackendStage,
   BackendUser,
+  MANAGEMENT_STATUSES,
+  ManagementPriority,
+  ManagementStatus,
+  ManagementWrite,
   StageCatalogItem,
   StageStatus,
 } from "../../shared/services/api-models";
 import { FILE_MAX_BYTES, FilesApiService, nombreDeArchivo } from "../../shared/services/files-api";
-import { fechaIsoAVista } from "../../shared/services/management-presentation";
+import { fechaIsoAVista, gestionATramite } from "../../shared/services/management-presentation";
 import { mensajeDeError } from "../../shared/services/api-base";
 import { BitacoraApiService, LOG_COMMENT_MAX, LOG_TITLE_MAX } from "../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../shared/services/catalog-api";
@@ -57,6 +61,22 @@ import { IdentityApiService } from "../../shared/services/identity-api";
 import { aManagementWrite, ManagementApiService } from "../../shared/services/management-api";
 
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
+
+const PRIORIDADES: readonly ManagementPriority[] = ["Alta", "Media", "Baja"];
+/** Máximo de `requesterName` en `ManagementWrite`. */
+const SOLICITANTE_MAX = 150;
+
+/** Datos generales editables (`ManagementWrite`). Las fechas en `DD-MM-YYYY`. */
+export interface CabeceraEditable {
+  estado: string;
+  prioridad: string;
+  responsableId: string;
+  solicitante: string;
+  fechaApertura: string;
+  fechaEstimada: string;
+}
+
+export type ErroresCabecera = Partial<Record<keyof CabeceraEditable, string>>;
 
 /** Máximo de `notes` en `PUT /gestiones/stages/{id}`. */
 const NOTAS_ETAPA_MAX = 300;
@@ -133,6 +153,8 @@ export class TramiteDetalle {
   }
 
   @Output() readonly visibleChange = new EventEmitter<boolean>();
+  /** Emite el trámite actualizado tras guardar, para refrescar el listado. */
+  @Output() readonly tramiteActualizado = new EventEmitter<Tramite>();
   @ViewChild("archivoInput") archivoInput?: ElementRef<HTMLInputElement>;
   @ViewChild(BitacoraPanel) bitacoraPanel?: BitacoraPanel;
 
@@ -147,6 +169,7 @@ export class TramiteDetalle {
     this.erroresCarga = [];
     this.mensajeArchivo = "";
     this.errorGuardado = "";
+    this.cancelarEdicionCabecera();
     this.tramite = tramiteId
       ? this.tramitesMock.obtenerPorId(tramiteId)
       : undefined;
@@ -202,6 +225,12 @@ export class TramiteDetalle {
   private readonly antecedentesOriginales = new Map<string, { estado: string; responsableId: string | null }>();
   private readonly etapasOriginales = new Map<EtapaDetalle, ValoresEtapa>();
   opcionesResponsables: OpcionResponsable[] = [];
+  readonly estadosTramite = [...MANAGEMENT_STATUSES];
+  readonly prioridades = [...PRIORIDADES];
+  readonly solicitanteMax = SOLICITANTE_MAX;
+  editandoCabecera = false;
+  cabecera: CabeceraEditable = this.cabeceraVacia();
+  erroresCabecera: ErroresCabecera = {};
   /** Avisos de secciones que no se pudieron cargar. */
   erroresCarga: string[] = [];
   /** Antecedente cuyo archivo se está subiendo o descargando. */
@@ -589,6 +618,66 @@ export class TramiteDetalle {
     });
   }
 
+  iniciarEdicionCabecera(): void {
+    if (!this.tramite || this.guardando) return;
+    this.cabecera = {
+      estado: this.tramite.estado,
+      prioridad: this.tramite.prioridad,
+      responsableId: this.tramite.responsableUserId ?? "",
+      solicitante: this.tramite.solicitanteCopec,
+      fechaApertura: this.fechaEditable(this.tramite.fechaApertura),
+      fechaEstimada: this.fechaEditable(this.tramite.fechaEstimadaTermino),
+    };
+    this.erroresCabecera = {};
+    this.editandoCabecera = true;
+  }
+
+  cancelarEdicionCabecera(): void {
+    this.editandoCabecera = false;
+    this.cabecera = this.cabeceraVacia();
+    this.erroresCabecera = {};
+  }
+
+  /** Limpia el error de un campo cuando la persona lo corrige. */
+  limpiarErrorCabecera(campo: keyof CabeceraEditable): void {
+    if (this.erroresCabecera[campo]) {
+      const { [campo]: _, ...resto } = this.erroresCabecera;
+      this.erroresCabecera = resto;
+    }
+  }
+
+  /** Reglas de `ManagementWrite` y de la base (`fecha_estimada_termino >= fecha_apertura`). */
+  validarCabecera(): ErroresCabecera {
+    const errores: ErroresCabecera = {};
+    const c = this.cabecera;
+    if (!MANAGEMENT_STATUSES.includes(c.estado as ManagementStatus)) {
+      errores.estado = "Selecciona un estado válido.";
+    }
+    if (!PRIORIDADES.includes(c.prioridad as ManagementPriority)) {
+      errores.prioridad = "Selecciona una prioridad.";
+    }
+    if (!/^[1-9]\d*$/.test(c.responsableId)) {
+      errores.responsableId = "Selecciona un responsable.";
+    }
+    const solicitante = c.solicitante.trim();
+    if (!solicitante) {
+      errores.solicitante = "Ingresa el solicitante.";
+    } else if (solicitante.length > SOLICITANTE_MAX) {
+      errores.solicitante = `El solicitante no puede superar los ${SOLICITANTE_MAX} caracteres.`;
+    }
+    const apertura = this.fechaParaApi(c.fechaApertura);
+    const estimada = this.fechaParaApi(c.fechaEstimada);
+    if (!apertura) {
+      errores.fechaApertura = "Ingresa una fecha de apertura válida (DD-MM-AAAA).";
+    }
+    if (c.fechaEstimada && !estimada) {
+      errores.fechaEstimada = "Ingresa una fecha válida (DD-MM-AAAA) o déjala vacía.";
+    } else if (apertura && estimada && estimada < apertura) {
+      errores.fechaEstimada = "La fecha estimada de término no puede ser anterior a la de apertura.";
+    }
+    return errores;
+  }
+
   guardarCambios(): void {
     if (!this.tramite || this.guardando) {
       return;
@@ -608,6 +697,14 @@ export class TramiteDetalle {
       this.tramite = tramiteActualizado;
       this.actualizarVisibilidad(false);
       return;
+    }
+
+    if (this.editandoCabecera) {
+      this.erroresCabecera = this.validarCabecera();
+      if (Object.keys(this.erroresCabecera).length > 0) {
+        this.errorGuardado = "Revisa los datos generales marcados antes de guardar.";
+        return;
+      }
     }
 
     const errores = this.validarCambios();
@@ -636,10 +733,13 @@ export class TramiteDetalle {
         : api.createStage(apiId, { stageId: etapa.stageId!, ...cuerpo });
     });
     const fechaRevision = this.tramite.fechaUltimaRevision ?? null;
-    // La cabecera se reenvía completa (`ManagementWrite`) con la última revisión.
+    const edicion = this.editandoCabecera ? this.cabeceraParaApi() : {};
+    // La cabecera se reenvía completa (`ManagementWrite`) con la última revisión
+    // y, si se editaron, los datos generales.
     const cabecera = api.management(apiId).pipe(
       switchMap((management) => api.updateManagement(apiId, {
         ...aManagementWrite(management),
+        ...edicion,
         lastReviewedOn: this.fechaRevisionParaApi(fechaRevision),
       })),
     );
@@ -652,16 +752,48 @@ export class TramiteDetalle {
         this.changeDetectorRef?.markForCheck();
       }),
     ).subscribe({
-      next: () => {
-        this.tramite = tramiteActualizado;
-        this.tramitesMock.guardar(tramiteActualizado);
+      next: ([gestionGuardada]) => {
+        // La respuesta del PUT trae los datos de presentación recalculados
+        // (responsable, semáforo…); se conserva lo editable de esta vista.
+        const actualizado: Tramite = {
+          ...gestionATramite(gestionGuardada),
+          fechaUltimaRevision: fechaRevision,
+          detalleEditable: tramiteActualizado.detalleEditable,
+        };
+        this.tramite = actualizado;
+        this.tramitesMock.guardar(actualizado);
         this.ultimaRevisionEnviada = fechaRevision;
+        this.cancelarEdicionCabecera();
+        this.tramiteActualizado.emit(actualizado);
         this.actualizarVisibilidad(false);
       },
       error: (error: unknown) => {
         this.errorGuardado = `${mensajeDeError(error, "No fue posible guardar los cambios.")} Es posible que parte de los cambios se haya guardado; vuelve a abrir el detalle para revisarlos.`;
       },
     });
+  }
+
+  private cabeceraParaApi(): Partial<ManagementWrite> {
+    const c = this.cabecera;
+    const apertura = this.fechaParaApi(c.fechaApertura);
+    return {
+      status: c.estado as ManagementStatus,
+      priority: c.prioridad as ManagementPriority,
+      responsibleUserId: c.responsableId,
+      requesterName: c.solicitante.trim(),
+      // Validada antes de llegar aquí; si faltara, se conserva la del backend.
+      ...(apertura ? { openedOn: apertura } : {}),
+      estimatedCompletionOn: this.fechaParaApi(c.fechaEstimada),
+    };
+  }
+
+  private cabeceraVacia(): CabeceraEditable {
+    return { estado: "", prioridad: "", responsableId: "", solicitante: "", fechaApertura: "", fechaEstimada: "" };
+  }
+
+  /** Las fechas de vista pueden traer textos como "Sin especificar". */
+  private fechaEditable(fecha: string | null | undefined): string {
+    return fecha && this.fechaParaApi(fecha) ? fecha : "";
   }
 
   /** Reglas del backend que se pueden comprobar antes de enviar. */

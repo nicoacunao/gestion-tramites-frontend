@@ -114,4 +114,11 @@ describe("GestionListado", () => {
 
     expect(listado.detalleTramiteVisible).toBe(true);
   });
+
+  it("refleja en la tabla la gestión guardada desde el detalle", () => {
+    componente.actualizarGestion({ ...GESTION_BASE, responsableInterno: "Ana Pérez", semaforoEtiqueta: "Atrasado" });
+
+    expect(componente.gestiones[0]).toMatchObject({ responsableInterno: "Ana Pérez", semaforoEtiqueta: "Atrasado" });
+    expect(componente.opcionesResponsables.map(({ label }) => label)).toContain("Ana Pérez");
+  });
 });

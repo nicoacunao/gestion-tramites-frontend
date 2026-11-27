@@ -94,18 +94,27 @@
       <div class="general-card__intro">
         <div>
           <p>
-            Información registrada al momento de crear el trámite. Estos datos
-            se muestran solo para consulta.
+            @if (editandoCabecera) {
+            Modifica los datos y presiona «Guardar cambios» al final del detalle.
+            La estación y el tipo de trámite no se pueden cambiar.
+            } @else {
+            Información registrada al crear el trámite. Puedes actualizar el
+            estado, la prioridad, el responsable, las fechas y el solicitante.
+            }
           </p>
         </div>
 
-        <span class="read-only-badge">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="5" y="10" width="14" height="10" rx="2"></rect>
-            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
-          </svg>
-          Solo lectura
-        </span>
+        @if (editandoCabecera) {
+        <button pButton type="button" severity="secondary" [outlined]="true" size="small"
+          [disabled]="guardando" (click)="cancelarEdicionCabecera()">
+          Descartar edición
+        </button>
+        } @else {
+        <button pButton type="button" severity="secondary" [outlined]="true" size="small"
+          [disabled]="guardando || cargandoDetalle" (click)="iniciarEdicionCabecera()">
+          Editar datos generales
+        </button>
+        }
       </div>
 
       <dl class="general-grid">
@@ -113,6 +122,20 @@
           <dt>Estación de servicio</dt>
           <dd>{{ tramite.idEstacion }} · {{ tramite.estacionServicio }}</dd>
         </div>
+        @if (editandoCabecera) {
+        <div class="general-item">
+          <dt>Estado</dt>
+          <dd>
+            <p-select inputId="cabecera-estado" name="cabeceraEstado"
+              [(ngModel)]="cabecera.estado" (ngModelChange)="limpiarErrorCabecera('estado')"
+              [options]="estadosTramite" appendTo="body" styleClass="general-edit-control"
+              [ariaLabel]="'Estado del trámite'" [invalid]="!!erroresCabecera.estado" />
+            @if (erroresCabecera.estado) {
+            <small class="general-edit-error" role="alert">{{ erroresCabecera.estado }}</small>
+            }
+          </dd>
+        </div>
+        }
         <div class="general-item">
           <dt>Comuna</dt>
           <dd>{{ tramite.comuna }}</dd>
@@ -135,11 +158,37 @@
         </div>
         <div class="general-item">
           <dt>Fecha de apertura</dt>
-          <dd>{{ tramite.fechaApertura }}</dd>
+          <dd>
+          @if (editandoCabecera) {
+          <p-datepicker inputId="cabecera-fecha-apertura" name="cabeceraFechaApertura"
+            [(ngModel)]="cabecera.fechaApertura" (ngModelChange)="limpiarErrorCabecera('fechaApertura')"
+            dataType="string" dateFormat="dd-mm-yy" placeholder="dd-mm-aaaa" [showIcon]="true"
+            iconDisplay="input" appendTo="body" styleClass="general-edit-control"
+            [ariaLabel]="'Fecha de apertura'" [invalid]="!!erroresCabecera.fechaApertura" />
+          @if (erroresCabecera.fechaApertura) {
+          <small class="general-edit-error" role="alert">{{ erroresCabecera.fechaApertura }}</small>
+          }
+          } @else {
+          {{ tramite.fechaApertura }}
+          }
+          </dd>
         </div>
         <div class="general-item">
           <dt>Fecha estimada de término</dt>
-          <dd>{{ tramite.fechaEstimadaTermino }}</dd>
+          <dd>
+          @if (editandoCabecera) {
+          <p-datepicker inputId="cabecera-fecha-estimada" name="cabeceraFechaEstimada"
+            [(ngModel)]="cabecera.fechaEstimada" (ngModelChange)="limpiarErrorCabecera('fechaEstimada')"
+            dataType="string" dateFormat="dd-mm-yy" placeholder="dd-mm-aaaa (opcional)" [showIcon]="true"
+            [showClear]="true" iconDisplay="input" appendTo="body" styleClass="general-edit-control"
+            [ariaLabel]="'Fecha estimada de término'" [invalid]="!!erroresCabecera.fechaEstimada" />
+          @if (erroresCabecera.fechaEstimada) {
+          <small class="general-edit-error" role="alert">{{ erroresCabecera.fechaEstimada }}</small>
+          }
+          } @else {
+          {{ tramite.fechaEstimadaTermino }}
+          }
+          </dd>
         </div>
         <div class="general-item">
           <dt>Fecha de última revisión</dt>
@@ -147,15 +196,55 @@
         </div>
         <div class="general-item">
           <dt>Prioridad</dt>
-          <dd>{{ tramite.prioridad }}</dd>
+          <dd>
+          @if (editandoCabecera) {
+          <p-select inputId="cabecera-prioridad" name="cabeceraPrioridad"
+            [(ngModel)]="cabecera.prioridad" (ngModelChange)="limpiarErrorCabecera('prioridad')"
+            [options]="prioridades" appendTo="body" styleClass="general-edit-control"
+            [ariaLabel]="'Prioridad'" [invalid]="!!erroresCabecera.prioridad" />
+          @if (erroresCabecera.prioridad) {
+          <small class="general-edit-error" role="alert">{{ erroresCabecera.prioridad }}</small>
+          }
+          } @else {
+          {{ tramite.prioridad }}
+          }
+          </dd>
         </div>
         <div class="general-item">
           <dt>Responsable interno</dt>
-          <dd>{{ tramite.responsableInterno }}</dd>
+          <dd>
+          @if (editandoCabecera) {
+          <p-select inputId="cabecera-responsable" name="cabeceraResponsable"
+            [(ngModel)]="cabecera.responsableId" (ngModelChange)="limpiarErrorCabecera('responsableId')"
+            [options]="opcionesResponsables" optionLabel="label" optionValue="value"
+            [filter]="opcionesResponsables.length > 8" [placeholder]="tramite.responsableInterno"
+            appendTo="body" styleClass="general-edit-control"
+            [ariaLabel]="'Responsable interno'" [invalid]="!!erroresCabecera.responsableId" />
+          @if (erroresCabecera.responsableId) {
+          <small class="general-edit-error" role="alert">{{ erroresCabecera.responsableId }}</small>
+          }
+          } @else {
+          {{ tramite.responsableInterno }}
+          }
+          </dd>
         </div>
         <div class="general-item">
           <dt>Solicitante Copec</dt>
-          <dd>{{ tramite.solicitanteCopec }}</dd>
+          <dd>
+          @if (editandoCabecera) {
+          <input pInputText id="cabecera-solicitante" name="cabeceraSolicitante"
+            [(ngModel)]="cabecera.solicitante" (ngModelChange)="limpiarErrorCabecera('solicitante')"
+            [maxlength]="solicitanteMax" required class="general-edit-control"
+            aria-label="Solicitante Copec"
+            [attr.aria-invalid]="!!erroresCabecera.solicitante"
+            [attr.aria-describedby]="erroresCabecera.solicitante ? 'cabecera-solicitante-error' : null" />
+          @if (erroresCabecera.solicitante) {
+          <small id="cabecera-solicitante-error" class="general-edit-error" role="alert">{{ erroresCabecera.solicitante }}</small>
+          }
+          } @else {
+          {{ tramite.solicitanteCopec }}
+          }
+          </dd>
         </div>
       </dl>
     </section>
