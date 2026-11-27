@@ -14,6 +14,16 @@ const antecedente = (
   parentBackgroundId: string | null = null,
 ) => ({ id, name, level, parentBackgroundId });
 
+const ETAPAS_CATALOGO = [
+  "Consulta y definición de antecedentes",
+  "Recolección de antecedentes y preparación del expediente",
+  "Ingreso del expediente",
+  "Revisión del expediente y emisión de observaciones",
+  "Respuesta a las observaciones",
+  "Aprobación del expediente",
+  "Emisión o entrega del documento definitivo",
+].map((name, index) => ({ id: `e${index + 1}`, name, percentage: [10, 20, 30, 40, 50, 80, 100][index], order: index + 1 }));
+
 describe("TramiteNuevo", () => {
   let componente: TramiteNuevo;
   let tramitesMock: TramitesMock;
@@ -31,6 +41,7 @@ describe("TramiteNuevo", () => {
     });
 
     componente = TestBed.createComponent(TramiteNuevo).componentInstance;
+    componente.etapasCatalogo = ETAPAS_CATALOGO;
     componente.tiposTramite = [
       {
         id: "tipo-a",
@@ -320,23 +331,21 @@ describe("TramiteNuevo", () => {
     expect(componente.mensajeCreacionVisible).toBe(false);
   });
 
-  it("crea el trámite con antecedentes, etapas estándar y bitácora inicial", () => {
+  it("valida los datos obligatorios antes de enviar", () => {
     componente.onTipoTramiteChange("tipo-a");
     componente.onModalidadChange("principal");
-    componente.antecedentesSeleccionadosBorrador = ["a1"];
-    componente.guardarSeleccionAntecedentes();
-    componente.agregarAntecedenteComplementario();
-    componente.antecedentesComplementarios[0].antecedente =
-      "Certificado extraordinario";
-    componente.form.responsableInterno = "Claudio Doñas";
-    componente.form.solicitanteCopec = "Jefatura de zona";
     componente.form.fechaApertura = "15/10/2026";
+    componente.form.fechaEstimadaTermino = "01/10/2026";
 
     componente.crearTramite();
-    componente.ngOnDestroy();
 
     expect(componente.creando).toBe(false);
-    expect(componente.mensajeCreacionVisible).toBe(false);
-    expect(componente.creacionError).toContain("responsable válido");
+    expect(componente.erroresValidacion).toEqual(expect.arrayContaining([
+      "Selecciona la estación de servicio.",
+      "Selecciona la prioridad.",
+      "Selecciona el responsable principal.",
+      "Ingresa el solicitante.",
+      "La fecha estimada de término no puede ser anterior a la de apertura.",
+    ]));
   });
 });

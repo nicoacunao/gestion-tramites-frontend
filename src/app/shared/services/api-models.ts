@@ -54,6 +54,35 @@ export interface BackendCatalogStation {
   companyRut: string;
 }
 
+/** Nodo del catálogo jerárquico de tipos de gestión (`ManagementType`). */
+export interface ManagementTypeNode {
+  id: string;
+  /** `null` solo para el nivel 1. */
+  parentId: string | null;
+  /** Ámbito; solo en el nivel 1. */
+  scopeId: string | null;
+  name: string;
+  /** 1 = tipo de trámite, 2 = gestión específica, 3+ = documentos. */
+  level: number;
+  /** Antecedente requerido (`true`) o complementario (`false`). */
+  required: boolean;
+}
+
+/** Estación del catálogo (`Station`). */
+export interface CatalogStation {
+  id: string;
+  address: string;
+  commune: string;
+  legalName: string;
+  zoneManager?: string | null;
+  commercialManager?: string | null;
+  companyRut?: string | null;
+  legalRepresentative?: string | null;
+  legalRepresentativeRut?: string | null;
+  estado: string;
+}
+
+/** @deprecated Contrato anterior; usar `ManagementTypeNode`. */
 export interface BackendManagementType {
   id: string;
   name: string;

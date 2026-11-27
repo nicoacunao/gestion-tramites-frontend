@@ -19,6 +19,25 @@ export function fechaIsoAVista(fecha: string | null | undefined): string | null 
   return anio?.length === 4 && mes && dia ? `${dia}-${mes}-${anio}` : null;
 }
 
+/**
+ * `DD-MM-YYYY` o `DD/MM/YYYY` (también acepta `YYYY-MM-DD`) → `YYYY-MM-DD`.
+ * Devuelve `null` si está vacía o no es una fecha real.
+ */
+export function fechaVistaAIso(fecha: string | null | undefined): string | null {
+  if (!fecha) return null;
+  const limpia = fecha.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(limpia)) return esFechaReal(limpia) ? limpia : null;
+  const [dia, mes, anio] = limpia.split(/[/-]/);
+  if (!/^\d{1,2}$/.test(dia ?? "") || !/^\d{1,2}$/.test(mes ?? "") || !/^\d{4}$/.test(anio ?? "")) return null;
+  const iso = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+  return esFechaReal(iso) ? iso : null;
+}
+
+function esFechaReal(iso: string): boolean {
+  const fecha = new Date(`${iso}T00:00:00Z`);
+  return !Number.isNaN(fecha.getTime()) && fecha.toISOString().slice(0, 10) === iso;
+}
+
 function texto(valor: string | null | undefined, respaldo = SIN_REGISTRAR): string {
   const limpio = valor?.trim();
   return limpio ? limpio : respaldo;

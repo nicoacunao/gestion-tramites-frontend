@@ -63,6 +63,8 @@ import { aManagementWrite, ManagementApiService } from "../../shared/services/ma
 type NivelGestion = "N1" | "N2" | "N3" | "N4";
 
 const PRIORIDADES: readonly ManagementPriority[] = ["Alta", "Media", "Baja"];
+/** Estados que exigen archivo asociado en antecedentes N2+. */
+const ESTADOS_RECIBIDO = ["Recibido", "Recibido conforme"];
 /** Máximo de `requesterName` en `ManagementWrite`. */
 const SOLICITANTE_MAX = 150;
 
@@ -799,10 +801,11 @@ export class TramiteDetalle {
   /** Reglas del backend que se pueden comprobar antes de enviar. */
   private validarCambios(): string[] {
     const errores: string[] = [];
+    // El backend exige archivo solo para marcar un antecedente N2+ como recibido.
     this.antecedentesModificados()
-      .filter((item) => item.nivel !== "N1" && !item.referenciaArchivo)
+      .filter((item) => ESTADOS_RECIBIDO.includes(item.estado) && !item.referenciaArchivo)
       .forEach((item) => errores.push(
-        `Para modificar «${this.nombreDeAntecedente(item)}» primero debes cargar su archivo.`,
+        `Para marcar «${this.nombreDeAntecedente(item)}» como recibido primero debes cargar su archivo.`,
       ));
     this.etapasModificadas().forEach((etapa) => {
       const estimada = this.fechaParaApi(etapa.fechaEstimada);

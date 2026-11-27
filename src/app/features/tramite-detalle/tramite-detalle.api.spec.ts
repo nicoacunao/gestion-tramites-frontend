@@ -169,6 +169,20 @@ describe("TramiteDetalle con API", () => {
     expect(management.updateBackground).not.toHaveBeenCalled();
   });
 
+  it("permite cambiar el responsable de un antecedente sin archivo", () => {
+    const { detalle, management } = crear();
+    detalle.antecedentesRequeridos[0].responsableId = "4";
+
+    detalle.guardarCambios();
+
+    expect(detalle.errorGuardado).toBe("");
+    expect(management.updateBackground).toHaveBeenCalledWith("2", {
+      responsibleUserId: "4",
+      status: "Pendiente",
+      fileReference: null,
+    });
+  });
+
   it("muestra el error del servidor al guardar y mantiene el detalle abierto", () => {
     const { detalle } = crear({
       management: { updateManagement: vi.fn(() => throwError(() => new ApiClientError("La gestión no pudo ser guardada.", 500))) },

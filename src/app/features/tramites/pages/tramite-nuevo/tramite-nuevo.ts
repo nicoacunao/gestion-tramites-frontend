@@ -27,20 +27,25 @@ import { TableModule } from "primeng/table";
 import { TextareaModule } from "primeng/textarea";
 import { TooltipModule } from "primeng/tooltip";
 import { TrashIcon } from "primeng/icons/trash";
-import { forkJoin, map, of, switchMap } from "rxjs";
+import { catchError, forkJoin, from, map, mergeMap, Observable, of, switchMap, toArray } from "rxjs";
 import { Breadcrumbs } from "../../../../shared/components/breadcrumbs/breadcrumbs";
 import {
   ESTADOS_ANTECEDENTE,
   ESTADOS_ETAPA,
-  ETAPAS_ESTANDAR,
 } from "../../models/estado-tramite";
 import {
-  BackendManagementType,
-  BackendSpecificManagement,
   BackendUser,
   LogEntryWrite,
+  ManagementPriority,
+  ManagementStatus,
+  ManagementTypeNode,
+  ManagementWrite,
+  StageCatalogItem,
+  StageStatus,
 } from "../../../../shared/services/api-models";
-import { ApiClientError } from "../../../../shared/services/api-base";
+import { ApiClientError, mensajeDeError } from "../../../../shared/services/api-base";
+import { FILE_MAX_BYTES, FilesApiService } from "../../../../shared/services/files-api";
+import { fechaVistaAIso } from "../../../../shared/services/management-presentation";
 import { BitacoraApiService } from "../../../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../../../shared/services/catalog-api";
 import { IdentityApiService } from "../../../../shared/services/identity-api";
@@ -56,13 +61,18 @@ interface EstacionServicio {
   rut: string;
 }
 
-type NivelAntecedente = "N2" | "N3" | "N4";
+/** `N2`, `N3`… según el nivel del tipo de gestión. */
+type NivelAntecedente = string;
 
+/** Tipo de gestión del catálogo que puede registrarse como antecedente. */
 interface AntecedenteCatalogo {
+  /** Id del tipo de gestión (`managementTypeId`). */
   id: string;
   name: string;
   level: NivelAntecedente;
   parentBackgroundId: string | null;
+  required?: boolean;
+  /** Nodo N2: la gestión específica misma. */
   isSpecificManagement?: boolean;
 }
 
@@ -70,8 +80,32 @@ interface TramiteEspecifico {
   id: string;
   nombre: string;
   level: "N2";
+  /** El N2 y sus documentos requeridos (N3+). */
   antecedentes: AntecedenteCatalogo[];
+  /** Documentos complementarios (no requeridos) del N2. */
+  complementarios?: AntecedenteCatalogo[];
 }
+
+interface OpcionCatalogo {
+  label: string;
+  value: string;
+}
+
+/** Antecedente a registrar en `POST /gestiones/items/{id}/backgrounds`. */
+interface AntecedenteACrear {
+  managementTypeId: string;
+  nombre: string;
+  responsibleUserId: string | null;
+  estado: string;
+  archivo: File | null;
+}
+
+const ESTADOS_RECIBIDO = ["Recibido", "Recibido conforme"];
+const PRIORIDADES: ManagementPriority[] = ["Alta", "Media", "Baja"];
+const SOLICITANTE_MAX = 150;
+const NOTAS_ETAPA_MAX = 300;
+/** Solicitudes de antecedentes en paralelo durante la creación. */
+const CONCURRENCIA_CREACION = 4;
 
 interface TipoTramite {
   id: string;
@@ -121,6 +155,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private readonly identityApi = inject(IdentityApiService);
   private readonly managementApi = inject(ManagementApiService);
   private readonly bitacoraApi = inject(BitacoraApiService);
+  private readonly filesApi = inject(FilesApiService);
   private readonly userSession = inject(UserSessionService);
   private temporizadorRedireccion?: ReturnType<typeof setInterval>;
 
@@ -141,14 +176,17 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       value: "subtramite" as ModalidadCreacion,
     },
   ];
-  readonly estadosIniciales = ["Borrador", "Pendiente", "Ingresado"];
+  readonly estadosIniciales: ManagementStatus[] = ["Borrador", "Pendiente", "Ingresado"];
   readonly estadosAntecedente = [...ESTADOS_ANTECEDENTE];
   readonly estadosEtapa = [...ESTADOS_ETAPA];
-  tiposDocumentoComplementario: string[] = [];
+  /** Documentos complementarios disponibles para la gestión configurada. */
+  tiposDocumentoComplementario: OpcionCatalogo[] = [];
 
   estacionesServicio: EstacionServicio[] = [];
-  prioridades: string[] = [];
-  responsables: string[] = [];
+  readonly prioridades = [...PRIORIDADES];
+  opcionesResponsables: OpcionCatalogo[] = [];
+  /** Catálogo de etapas (`GET /catalogos/stages`). */
+  etapasCatalogo: StageCatalogItem[] = [];
   tiposTramite: TipoTramite[] = [];
   tramitesEspecificos: TramiteEspecifico[] = [];
 
@@ -158,6 +196,10 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   creacionError = "";
   creacionErrorCode = "";
   creacionRequestId = "";
+  /** Errores de validación detectados antes de enviar. */
+  erroresValidacion: string[] = [];
+  /** Partes que no se pudieron registrar después de crear la gestión. */
+  avisosCreacion: string[] = [];
   creando = false;
   private responsablesApi: BackendUser[] = [];
   private antecedentesCatalogoPorId = new Map<string, AntecedenteCatalogo>();
@@ -173,6 +215,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     nombreConcesionario: "",
     prioridad: "",
     estado: "Borrador",
+    /** Id del usuario responsable. */
     responsableInterno: "",
     solicitanteCopec: "",
     fechaApertura: "",
@@ -283,14 +326,14 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       : "";
   }
 
-  onResponsablePrincipalChange(responsable: string): void {
-    this.form.responsableInterno = responsable;
+  onResponsablePrincipalChange(responsableId: string | null): void {
+    this.form.responsableInterno = responsableId ?? "";
 
     for (const antecedente of [
       ...this.antecedentesRequeridos,
       ...this.antecedentesComplementarios,
     ]) {
-      antecedente.responsable = responsable;
+      antecedente.responsable = this.form.responsableInterno;
     }
   }
 
@@ -441,6 +484,12 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     item: { archivo: File | null; archivoNombre: string },
   ): void {
     const archivo = event.currentFiles.at(-1) ?? event.files.at(-1) ?? null;
+    if (archivo && archivo.size > FILE_MAX_BYTES) {
+      item.archivo = null;
+      item.archivoNombre = "";
+      this.erroresValidacion = [`El archivo ${archivo.name} supera el máximo de 10 MB.`];
+      return;
+    }
 
     item.archivo = archivo;
     item.archivoNombre = archivo?.name ?? "";
@@ -479,6 +528,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     this.antecedentesSeleccionadosBorrador = [];
     this.selectorAntecedentesVisible = false;
     this.antecedentesComplementarios = [];
+    this.tiposDocumentoComplementario = [];
     this.etapasGestion = [];
 
     if (!tipo || !this.modalidadCreacion) {
@@ -501,14 +551,19 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       antecedentes.map((antecedente) => [antecedente.id, antecedente]),
     );
     this.antecedentesDisponibles = antecedentes;
+    const complementarios = new Map<string, AntecedenteCatalogo>();
+    subtramites.flatMap((gestion) => gestion.complementarios ?? [])
+      .forEach((item) => complementarios.set(item.id, item));
+    this.tiposDocumentoComplementario = [...complementarios.values()]
+      .map(({ id, name }) => ({ label: name, value: id }));
 
     if (!subtramites.length) {
       return;
     }
 
-    this.etapasGestion = ETAPAS_ESTANDAR.map(({ nombre, porcentaje }) =>
-      this.crearEtapa(nombre, porcentaje),
-    );
+    this.etapasGestion = [...this.etapasCatalogo]
+      .sort((a, b) => a.order - b.order)
+      .map(({ id, name, percentage }) => this.crearEtapa(id, name, percentage));
   }
 
   private construirAntecedentesDisponibles(
@@ -524,9 +579,9 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       level: catalogo.level,
       parentBackgroundId: catalogo.parentBackgroundId,
       obligatorio: true,
+      /** Id del usuario responsable. */
       responsable: this.form.responsableInterno,
       estado: "Pendiente",
-      observaciones: "",
       archivo: null as File | null,
       archivoNombre: "",
       isSpecificManagement: catalogo.isSpecificManagement ?? false,
@@ -536,13 +591,13 @@ export class TramiteNuevo implements OnInit, OnDestroy {
   private crearAntecedenteComplementario() {
     return {
       antecedente: "",
-      backgroundId: null,
-      level: "N3" as const,
+      /** Id del tipo de documento complementario seleccionado. */
+      backgroundId: null as string | null,
+      level: "N3",
       parentBackgroundId: null,
       obligatorio: false,
       responsable: this.form.responsableInterno,
       estado: "Pendiente",
-      observaciones: "",
       archivo: null as File | null,
       archivoNombre: "",
     };
@@ -604,13 +659,15 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     });
   }
 
-  private crearEtapa(etapa: string, porcentaje: number) {
+  private crearEtapa(stageId: string, etapa: string, porcentaje: number) {
     return {
+      stageId,
       etapa,
       porcentaje,
       estado: "Pendiente",
       fechaEstimada: "",
       fechaReal: "",
+      /** Id del usuario responsable. */
       responsable: "",
       observacion: "",
     };
@@ -618,6 +675,7 @@ export class TramiteNuevo implements OnInit, OnDestroy {
 
   private guardarTramite(): void {
     if (
+      this.creando ||
       this.mensajeCreacionVisible ||
       !this.configuracionLista ||
       !this.modalidadCreacion
@@ -625,47 +683,213 @@ export class TramiteNuevo implements OnInit, OnDestroy {
       return;
     }
 
-    this.creando = true;
     this.creacionError = "";
     this.creacionErrorCode = "";
     this.creacionRequestId = "";
-    if (!this.obtenerResponsableSeleccionado()) {
-      this.creando = false;
-      this.creacionError = "Seleccione un responsable válido del catálogo de usuarios.";
+    this.avisosCreacion = [];
+    this.erroresValidacion = this.validarFormulario();
+    if (this.erroresValidacion.length > 0) {
       return;
     }
-    this.managementApi.createManagement(this.crearPayload(this.modalidadCreacion)).pipe(
-      switchMap((tramite) =>
-        this.form.estado === "Ingresado"
-          ? this.bitacoraApi
-              .createLog(this.crearLogIngreso(tramite.id))
-              .pipe(map(() => tramite))
-          : of(tramite),
-      ),
+
+    this.creando = true;
+    const estadoInicial = this.form.estado as ManagementStatus;
+    const antecedentes = this.antecedentesACrear();
+    const etapas = this.etapasACrear();
+
+    this.managementApi.createManagement(this.crearPayload()).pipe(
+      switchMap((gestion) => forkJoin({
+        antecedentes: this.crearAntecedentes(gestion.id, antecedentes),
+        etapas: this.crearEtapas(gestion.id, etapas),
+        bitacora: estadoInicial === "Ingresado"
+          ? this.bitacoraApi.createLog(this.crearLogIngreso(gestion.id)).pipe(
+              map(() => [] as string[]),
+              catchError((error: unknown) => of([`Bitácora: ${mensajeDeError(error, "no se registró la entrada de ingreso.")}`])),
+            )
+          : of([] as string[]),
+      }).pipe(map((avisos) => ({ gestion, avisos: [...avisos.antecedentes, ...avisos.etapas, ...avisos.bitacora] })))),
     ).subscribe({
-      next: (tramite) => {
-        this.tramiteCreadoId = tramite.id;
+      next: ({ gestion, avisos }) => {
+        this.tramiteCreadoId = gestion.id;
         this.creando = false;
-        this.creacionErrorCode = "";
-        this.creacionRequestId = "";
+        this.avisosCreacion = avisos;
         this.segundosRestantes = this.segundosRedireccion;
         this.mensajeCreacionVisible = true;
-        this.iniciarRedireccionAutomatica();
+        // Con avisos no se redirige solo: la persona debe poder leerlos.
+        if (avisos.length === 0) {
+          this.iniciarRedireccionAutomatica();
+        }
+        this.changeDetectorRef.markForCheck();
       },
-      error: (error: Error) => {
+      error: (error: unknown) => {
         this.creando = false;
-        this.creacionError = error.message;
+        this.creacionError = mensajeDeError(error, "No fue posible crear el trámite. Inténtalo nuevamente.");
         this.creacionErrorCode = error instanceof ApiClientError ? error.code ?? "" : "";
         this.creacionRequestId = error instanceof ApiClientError ? error.requestId ?? "" : "";
+        this.changeDetectorRef.markForCheck();
       },
     });
   }
 
+  /** Reglas del backend comprobables antes de enviar. */
+  private validarFormulario(): string[] {
+    const errores: string[] = [];
+    const f = this.form;
+    if (!this.estacionesServicio.some(({ codigo }) => codigo === f.estacionServicio)) {
+      errores.push("Selecciona la estación de servicio.");
+    }
+    if (!PRIORIDADES.includes(f.prioridad as ManagementPriority)) {
+      errores.push("Selecciona la prioridad.");
+    }
+    if (!this.obtenerResponsableSeleccionado()) {
+      errores.push("Selecciona el responsable principal.");
+    }
+    if (!this.estadosIniciales.includes(f.estado as ManagementStatus)) {
+      errores.push("Selecciona el estado inicial.");
+    }
+    const solicitante = f.solicitanteCopec.trim();
+    if (!solicitante) {
+      errores.push("Ingresa el solicitante.");
+    } else if (solicitante.length > SOLICITANTE_MAX) {
+      errores.push(`El solicitante no puede superar los ${SOLICITANTE_MAX} caracteres.`);
+    }
+    const apertura = fechaVistaAIso(f.fechaApertura);
+    const estimada = fechaVistaAIso(f.fechaEstimadaTermino);
+    if (!apertura) {
+      errores.push("Ingresa una fecha de apertura válida.");
+    }
+    if (f.fechaEstimadaTermino && !estimada) {
+      errores.push("Ingresa una fecha estimada de término válida o déjala vacía.");
+    } else if (apertura && estimada && estimada < apertura) {
+      errores.push("La fecha estimada de término no puede ser anterior a la de apertura.");
+    }
+    [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
+      .filter((item) => ESTADOS_RECIBIDO.includes(item.estado) && !item.archivo)
+      .forEach((item) => errores.push(
+        `Para marcar «${this.nombreAntecedente(item)}» como recibido debes adjuntar su archivo.`,
+      ));
+    this.etapasGestion.forEach((etapa) => {
+      const est = fechaVistaAIso(etapa.fechaEstimada);
+      const real = fechaVistaAIso(etapa.fechaReal);
+      if ((etapa.fechaEstimada && !est) || (etapa.fechaReal && !real)) {
+        errores.push(`Revisa las fechas de la etapa «${etapa.etapa}».`);
+      } else if (est && real && real < est) {
+        errores.push(`En la etapa «${etapa.etapa}», la fecha real no puede ser anterior a la estimada.`);
+      }
+      if (etapa.observacion.trim().length > NOTAS_ETAPA_MAX) {
+        errores.push(`La observación de la etapa «${etapa.etapa}» supera los ${NOTAS_ETAPA_MAX} caracteres.`);
+      }
+    });
+    return errores;
+  }
+
+  private nombreAntecedente(item: { antecedente: string; backgroundId: string | null }): string {
+    return item.antecedente
+      || this.tiposDocumentoComplementario.find(({ value }) => value === item.backgroundId)?.label
+      || "documento complementario";
+  }
+
+  /**
+   * Tipo N1, gestiones N2 (todas en modo completo, o la elegida) y los
+   * documentos seleccionados, sin repetir tipos.
+   */
+  private antecedentesACrear(): AntecedenteACrear[] {
+    const tipo = this.tipoSeleccionado!;
+    const responsable = this.form.responsableInterno || null;
+    const porTipo = new Map<string, AntecedenteACrear>();
+    const agregar = (item: AntecedenteACrear) => porTipo.set(item.managementTypeId, item);
+
+    agregar({ managementTypeId: tipo.id, nombre: tipo.nombre, responsibleUserId: responsable, estado: "Pendiente", archivo: null });
+    const gestiones = this.requiereSeleccionSegundoNivel
+      ? tipo.tramitesEspecificos.filter(({ id }) => id === this.form.tramiteEspecifico)
+      : tipo.tramitesEspecificos;
+    gestiones.forEach(({ id, nombre }) => agregar({ managementTypeId: id, nombre, responsibleUserId: responsable, estado: "Pendiente", archivo: null }));
+    [...this.antecedentesRequeridos, ...this.antecedentesComplementarios]
+      .filter((item) => item.backgroundId)
+      .forEach((item) => agregar({
+        managementTypeId: item.backgroundId!,
+        nombre: this.nombreAntecedente(item),
+        responsibleUserId: item.responsable || responsable,
+        estado: item.estado,
+        archivo: item.archivo,
+      }));
+    return [...porTipo.values()];
+  }
+
+  /**
+   * Crea cada antecedente; si trae archivo, lo sube y luego fija su estado.
+   * Devuelve los avisos de lo que no se pudo registrar.
+   */
+  private crearAntecedentes(managementId: string, items: AntecedenteACrear[]): Observable<string[]> {
+    return from(items).pipe(
+      mergeMap((item) => this.registrarAntecedente(managementId, item).pipe(
+        catchError((error: unknown) => of(`«${item.nombre}»: ${mensajeDeError(error, "no se pudo registrar.")}`)),
+      ), CONCURRENCIA_CREACION),
+      toArray(),
+      map((avisos) => avisos.filter((aviso): aviso is string => Boolean(aviso))),
+    );
+  }
+
+  private registrarAntecedente(managementId: string, item: AntecedenteACrear): Observable<string | null> {
+    // Sin archivo no se puede marcar como recibido: se crea pendiente y,
+    // si hay archivo, se actualiza el estado después de subirlo.
+    const estadoInicial = item.archivo ? "Pendiente" : item.estado;
+    return this.managementApi.createBackground(managementId, {
+      managementTypeId: item.managementTypeId,
+      responsibleUserId: item.responsibleUserId,
+      status: estadoInicial,
+    }).pipe(
+      switchMap((antecedente) => {
+        if (!item.archivo) return of(null);
+        return this.filesApi.upload(item.archivo, antecedente.id).pipe(
+          switchMap((archivo) => item.estado === estadoInicial
+            ? of(null)
+            : this.managementApi.updateBackground(antecedente.id, {
+                responsibleUserId: item.responsibleUserId,
+                status: item.estado,
+                fileReference: archivo.storageReference,
+              }).pipe(map(() => null))),
+          catchError((error: unknown) => of(
+            `«${item.nombre}»: quedó registrado como Pendiente, pero el archivo no se cargó. ${mensajeDeError(error, "")}`.trim(),
+          )),
+        );
+      }),
+    );
+  }
+
+  /** Etapas con datos distintos de los valores por defecto. */
+  private etapasACrear() {
+    return this.etapasGestion.filter((etapa) =>
+      etapa.estado !== "Pendiente"
+      || etapa.fechaEstimada
+      || etapa.fechaReal
+      || etapa.responsable
+      || etapa.observacion.trim());
+  }
+
+  private crearEtapas(managementId: string, etapas: ReturnType<typeof this.etapasACrear>): Observable<string[]> {
+    return from(etapas).pipe(
+      mergeMap((etapa) => this.managementApi.createStage(managementId, {
+        stageId: etapa.stageId,
+        status: etapa.estado as StageStatus,
+        estimatedOn: fechaVistaAIso(etapa.fechaEstimada),
+        completedOn: fechaVistaAIso(etapa.fechaReal),
+        responsibleUserId: etapa.responsable || null,
+        notes: etapa.observacion.trim() || null,
+      }).pipe(
+        map(() => null),
+        catchError((error: unknown) => of(`Etapa «${etapa.etapa}»: ${mensajeDeError(error, "no se pudo registrar.")}`)),
+      ), CONCURRENCIA_CREACION),
+      toArray(),
+      map((avisos) => avisos.filter((aviso): aviso is string => Boolean(aviso))),
+    );
+  }
+
   private crearLogIngreso(managementId: string): LogEntryWrite {
-    // El autor lo asigna el backend desde la sesión autenticada.
+    // Fecha y hora de Chile; el autor lo asigna el backend desde la sesión.
     return {
       managementId,
-      registeredOn: this.normalizarFechaApi(this.form.fechaApertura),
+      registeredOn: fechaVistaAIso(this.form.fechaApertura) ?? undefined,
       registeredAt: this.obtenerHoraActual(),
       title: "Ingreso del trámite",
       comment: "Se ha ingresado el trámite al sistema.",
@@ -684,196 +908,119 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     }).format(new Date());
   }
 
-  private crearPayload(modalidadCreacion: ModalidadCreacion): object {
-    const estacion = this.estacionesServicio.find((item) => item.codigo === this.form.estacionServicio);
-    const tipo = this.tipoSeleccionado;
-    const subtramite = tipo?.tramitesEspecificos.find((item) => item.id === this.form.tramiteEspecifico);
-    const responsable = this.obtenerResponsableSeleccionado();
+  /** Cuerpo de `POST /gestiones/items` (`ManagementWrite`). */
+  private crearPayload(): ManagementWrite {
     return {
-      stationId: estacion?.codigo || this.form.estacionServicio,
-      managementTypeId: tipo?.id || this.form.tipoTramite,
-      scopeCode: tipo?.scopeCode || this.obtenerScopeCode(tipo?.id),
-      responsibleUserId: responsable!.id,
-      level: modalidadCreacion === "subtramite" ? "N2" : "N1",
-      openedOn: this.normalizarFechaApi(this.form.fechaApertura),
-      estimatedCompletionOn: this.form.fechaEstimadaTermino ? this.normalizarFechaApi(this.form.fechaEstimadaTermino) : null,
-      lastReviewedOn: null, priority: this.form.prioridad || "Media",
-      requesterName: this.form.solicitanteCopec || "Sin especificar", status: this.form.estado || "Borrador",
-      creationMode: modalidadCreacion, specificManagementId: subtramite?.id ?? null,
-      subtramitesAsociados: modalidadCreacion === "principal" && !subtramite ? this.tramitesEspecificos.map((item) => item.id) : subtramite ? [subtramite.id] : [],
-      ...(subtramite ? {} : {
-        requiredBackgrounds: this.antecedentesRequeridos
-          .filter((item) => !item.isSpecificManagement)
-          .map((item) => ({
-        backgroundId: item.backgroundId,
-        parentBackgroundId: item.parentBackgroundId,
-        level: item.level,
-        name: item.antecedente,
-        category: "requerido",
-        required: true,
-        responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
-        status: item.estado,
-        observations: item.observaciones || null,
-          })),
-        complementaryBackgrounds: this.antecedentesComplementarios
-        .filter((item) => item.antecedente.trim())
-        .map((item) => ({
-          backgroundId: item.backgroundId,
-          parentBackgroundId: item.parentBackgroundId,
-          level: item.level,
-          name: item.antecedente.trim(),
-          category: "complementario",
-          required: false,
-          responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
-          status: item.estado,
-          observations: item.observaciones || null,
-        })),
-        stages: this.etapasGestion.map((item) => ({
-        stageId: null,
-        name: item.etapa,
-        status: item.estado,
-        estimatedOn: item.fechaEstimada ? this.normalizarFechaApi(item.fechaEstimada) : null,
-        completedOn: item.fechaReal ? this.normalizarFechaApi(item.fechaReal) : null,
-        responsibleUserId: this.obtenerResponsablePorNombre(item.responsable)?.id ?? null,
-        notes: item.observacion || null,
-        })),
-      }),
+      stationId: this.form.estacionServicio,
+      responsibleUserId: this.obtenerResponsableSeleccionado()!.id,
+      openedOn: fechaVistaAIso(this.form.fechaApertura)!,
+      estimatedCompletionOn: fechaVistaAIso(this.form.fechaEstimadaTermino),
+      lastReviewedOn: null,
+      priority: this.form.prioridad as ManagementPriority,
+      status: this.form.estado as ManagementStatus,
+      requesterName: this.form.solicitanteCopec.trim(),
     };
   }
 
-  private normalizarFechaApi(fecha: string): string {
-    const [dia, mes, anio] = fecha.replaceAll("/", "-").split("-");
-    return `${anio}-${mes}-${dia}`;
-  }
+
 
   private obtenerNombreConcesionario(razonSocial: string): string {
     return razonSocial.replace(/\s+(SpA|Ltda\.?|Limitada|S\.?A\.?)$/i, "");
   }
 
   private obtenerResponsableSeleccionado(): BackendUser | undefined {
-    return this.obtenerResponsablePorNombre(this.form.responsableInterno);
+    return this.responsablesApi.find(({ id }) => id === this.form.responsableInterno);
   }
 
-  private obtenerResponsablePorNombre(nombre: string): BackendUser | undefined {
-    const nombreNormalizado = nombre.trim().toLocaleLowerCase("es-CL");
-    return this.responsablesApi.find(
-      (user) => [user.names, user.firstSurname, user.secondSurname]
-        .filter(Boolean)
-        .join(" ")
-        .toLocaleLowerCase("es-CL") === nombreNormalizado,
-    );
-  }
 
-  private obtenerScopeCode(tipoId = ""): string {
-    const prefijoPorTipo: Record<string, string> = {
-      "patente-comercial": "MUN",
-      "resolucion-sanitaria-alimentos": "SAN",
-      "informe-sanitario-establecimientos": "SAN",
-      "regularizacion-obras": "DOM",
-    };
-    return prefijoPorTipo[tipoId] ?? "OTR";
-  }
+
+
 
   private cargarCatalogos(): void {
     this.catalogosCargando = true;
-    this.cargarAntecedentesComplementarios();
+    this.catalogosError = "";
 
     forkJoin({
       estaciones: this.catalogApi.catalogStations(),
       tipos: this.catalogApi.managementTypes(),
-      responsables: this.identityApi.users(),
+      responsables: this.identityApi.cachedUsers(),
+      // Sin catálogo de etapas el trámite se crea igual; las etapas se editan después.
+      etapas: this.catalogApi.stageCatalog().pipe(catchError(() => of([] as StageCatalogItem[]))),
     }).subscribe({
-      next: ({ estaciones, tipos, responsables }) => {
+      next: ({ estaciones, tipos, responsables, etapas }) => {
         this.estacionesServicio = estaciones.map((estacion) => ({
           codigo: estacion.id,
-          nombre: estacion.name ?? estacion.legalName,
+          nombre: estacion.legalName,
           direccion: estacion.address,
           comuna: estacion.commune,
           concesionario: estacion.legalName,
-          rut: estacion.companyRut,
+          rut: estacion.companyRut ?? "",
         }));
-        this.prioridades = ["Alta", "Media", "Baja"];
         this.responsablesApi = responsables;
-        this.responsables = responsables.map((user) =>
-          [user.names, user.firstSurname, user.secondSurname]
-            .filter(Boolean)
-            .join(" "),
-        );
-
-        this.tiposTramite = tipos.map((tipo) =>
-          this.mapearTipoTramite(tipo, []),
-        );
-        this.catalogosError = "";
+        this.opcionesResponsables = responsables.map((user) => ({
+          label: [user.names, user.firstSurname, user.secondSurname].filter(Boolean).join(" "),
+          value: user.id,
+        }));
+        this.etapasCatalogo = etapas;
+        this.tiposTramite = this.construirTiposTramite(tipos);
+        this.catalogosCargando = false;
         this.changeDetectorRef.markForCheck();
-
-        forkJoin(
-          tipos.map((tipo) => this.catalogApi.specificManagements(tipo.id)),
-        ).subscribe({
-          next: (gestionesPorTipo) => {
-            this.tiposTramite = tipos.map((tipo, index) =>
-              this.mapearTipoTramite(tipo, gestionesPorTipo[index] ?? []),
-            );
-            this.catalogosError = "";
-            this.catalogosCargando = false;
-            this.changeDetectorRef.markForCheck();
-          },
-          error: (error: ApiClientError) => {
-            this.catalogosError =
-              error.status === 403
-                ? "No tiene autorización para consultar las gestiones específicas del catálogo."
-                : "No fue posible cargar las gestiones específicas del catálogo.";
-            this.catalogosCargando = false;
-            this.changeDetectorRef.markForCheck();
-          },
-        });
       },
-      error: (error: ApiClientError) => {
-        this.catalogosError = error.status === 403
-          ? "No tiene autorización para consultar los catálogos del formulario."
-          : "No fue posible cargar los catálogos del formulario.";
+      error: (error: unknown) => {
+        this.catalogosError = error instanceof ApiClientError && error.status === 403
+          ? "No tienes autorización para consultar los catálogos del formulario."
+          : mensajeDeError(error, "No fue posible cargar los catálogos del formulario.");
         this.catalogosCargando = false;
         this.changeDetectorRef.markForCheck();
       },
     });
   }
 
-  private cargarAntecedentesComplementarios(): void {
-    this.catalogApi.backgroundCatalog("complementario").subscribe({
-      next: (antecedentes) => {
-        this.tiposDocumentoComplementario = antecedentes.map(
-          ({ name }) => name,
-        );
-        this.changeDetectorRef.markForCheck();
-      },
-      error: (error: ApiClientError) => {
-        this.tiposDocumentoComplementario = [];
-        this.catalogosError = error.status === 403
-          ? "No tiene autorización para consultar los antecedentes complementarios."
-          : "No fue posible cargar los antecedentes complementarios.";
-        this.changeDetectorRef.markForCheck();
-      },
+  /**
+   * Convierte el catálogo jerárquico: N1 = tipo de trámite, N2 = gestión
+   * específica, N3+ = documentos (requeridos o complementarios).
+   */
+  private construirTiposTramite(nodos: ManagementTypeNode[]): TipoTramite[] {
+    const hijos = new Map<string, ManagementTypeNode[]>();
+    nodos.forEach((nodo) => {
+      if (!nodo.parentId) return;
+      hijos.set(nodo.parentId, [...(hijos.get(nodo.parentId) ?? []), nodo]);
     });
-  }
+    const ordenar = (lista: ManagementTypeNode[]) =>
+      [...lista].sort((a, b) => a.name.localeCompare(b.name, "es-CL"));
+    const descendientes = (id: string, visitados = new Set<string>()): ManagementTypeNode[] =>
+      ordenar(hijos.get(id) ?? []).flatMap((hijo) => {
+        if (visitados.has(hijo.id)) return [];
+        visitados.add(hijo.id);
+        return [hijo, ...descendientes(hijo.id, visitados)];
+      });
+    const aCatalogo = (nodo: ManagementTypeNode, parentId: string | null): AntecedenteCatalogo => ({
+      id: nodo.id,
+      name: nodo.name,
+      level: `N${nodo.level}`,
+      parentBackgroundId: parentId,
+      required: nodo.required,
+    });
 
-  private mapearTipoTramite(
-    tipo: BackendManagementType,
-    gestiones: BackendSpecificManagement[],
-  ): TipoTramite {
-    return {
+    return ordenar(nodos.filter(({ level }) => level === 1)).map((tipo) => ({
       id: tipo.id,
       nombre: tipo.name,
-      segundoNivelLabel: tipo.secondLevelLabel ?? "Gestión específica",
-      requiereSeleccionSegundoNivelParaPrincipal:
-        tipo.requiresSpecificSelection ?? false,
-      tramitesEspecificos: gestiones
-        .filter((gestion) => gestion.active)
-        .map((gestion) => ({
+      segundoNivelLabel: "Gestión específica",
+      requiereSeleccionSegundoNivelParaPrincipal: false,
+      tramitesEspecificos: ordenar((hijos.get(tipo.id) ?? []).filter(({ level }) => level === 2)).map((gestion) => {
+        const documentos = descendientes(gestion.id);
+        return {
           id: gestion.id,
           nombre: gestion.name,
-          level: gestion.level,
-          antecedentes: gestion.backgrounds ?? [],
-        })),
-    };
+          level: "N2" as const,
+          antecedentes: [
+            { ...aCatalogo(gestion, null), isSpecificManagement: true },
+            ...documentos.filter(({ required }) => required).map((doc) => aCatalogo(doc, doc.parentId)),
+          ],
+          complementarios: documentos.filter(({ required }) => !required).map((doc) => aCatalogo(doc, doc.parentId)),
+        };
+      }),
+    }));
   }
 
   private iniciarRedireccionAutomatica(): void {

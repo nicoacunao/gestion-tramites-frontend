@@ -824,3 +824,19 @@ textarea[pTextarea] {
     width: min(100%, 300px);
   }
 }
+
+
+.creation-error-list,
+.creation-warnings {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.creation-warnings {
+  max-height: 180px;
+  overflow-y: auto;
+  color: #8a5a00;
+  text-align: left;
+}

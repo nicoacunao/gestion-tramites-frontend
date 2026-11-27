@@ -4,6 +4,23 @@
   </div>
 
   <form class="creation-form">
+      @if (catalogosError) {
+      <div class="creation-error" role="alert">
+        <p-message severity="error" [text]="catalogosError" />
+      </div>
+      }
+      @if (erroresValidacion.length) {
+      <div class="creation-error" role="alert">
+        <p-message severity="warn">
+          <div>
+            <strong>Revisa los siguientes datos antes de crear el trámite:</strong>
+            <ul class="creation-error-list">
+              @for (error of erroresValidacion; track $index) { <li>{{ error }}</li> }
+            </ul>
+          </div>
+        </p-message>
+      </div>
+      }
       @if (creacionError) {
       <div class="creation-error" role="alert">
         <p-message severity="error" [text]="creacionError" />
@@ -283,10 +300,10 @@
               pInputText
               id="nombreConcesionario"
               name="nombreConcesionario"
-              [(ngModel)]="form.nombreConcesionario"
-              placeholder="Ingrese el nombre del concesionario"
-              maxlength="150"
+              [value]="form.nombreConcesionario"
+              placeholder="Se completa al seleccionar la estación"
               class="w-100"
+              readonly
             />
           </div>
         </div>
@@ -312,7 +329,9 @@
               inputId="responsableInterno"
               name="responsableInterno"
               [(ngModel)]="form.responsableInterno"
-              [options]="responsables"
+              [options]="opcionesResponsables"
+                  optionLabel="label"
+                  optionValue="value"
               placeholder="Seleccione responsable principal"
               [loading]="catalogosCargando"
               [disabled]="catalogosCargando"
@@ -464,7 +483,6 @@
               <th class="responsable-column" scope="col">Responsable</th>
               <th class="estado-column" scope="col">Estado</th>
               <th class="archivo-column" scope="col">Archivo</th>
-              <th class="observaciones-column" scope="col">Observaciones</th>
             </tr>
           </ng-template>
 
@@ -485,7 +503,9 @@
                   [inputId]="'responsableReq' + i"
                   [name]="'responsableReq' + i"
                   [(ngModel)]="item.responsable"
-                  [options]="responsables"
+                  [options]="opcionesResponsables"
+                  optionLabel="label"
+                  optionValue="value"
                   placeholder="Seleccione responsable"
                   [filter]="true"
                   filterPlaceholder="Buscar responsable"
@@ -534,20 +554,6 @@
                 </p-fileupload>
               </td>
 
-              <td class="observaciones-column">
-                <label class="visually-hidden" [for]="'observacionesReq' + i">
-                  Observaciones de {{ item.antecedente }}
-                </label>
-                <textarea
-                  pTextarea
-                  [id]="'observacionesReq' + i"
-                  [name]="'observacionesReq' + i"
-                  [(ngModel)]="item.observaciones"
-                  placeholder="Agregar observación"
-                  [autoResize]="true"
-                  rows="1"
-                ></textarea>
-              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -627,7 +633,6 @@
               <th class="responsable-column" scope="col">Responsable</th>
               <th class="estado-column" scope="col">Estado</th>
               <th class="archivo-column" scope="col">Archivo</th>
-              <th class="observaciones-column" scope="col">Observaciones</th>
             </tr>
           </ng-template>
 
@@ -642,11 +647,12 @@
                     <p-select
                       [inputId]="'antecedenteExtra' + i"
                       [name]="'antecedenteExtra' + i"
-                      [(ngModel)]="item.antecedente"
+                      [(ngModel)]="item.backgroundId"
                       [options]="tiposDocumentoComplementario"
+                      optionLabel="label"
+                      optionValue="value"
                       placeholder="Seleccione tipo de documento"
-                      [loading]="catalogosCargando"
-                      [disabled]="catalogosCargando"
+                      [emptyMessage]="'Esta gestión no tiene documentos complementarios'"
                       [filter]="true"
                       filterPlaceholder="Buscar tipo de documento"
                       appendTo="body"
@@ -678,7 +684,9 @@
                   [inputId]="'responsableExtra' + i"
                   [name]="'responsableExtra' + i"
                   [(ngModel)]="item.responsable"
-                  [options]="responsables"
+                  [options]="opcionesResponsables"
+                  optionLabel="label"
+                  optionValue="value"
                   placeholder="Seleccione responsable"
                   [filter]="true"
                   filterPlaceholder="Buscar responsable"
@@ -730,20 +738,6 @@
                 </p-fileupload>
               </td>
 
-              <td class="observaciones-column">
-                <label class="visually-hidden" [for]="'observacionesExtra' + i">
-                  Observaciones del antecedente complementario {{ i + 1 }}
-                </label>
-                <textarea
-                  pTextarea
-                  [id]="'observacionesExtra' + i"
-                  [name]="'observacionesExtra' + i"
-                  [(ngModel)]="item.observaciones"
-                  placeholder="Agregar observación"
-                  [autoResize]="true"
-                  rows="1"
-                ></textarea>
-              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -855,7 +849,9 @@
                   [inputId]="'responsableEtapa' + i"
                   [name]="'responsableEtapa' + i"
                   [(ngModel)]="item.responsable"
-                  [options]="responsables"
+                  [options]="opcionesResponsables"
+                  optionLabel="label"
+                  optionValue="value"
                   placeholder="Seleccione responsable"
                   [filter]="true"
                   filterPlaceholder="Buscar responsable"
@@ -1046,7 +1042,7 @@
   </p-dialog>
 
   <p-dialog
-    [header]="creando ? 'Guardando trámite' : 'Trámite creado correctamente'"
+    [header]="creando ? 'Guardando trámite' : avisosCreacion.length ? 'Trámite creado con observaciones' : 'Trámite creado correctamente'"
     [visible]="creando || mensajeCreacionVisible"
     [modal]="true"
     [closable]="false"
@@ -1067,7 +1063,7 @@
       />
       <div class="creation-success-copy">
         <strong>Guardando el trámite</strong>
-        <p>Estamos enviando la información. No cierres esta ventana.</p>
+        <p>Estamos registrando la gestión, sus antecedentes y etapas. No cierres esta ventana.</p>
       </div>
       <p-progressbar
         mode="indeterminate"
@@ -1083,9 +1079,18 @@
 
       <div class="creation-success-copy">
         <strong>Trámite #{{ tramiteCreadoId }}</strong>
+        @if (avisosCreacion.length) {
+        <p>El trámite fue creado, pero algunos datos no se pudieron registrar. Puedes completarlos desde el detalle:</p>
+        } @else {
         <p>La información fue guardada exitosamente.</p>
+        }
       </div>
 
+      @if (avisosCreacion.length) {
+      <ul class="creation-warnings" role="alert">
+        @for (aviso of avisosCreacion; track $index) { <li>{{ aviso }}</li> }
+      </ul>
+      } @else {
       <div class="creation-redirect" aria-live="polite">
         <span>
           Redirigiendo al detalle en
@@ -1098,6 +1103,7 @@
           styleClass="creation-progress"
         />
       </div>
+      }
 
       <button
         pButton
