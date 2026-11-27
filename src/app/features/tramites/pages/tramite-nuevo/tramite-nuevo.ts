@@ -38,6 +38,7 @@ import {
   BackendManagementType,
   BackendSpecificManagement,
   BackendUser,
+  LogEntryWrite,
 } from "../../../../shared/services/api-models";
 import { ApiClientError } from "../../../../shared/services/api-base";
 import { BitacoraApiService } from "../../../../shared/services/bitacora-api";
@@ -660,20 +661,18 @@ export class TramiteNuevo implements OnInit, OnDestroy {
     });
   }
 
-  private crearLogIngreso(managementId: string): object {
-    const usuario = this.userSession.currentUser();
-
+  private crearLogIngreso(managementId: string): LogEntryWrite {
+    // El autor lo asigna el backend desde la sesión autenticada.
     return {
       managementId,
-      userId: usuario.id ?? null,
       registeredOn: this.normalizarFechaApi(this.form.fechaApertura),
       registeredAt: this.obtenerHoraActual(),
       title: "Ingreso del trámite",
       comment: "Se ha ingresado el trámite al sistema.",
       type: "inicio",
-      automatic: true,
     };
   }
+
 
   private obtenerHoraActual(): string {
     return new Intl.DateTimeFormat("es-CL", {

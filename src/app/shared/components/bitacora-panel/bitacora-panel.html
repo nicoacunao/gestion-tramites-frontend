@@ -11,7 +11,7 @@
       <h3 [id]="formularioTituloId">Agregar una novedad</h3>
     </div>
 
-    <form (ngSubmit)="registrarEntrada()" novalidate>
+    <form (ngSubmit)="registrarEntrada()" [attr.aria-busy]="guardando" novalidate>
       <div class="field-group">
         <label [for]="tituloId">Título de la novedad</label>
         <input
@@ -20,6 +20,8 @@
           type="text"
           [(ngModel)]="tituloNuevo"
           (ngModelChange)="limpiarMensajes()"
+          [disabled]="guardando"
+          required
           [maxlength]="maximoCaracteresTitulo"
           [attr.aria-invalid]="
             mensajeValidacion && !tituloNuevo.trim() ? 'true' : 'false'
@@ -48,6 +50,8 @@
           name="comentarioBitacora"
           [(ngModel)]="comentarioNuevo"
           (ngModelChange)="limpiarMensajes()"
+          [disabled]="guardando"
+          required
           [maxlength]="maximoCaracteres"
           [attr.aria-invalid]="
             mensajeValidacion && !comentarioNuevo.trim() ? 'true' : 'false'
@@ -95,22 +99,42 @@
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 5v14M5 12h14"></path>
           </svg>
-          Agregar a la bitácora
+          {{ guardando ? "Guardando…" : "Agregar a la bitácora" }}
         </button>
       </div>
     </form>
   </section>
 
-  @if (entradas.length > 0) {
-  <section class="history" [attr.aria-labelledby]="historialTituloId">
+  <section class="history" [attr.aria-labelledby]="historialTituloId" [attr.aria-busy]="cargando">
     <div class="history-heading">
       <h3 [id]="historialTituloId">Historial de la bitácora</h3>
+      @if (!cargando && !errorCarga) {
       <span class="history-count">
         {{ entradas.length }} {{ entradas.length === 1 ? "registro" :
         "registros" }}
       </span>
+      }
     </div>
 
+    @if (cargando) {
+    <div class="history-state" role="status">
+      <span class="visually-hidden">Cargando la bitácora</span>
+      @for (fila of filasCarga; track fila) {
+      <div class="history-skeleton" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      }
+    </div>
+    } @else if (errorCarga) {
+    <div class="history-state history-state--error" role="alert">
+      <p>{{ errorCarga }}</p>
+      <button type="button" class="secondary-button" (click)="cargar()">Reintentar</button>
+    </div>
+    } @else if (entradas.length === 0) {
+    <div class="history-state" role="status">
+      <p>Aún no hay registros en la bitácora de esta gestión.</p>
+    </div>
+    } @else {
     <p-timeline [value]="entradas" styleClass="bitacora-timeline">
       <ng-template #opposite let-entrada>
         <time
@@ -137,6 +161,6 @@
         </article>
       </ng-template>
     </p-timeline>
+    }
   </section>
-  }
 </div>

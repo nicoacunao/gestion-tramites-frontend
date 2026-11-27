@@ -182,19 +182,34 @@ export interface BackendStage {
   version: number;
 }
 
+export type LogEntryType = "inicio" | "novedad" | "seguimiento" | "contacto";
+
+/** Entrada de bitácora (`LogEntry` en OpenAPI). Fecha y hora en America/Santiago. */
 export interface BackendLogEntry {
   id: string;
   managementId: string;
   userId: string | null;
+  /** `YYYY-MM-DD` */
   registeredOn: string;
+  /** `HH:mm:ss` */
   registeredAt: string;
   title: string;
   comment: string;
-  authorName?: string | null;
-  authorInitials?: string | null;
-  type?: "inicio" | "novedad" | "seguimiento" | "contacto" | null;
-  automatic?: boolean;
-  version: number;
+  type: LogEntryType | null;
+}
+
+/** Cuerpo de `POST /bitacora/items` (`LogEntryWrite`). */
+export interface LogEntryWrite {
+  managementId: string;
+  /** 1 a 80 caracteres. */
+  title: string;
+  /** 1 a 1000 caracteres. */
+  comment: string;
+  type?: LogEntryType | null;
+  /** Si se omite, el backend usa el usuario autenticado. */
+  userId?: string | null;
+  registeredOn?: string;
+  registeredAt?: string;
 }
 
 export interface BackendStationSummary {

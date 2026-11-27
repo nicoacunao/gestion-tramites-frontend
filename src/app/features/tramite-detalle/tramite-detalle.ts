@@ -25,10 +25,7 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SelectModule } from "primeng/select";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
-import {
-  BitacoraPanel,
-  EntradaBitacora,
-} from "../../shared/components/bitacora-panel/bitacora-panel";
+import { BitacoraPanel } from "../../shared/components/bitacora-panel/bitacora-panel";
 import { UserSessionService } from "../../shared/services/user-session";
 import {
   ESTADOS_ANTECEDENTE,
@@ -46,7 +43,8 @@ import {
 } from "../tramites/models/tramite";
 import { TramitesMock } from "../../shared/services/tramites-mock";
 import { BackendBackground, BackendStage, BackendUser } from "../../shared/services/api-models";
-import { BitacoraApiService } from "../../shared/services/bitacora-api";
+import { mensajeDeError } from "../../shared/services/api-base";
+import { BitacoraApiService, LOG_COMMENT_MAX, LOG_TITLE_MAX } from "../../shared/services/bitacora-api";
 import { CatalogApiService } from "../../shared/services/catalog-api";
 import { IdentityApiService } from "../../shared/services/identity-api";
 import { ManagementApiService } from "../../shared/services/management-api";
@@ -91,7 +89,6 @@ interface AntecedenteVisible<T extends AntecedenteConNivel> {
   styleUrl: "./tramite-detalle.scss",
 })
 export class TramiteDetalle {
-  private readonly entradasPorTramite = new Map<string | number, EntradaBitacora[]>();
   private _tramiteId: string | number | null = null;
   private _visible = false;
   private ultimaRevisionEnviada: string | null = null;
@@ -113,6 +110,7 @@ export class TramiteDetalle {
 
   @Output() readonly visibleChange = new EventEmitter<boolean>();
   @ViewChild("archivoInput") archivoInput?: ElementRef<HTMLInputElement>;
+  @ViewChild(BitacoraPanel) bitacoraPanel?: BitacoraPanel;
 
   @Input()
   set tramiteId(tramiteId: string | number | null) {
@@ -128,7 +126,8 @@ export class TramiteDetalle {
     if (tramiteId && this.managementApi) {
       // El listado puede tener una copia previa. Se muestra de inmediato, pero
       // el detalle siempre se refresca para evitar presentar información obsoleta.
-      this.solicitudesDetallePendientes = 4 + (this.catalogApi ? 1 : 0);
+      // Gestión + usuarios + antecedentes + etapas + catálogo (o su cierre inmediato).
+      this.solicitudesDetallePendientes = 5;
       this.tramitesMock.cargarPorId(tramiteId).pipe(
         finalize(() => this.finalizarCargaDetalle()),
       ).subscribe({
@@ -250,21 +249,6 @@ export class TramiteDetalle {
     });
   }
 
-  get bitacora(): EntradaBitacora[] {
-    if (!this.tramite) {
-      return [];
-    }
-
-    let entradas = this.entradasPorTramite.get(this.tramite.id);
-
-    if (!entradas) {
-      entradas = this.crearEntradasIniciales(this.tramite);
-      this.entradasPorTramite.set(this.tramite.id, entradas);
-    }
-
-    return entradas;
-  }
-
   get puedeAdjuntarAntecedente(): boolean {
     return Boolean(this.tipoAntecedenteNuevo && this.archivoAntecedenteNuevo);
   }
@@ -300,14 +284,6 @@ export class TramiteDetalle {
 
   cerrar(): void {
     this.actualizarVisibilidad(false);
-  }
-
-  agregarEntradaBitacora(entrada: EntradaBitacora): void {
-    if (!this.tramite) {
-      return;
-    }
-
-    this.entradasPorTramite.set(this.tramite.id, [entrada, ...this.bitacora]);
   }
 
   seleccionarArchivo(event: Event): void {
@@ -384,7 +360,7 @@ export class TramiteDetalle {
   }
 
   private cargarDatosBackend(tramite: Tramite): void {
-    if (!this.managementApi || !this.identityApi || !this.bitacoraApi || !tramite.apiId) {
+    if (!this.managementApi || !this.identityApi || !tramite.apiId) {
       this.cancelarCargaDetalle();
       return;
     }
@@ -393,7 +369,7 @@ export class TramiteDetalle {
     this.identityApi.users().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (users) => { this.responsablesApi = users; this.actualizarNombresResponsables(); } });
     this.managementApi.backgrounds(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarAntecedentesBackend(items) });
     this.managementApi.stages(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.aplicarEtapasBackend(items) });
-    this.bitacoraApi.logs(apiId).pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({ next: (items) => this.entradasPorTramite.set(tramite.id, items.map((item) => ({ id: item.id, fechaIso: item.registeredOn, fecha: this.formatearFechaIsoComoVista(item.registeredOn), hora: item.registeredAt.slice(0, 5), usuario: item.authorName ?? "Usuario del sistema", iniciales: item.authorInitials ?? "US", tipo: item.type ?? "novedad", titulo: item.title, comentario: item.comment, automatica: item.automatic ?? false }))) });
+    // La bitácora la carga `BitacoraPanel` con el id de la gestión.
     if (this.catalogApi) {
       this.catalogApi.backgroundCatalog().pipe(finalize(() => this.finalizarCargaDetalle())).subscribe({
         next: (items) => {
@@ -508,28 +484,45 @@ export class TramiteDetalle {
       cargadoPor: usuario.fullName,
     });
 
-    const entrada: EntradaBitacora = {
-      id: `BIT-${this.tramite.id}-documento-${ahora.getTime()}`,
-      fecha,
-      fechaIso: this.formatearFechaIso(ahora),
-      hora,
-      usuario: usuario.fullName,
-      iniciales: usuario.initials,
-      titulo: `Documento incorporado: ${tipoDocumento}`,
-      comentario:
-        contexto ||
-        `Se incorporó el archivo ${archivo} como evidencia del trámite.`,
-      automatica: false,
-    };
-
-    this.entradasPorTramite.set(this.tramite.id, [entrada, ...this.bitacora]);
     this.tipoAntecedenteNuevo = null;
     this.archivoAntecedenteNuevo = null;
     this.contextoDocumentoNuevo = "";
-    this.mensajeDocumento =
-      "El documento quedó asociado al trámite y la recepción fue registrada en la bitácora.";
+    this.mensajeDocumento = "El documento quedó asociado al trámite.";
     this.mensajeDocumentoEsError = false;
     this.limpiarArchivoSeleccionado();
+    this.registrarDocumentoEnBitacora(
+      tipoDocumento,
+      contexto || `Se incorporó el archivo ${archivo} como evidencia del trámite.`,
+      ahora,
+    );
+  }
+
+  /** Registra la recepción del documento en la bitácora (`POST /bitacora/items`). */
+  private registrarDocumentoEnBitacora(tipoDocumento: string, comentario: string, ahora: Date): void {
+    const managementId = this.tramite?.apiId;
+    if (!this.bitacoraApi || !managementId) return;
+
+    this.bitacoraApi.createLog({
+      managementId,
+      title: `Documento incorporado: ${tipoDocumento}`.slice(0, LOG_TITLE_MAX),
+      comment: comentario.slice(0, LOG_COMMENT_MAX),
+      type: "novedad",
+      // Fecha y hora de Chile: el backend las interpreta en America/Santiago.
+      registeredOn: this.formatearFechaIso(ahora),
+      registeredAt: this.formatearHora(ahora),
+    }).subscribe({
+      next: () => {
+        this.mensajeDocumento =
+          "El documento quedó asociado al trámite y la recepción fue registrada en la bitácora.";
+        this.bitacoraPanel?.cargar();
+        this.changeDetectorRef?.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.mensajeDocumento = `El documento quedó asociado al trámite, pero no se registró en la bitácora. ${mensajeDeError(error, "Inténtalo nuevamente más tarde.")}`;
+        this.mensajeDocumentoEsError = true;
+        this.changeDetectorRef?.markForCheck();
+      },
+    });
   }
 
   alternarAntecedente(
@@ -566,10 +559,6 @@ export class TramiteDetalle {
 
   obtenerSeveridadEstado(estado: string): TagSeverity {
     return resolverSeveridadEstado(estado);
-  }
-
-  private crearEntradasIniciales(tramite: Tramite): EntradaBitacora[] {
-    return [];
   }
 
   private limpiarFormularioDocumento(): void {
@@ -750,11 +739,6 @@ export class TramiteDetalle {
       partes.find(({ type }) => type === tipo)?.value ?? "";
 
     return `${valor("year")}-${valor("month")}-${valor("day")}`;
-  }
-
-  private formatearFechaIsoComoVista(fechaIso: string): string {
-    const [anio, mes, dia] = fechaIso.split("-");
-    return `${dia}-${mes}-${anio}`;
   }
 
   private formatearFechaBackend(fecha: string | null): string {

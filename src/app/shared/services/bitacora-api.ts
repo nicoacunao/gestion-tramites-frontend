@@ -1,6 +1,10 @@
 import { Injectable } from "@angular/core";
 import { ApiBaseService } from "./api-base";
-import { BackendLogEntry } from "./api-models";
+import { BackendLogEntry, LogEntryWrite } from "./api-models";
+
+/** Límites de `POST /bitacora/items`. */
+export const LOG_TITLE_MAX = 80;
+export const LOG_COMMENT_MAX = 1000;
 
 @Injectable({ providedIn: "root" })
 export class BitacoraApiService extends ApiBaseService {
@@ -8,7 +12,7 @@ export class BitacoraApiService extends ApiBaseService {
     return this.get<BackendLogEntry[]>("/bitacora/items", { managementId });
   }
 
-  createLog(body: object) {
+  createLog(body: LogEntryWrite) {
     return this.post<BackendLogEntry>("/bitacora/items", body);
   }
 }

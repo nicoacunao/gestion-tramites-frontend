@@ -63,7 +63,6 @@ export class GestionListado {
   @Input() ariaLabelTabla = "Tabla de gestiones";
   @Input() mostrarCantidadResultados = false;
   @Input() mostrarResponsableInterno = false;
-  @Input() bitacoraPersonal = false;
   @Input() loading = false;
   /** Texto cuando la vista no tiene ninguna gestión (sin filtros aplicados). */
   @Input() mensajeSinGestiones = "No hay gestiones para mostrar.";

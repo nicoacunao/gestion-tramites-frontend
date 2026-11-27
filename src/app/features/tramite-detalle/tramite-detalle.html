@@ -866,11 +866,9 @@
         >
           <app-bitacora-panel
             class="bitacora-panel--compact"
-            [entradas]="bitacora"
-            [contextoId]="tramite.id"
+            [gestionId]="tramite.apiId"
             idBase="bitacora-detalle"
             [activo]="visible"
-            (entradaRegistrada)="agregarEntradaBitacora($event)"
           />
         </p-panel>
       </ng-template>

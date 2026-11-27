@@ -1,3 +1,8 @@
+import { of, throwError } from "rxjs";
+import { BitacoraPanel } from "../../shared/components/bitacora-panel/bitacora-panel";
+import { ApiClientError } from "../../shared/services/api-base";
+import { BackendLogEntry, LogEntryWrite } from "../../shared/services/api-models";
+import { BitacoraApiService } from "../../shared/services/bitacora-api";
 import { UserSessionService } from "../../shared/services/user-session";
 import { TramitesMock } from "../../shared/services/tramites-mock";
 import { TramiteDetalle } from "./tramite-detalle";
@@ -64,8 +69,6 @@ describe("TramiteDetalle", () => {
     expect(componente.antecedentesRequeridos[0].nivel).toBe("N2");
     expect(componente.antecedentesRequeridos[0].isSpecificManagement).toBeUndefined();
     expect(componente.antecedentesRequeridos[0].version).toBe(1);
-    // Las entradas iniciales ahora provienen de GET /bitacora/items.
-    expect(componente.bitacora).toEqual([]);
   });
 
   it("conserva los antecedentes requeridos en N3", () => {
@@ -81,53 +84,59 @@ describe("TramiteDetalle", () => {
     ).toEqual(["N3", "N3"]);
   });
 
-  it("asocia un documento adicional y registra su contexto en la bitácora", () => {
-    componente.tipoAntecedenteNuevo = "Informe técnico";
-    componente.archivoAntecedenteNuevo = new File(
+  it("asocia un documento adicional y registra su contexto en la bitácora del backend", () => {
+    const createLog = vi.fn((_body: LogEntryWrite) => of({} as BackendLogEntry));
+    const bitacoraApi = { createLog } as unknown as BitacoraApiService;
+    const session = new UserSessionService();
+    const detalle = new TramiteDetalle(tramitesMock, session, null, null, bitacoraApi);
+    detalle.tramiteId = 1001;
+    const cargar = vi.fn();
+    detalle.bitacoraPanel = { cargar } as unknown as BitacoraPanel;
+    detalle.tipoAntecedenteNuevo = "Informe técnico";
+    detalle.archivoAntecedenteNuevo = new File(
       ["contenido"],
       "informe-tecnico.pdf",
       { type: "application/pdf" },
     );
-    componente.contextoDocumentoNuevo =
+    detalle.contextoDocumentoNuevo =
       "La municipalidad entregó el informe y se coordinó su revisión.";
 
-    componente.adjuntarAntecedente();
+    detalle.adjuntarAntecedente();
 
-    expect(componente.antecedentesComplementarios[0]).toMatchObject({
+    expect(detalle.antecedentesComplementarios[0]).toMatchObject({
       tipoDocumento: "Informe técnico",
       archivo: "informe-tecnico.pdf",
     });
-    expect(componente.archivosAdjuntos[0]).toMatchObject({
+    expect(detalle.archivosAdjuntos[0]).toMatchObject({
       categoria: "Antecedente adicional",
       archivo: "informe-tecnico.pdf",
     });
-    expect(componente.bitacora[0]).toMatchObject({
-      titulo: "Documento incorporado: Informe técnico",
-      comentario:
-        "La municipalidad entregó el informe y se coordinó su revisión.",
-    });
+    expect(createLog).toHaveBeenCalledWith(expect.objectContaining({
+      managementId: "1001",
+      title: "Documento incorporado: Informe técnico",
+      comment: "La municipalidad entregó el informe y se coordinó su revisión.",
+      type: "novedad",
+      registeredOn: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      registeredAt: expect.stringMatching(/^\d{2}:\d{2}$/),
+    }));
+    expect(cargar).toHaveBeenCalled();
+    expect(detalle.mensajeDocumento).toContain("registrada en la bitácora");
   });
 
-  it("mantiene las novedades separadas de las etapas", () => {
-    componente.agregarEntradaBitacora({
-      id: "BIT-1001-novedad",
-      fecha: "19-09-2026",
-      fechaIso: "2026-09-19",
-      hora: "10:30",
-      usuario: "Jose Luis Rozas",
-      iniciales: "JL",
-      tipo: "novedad",
-      titulo: "Institución cerrada",
-      comentario: "La visita no pudo realizarse y se coordinó una nueva fecha.",
-      automatica: false,
-    });
+  it("informa si el documento no pudo registrarse en la bitácora", () => {
+    const bitacoraApi = {
+      createLog: () => throwError(() => new ApiClientError("El título o comentario no es válido.", 422)),
+    } as unknown as BitacoraApiService;
+    const detalle = new TramiteDetalle(tramitesMock, new UserSessionService(), null, null, bitacoraApi);
+    detalle.tramiteId = 1001;
+    detalle.tipoAntecedenteNuevo = "Informe técnico";
+    detalle.archivoAntecedenteNuevo = new File(["x"], "informe.pdf");
 
-    expect(componente.bitacora[0]).toMatchObject({
-      usuario: "Jose Luis Rozas",
-      titulo: "Institución cerrada",
-      comentario: "La visita no pudo realizarse y se coordinó una nueva fecha.",
-      automatica: false,
-    });
+    detalle.adjuntarAntecedente();
+
+    expect(detalle.mensajeDocumentoEsError).toBe(true);
+    expect(detalle.mensajeDocumento).toContain("no se registró en la bitácora");
+    expect(detalle.mensajeDocumento).toContain("El título o comentario no es válido.");
   });
 
   it("utiliza las siete etapas estándar del trámite", () => {

@@ -27,8 +27,8 @@
           <strong class="dialog-title__code">{{ gestion.codigo }}</strong>
           }
         </div>
-        @if (gestion) {
-        <p class="dialog-title__description">{{ gestion.descripcion }}</p>
+        @if (gestion?.descripcion) {
+        <p class="dialog-title__description">{{ gestion?.descripcion }}</p>
         }
       </div>
     </div>
@@ -50,11 +50,9 @@
 
     <app-bitacora-panel
       class="bitacora-panel--compact"
-      [entradas]="entradas"
-      [contextoId]="gestion.id"
+      [gestionId]="gestion.id"
       idBase="bitacora-modal"
       [activo]="visible"
-      (entradaRegistrada)="agregarEntrada($event)"
     />
   </article>
   }
