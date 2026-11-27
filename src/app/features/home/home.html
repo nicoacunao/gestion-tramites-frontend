@@ -478,14 +478,16 @@
         </p-dialog>
         } @case ("tareas") {
         <p-card styleClass="tasks-card tab-content-card">
-          @if (tasksError) { <p class="field-error" role="alert">{{ tasksError }}</p> }
           <div class="tasks-heading">
             <div>
               <p class="section-kicker">Seguimiento</p>
               <h2 class="content-title">Mis tareas</h2>
-              <span class="tasks-summary"
-                >{{ tasks.length }} gestiones asignadas</span
-              >
+              @if (!loadingTasks && !tasksError) {
+              <span class="tasks-summary">
+                {{ tasksTotal }} {{ tasksTotal === 1 ? "gestión asignada" : "gestiones asignadas" }}
+                @if (tasksTotal > tasks.length) { · se muestran las {{ tasks.length }} más urgentes }
+              </span>
+              }
             </div>
             <a
               pButton
@@ -514,7 +516,14 @@
             </article>
             }
           </div>
-          } @else if (tasks.length === 0 && !tasksError) {
+          } @else if (tasksError) {
+          <div class="stations-error" role="alert">
+            <p class="field-error">{{ tasksError }}</p>
+            <button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="loadTasks()">
+              Reintentar
+            </button>
+          </div>
+          } @else if (tasks.length === 0) {
           <div class="home-empty-state home-empty-state--tasks" role="status">
             <span class="home-empty-state__icon" aria-hidden="true">○</span>
             <strong>No tienes gestiones asignadas</strong>
@@ -535,7 +544,7 @@
                   <div class="task-copy">
                     <div class="task-meta">
                       <span class="task-code">{{ task.code }}</span>
-                      <span>Estación {{ task.stationId }}</span>
+                      <span>Estación {{ task.stationId }}@if (task.stationName) { · {{ task.stationName }} }</span>
                     </div>
                     <h3>{{ task.title }}</h3>
                     <p>{{ task.detail }}</p>
@@ -557,7 +566,7 @@
                         [severity]="task.severity"
                       />
                     </div>
-                    <time>{{ task.updatedAt }}</time>
+                    <time [attr.datetime]="task.updatedOn">{{ task.updatedAt }}</time>
                     <a
                       pButton
                       [routerLink]="task.route"

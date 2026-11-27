@@ -34,13 +34,13 @@ import { Subscription } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ConnectedUser, EditableUserProfile, UserSessionService } from "../../shared/services/user-session";
 import { ApiClientError } from "../../shared/services/api-base";
-import { BackendManagement, BackendStation, BackendStationPage, ImportStationsResponse, StationImportRowError } from "../../shared/services/api-models";
+import { ManagementContract, TrafficLight, BackendStation, BackendStationPage, ImportStationsResponse, StationImportRowError } from "../../shared/services/api-models";
 import { ManagementApiService } from "../../shared/services/management-api";
 import { StationApiService } from "../../shared/services/station-api";
 
 type QuickAccessId = "datos" | "estaciones" | "tareas" | "reporte";
 type TaskSeverity = "success" | "warn" | "danger";
-type TrafficLightStatus = "al-dia" | "proximo-vencer" | "atrasado";
+type TrafficLightStatus = TrafficLight;
 
 interface QuickAccess {
   id: QuickAccessId;
@@ -50,18 +50,44 @@ interface QuickAccess {
 }
 
 interface HomeTask {
-  id: number;
+  id: string;
   code: string;
   stationId: string;
+  stationName: string;
   title: string;
   detail: string;
+  /** Fecha `YYYY-MM-DD` para el atributo `datetime`. */
+  updatedOn: string;
+  /** Fecha `DD-MM-YYYY` para mostrar. */
   updatedAt: string;
   trafficStatus: TrafficLightStatus;
   trafficLabel: string;
   severity: TaskSeverity;
   route: string;
-  queryParams: { detalle: number };
+  queryParams: { detalle: string };
 }
+
+/** Cantidad de gestiones que se resumen en la pestaña; el resto está en Escritorio. */
+const TASKS_PREVIEW = 3;
+
+const TRAFFIC_SEVERITY: Record<TrafficLightStatus, TaskSeverity> = {
+  "al-dia": "success",
+  "proximo-vencer": "warn",
+  atrasado: "danger",
+};
+
+const TRAFFIC_LABEL: Record<TrafficLightStatus, string> = {
+  "al-dia": "Al día",
+  "proximo-vencer": "Próximo a vencer",
+  atrasado: "Atrasado",
+};
+
+/** Orden de urgencia para elegir qué gestiones resumir. */
+const TRAFFIC_PRIORITY: Record<TrafficLightStatus, number> = {
+  atrasado: 0,
+  "proximo-vencer": 1,
+  "al-dia": 2,
+};
 
 type ImportState = "idle" | "selected" | "verified" | "importing" | "completed";
 
@@ -180,8 +206,11 @@ export class Home {
   ];
 
   tasks: HomeTask[] = [];
+  /** Total de gestiones asignadas (la lista solo resume las más urgentes). */
+  tasksTotal = 0;
   loadingTasks = true;
   tasksError = "";
+  private tasksRequest?: Subscription;
   stations: BackendStation[] = [];
   readonly stationPageSize = 5;
   stationsTotal = 0;
@@ -211,16 +240,7 @@ export class Home {
         this.userForm.reset(this.profileFormValue(user));
       }
     });
-    this.managementApi.managements(true).subscribe({
-      next: (items) => {
-        const userId = this.userSession.currentUser().id;
-        this.tasks = userId
-          ? items.filter((item) => item.responsibleUserId === userId).slice(0, 3).map((item) => this.toTask(item))
-          : [];
-        this.loadingTasks = false;
-      },
-      error: (error: Error) => { this.tasks = []; this.tasksError = error.message; this.loadingTasks = false; },
-    });
+    this.loadTasks();
     this.loadStations();
   }
 
@@ -283,11 +303,76 @@ export class Home {
     this.loadStations(Math.floor(event.first / pageSize) + 1);
   }
 
-  private toTask(item: BackendManagement): HomeTask {
-    const id = Number.parseInt(item.id.replace(/\D/g, ""), 10) || 0;
-    const attention = item.status === "Observado" || item.status === "Rechazado";
-    return { id, code: item.id, stationId: item.stationId, title: item.managementTypeName ?? item.managementTypeId, detail: item.status ?? "Pendiente", updatedAt: item.lastReviewedOn ?? item.openedOn, trafficStatus: attention ? "atrasado" : "al-dia", trafficLabel: attention ? "Requiere atención" : "Al día", severity: attention ? "danger" : "success", route: "/todas-las-gestiones", queryParams: { detalle: id } };
+  /**
+   * `assignedToMe=true` hace que el backend devuelva solo las gestiones del
+   * usuario autenticado; no se vuelve a filtrar en el cliente.
+   */
+  loadTasks(): void {
+    this.tasksRequest?.unsubscribe();
+    this.loadingTasks = true;
+    this.tasksError = "";
+    this.changeDetector.markForCheck();
+    this.tasksRequest = this.managementApi.managements(true).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (items) => {
+        this.tasksTotal = items.length;
+        this.tasks = [...items]
+          .sort((a, b) => this.compareUrgency(a, b))
+          .slice(0, TASKS_PREVIEW)
+          .map((item) => this.toTask(item));
+        this.loadingTasks = false;
+        this.changeDetector.markForCheck();
+      },
+      error: (error: unknown) => {
+        this.tasks = [];
+        this.tasksTotal = 0;
+        this.tasksError = error instanceof ApiClientError
+          ? error.message
+          : "No fue posible cargar tus gestiones. Inténtalo nuevamente.";
+        this.loadingTasks = false;
+        this.changeDetector.markForCheck();
+      },
+    });
   }
+
+  private compareUrgency(a: ManagementContract, b: ManagementContract): number {
+    const byTraffic = TRAFFIC_PRIORITY[this.trafficOf(a)] - TRAFFIC_PRIORITY[this.trafficOf(b)];
+    if (byTraffic !== 0) return byTraffic;
+    // Sin fecha estimada va al final.
+    return (a.estimatedCompletionOn ?? "9999-12-31").localeCompare(b.estimatedCompletionOn ?? "9999-12-31");
+  }
+
+  private trafficOf(item: ManagementContract): TrafficLightStatus {
+    const value = item.trafficLight ?? item.semaforo;
+    return value && value in TRAFFIC_SEVERITY ? value : "al-dia";
+  }
+
+  private toTask(item: ManagementContract): HomeTask {
+    const trafficStatus = this.trafficOf(item);
+    const updatedOn = (item.lastReviewedOn ?? item.openedOn).slice(0, 10);
+    return {
+      id: item.id,
+      code: item.code ?? item.codigo ?? `Gestión ${item.id}`,
+      stationId: item.stationId,
+      stationName: item.stationName ?? item.legalName ?? "",
+      title: item.managementTypeName?.trim() || "Gestión sin tipo asignado",
+      detail: item.status,
+      updatedOn,
+      updatedAt: this.formatDate(updatedOn),
+      trafficStatus,
+      trafficLabel: item.trafficLightLabel ?? item.semaforoEtiqueta ?? TRAFFIC_LABEL[trafficStatus],
+      severity: TRAFFIC_SEVERITY[trafficStatus],
+      route: "/todas-las-gestiones",
+      queryParams: { detalle: item.id },
+    };
+  }
+
+  private formatDate(isoDate: string): string {
+    const [year, month, day] = isoDate.split("-");
+    return year && month && day ? `${day}-${month}-${year}` : isoDate;
+  }
+
 
   selectQuickAccess(id: QuickAccessId, scrollPanel = true): void {
     this.activeAccessId = id;

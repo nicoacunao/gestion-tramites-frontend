@@ -92,28 +92,78 @@ export interface BackendCatalogBackground {
   version: number;
 }
 
-export interface BackendManagement {
+export const MANAGEMENT_STATUSES = [
+  "Borrador",
+  "Pendiente",
+  "Ingresado",
+  "En tramitación",
+  "Observado",
+  "Reingresado",
+  "Rechazado",
+  "Terminado aprobado",
+  "Terminado desfavorable",
+] as const;
+
+export type ManagementStatus = (typeof MANAGEMENT_STATUSES)[number];
+export type ManagementPriority = "Alta" | "Media" | "Baja";
+export type TrafficLight = "al-dia" | "proximo-vencer" | "atrasado";
+
+/** Gestión según el contrato vigente (`Management` en OpenAPI). */
+export interface ManagementContract {
   id: string;
   stationId: string;
-  managementTypeId: string;
-  scopeCode: string;
   responsibleUserId: string;
-  level: "N1" | "N2" | "N3" | "N4";
-  sequence: number;
+  createdAt?: string;
   openedOn: string;
   estimatedCompletionOn: string | null;
   lastReviewedOn: string | null;
-  priority: "Alta" | "Media" | "Baja";
+  priority: ManagementPriority;
+  status: ManagementStatus;
   requesterName: string;
-  status: string | null;
-  version: number;
+  stationName?: string | null;
+  legalName?: string | null;
+  responsibleName?: string | null;
+  commune?: string | null;
+  address?: string | null;
+  legalRut?: string | null;
+  legalRepresentative?: string | null;
+  legalRepresentativeRut?: string | null;
+  /** Tipos de gestión asociados; si hay varios, vienen separados por coma. */
+  managementTypeName?: string | null;
+  level?: string | null;
+  scopeCode?: string | null;
+  scopeName?: string | null;
+  sequence?: number | null;
+  /** Código de presentación, por ejemplo `N1-MUN-001`; `null` si no hay ámbito único. */
+  code?: string | null;
+  trafficLight?: TrafficLight;
+  trafficLightLabel?: string;
+  /** Alias en español de los campos de presentación. */
+  codigo?: string | null;
+  nivel?: string | null;
+  ambito?: string | null;
+  codigoAmbito?: string | null;
+  correlativo?: number | null;
+  semaforo?: TrafficLight;
+  semaforoEtiqueta?: string;
+}
+
+/**
+ * Campos del contrato anterior que todavía lee el adaptador `TramitesMock`.
+ * El backend ya no los envía; se eliminan al adaptar el listado (fase 3).
+ * @deprecated
+ */
+export interface LegacyManagementFields {
+  // Tipado del contrato anterior (no nulos); el contrato vigente los permite nulos.
   codigo: string;
   nivel: `N${number}`;
   ambito: string;
   codigoAmbito: string;
   correlativo: number;
-  semaforo: "al-dia" | "proximo-vencer" | "atrasado";
+  semaforo: TrafficLight;
   semaforoEtiqueta: string;
+  managementTypeId: string;
+  version: number;
   fechaInicio: string;
   fechaIngreso: string;
   fechaIngresoOrden: string;
@@ -129,19 +179,15 @@ export interface BackendManagement {
   rutRepresentanteLegal: string;
   concesionario: string;
   descripcion: string;
-  stationName?: string | null;
-  legalName?: string | null;
-  responsibleName?: string | null;
-  managementTypeName?: string | null;
   managementTypeCode?: string | null;
-  legalRut?: string | null;
-  legalRepresentative?: string | null;
   creationMode?: "principal" | "subtramite";
   specificManagementId?: string | null;
   specificManagementName?: string | null;
   specificManagement?: BackendSpecificManagementReference | null;
   specificManagements?: BackendSpecificManagementReference[];
 }
+
+export type BackendManagement = ManagementContract & LegacyManagementFields;
 
 export interface BackendBackground {
   id: string;

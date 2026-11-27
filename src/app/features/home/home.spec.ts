@@ -4,7 +4,7 @@ import { provideRouter } from "@angular/router";
 import { MessageService } from "primeng/api";
 import { NEVER, Subject } from "rxjs";
 import { ApiClientError } from "../../shared/services/api-base";
-import { BackendStation, BackendStationPage, ImportStationsResponse } from "../../shared/services/api-models";
+import { BackendStation, BackendStationPage, ImportStationsResponse, ManagementContract } from "../../shared/services/api-models";
 import { ManagementApiService } from "../../shared/services/management-api";
 import { StationApiService } from "../../shared/services/station-api";
 import { ConnectedUser, UserSessionService } from "../../shared/services/user-session";
@@ -239,5 +239,111 @@ describe("Home › Estaciones", () => {
     expect(componente.importState).toBe("verified");
     expect(componente.importErrorRows).toEqual([{ row: 2, message: "EDS es obligatorio." }]);
     expect(componente.importRequestId).toBe("req-err");
+  });
+});
+
+function gestion(id: string, extra: Partial<ManagementContract> = {}): ManagementContract {
+  return {
+    id,
+    stationId: "1001",
+    responsibleUserId: "7",
+    openedOn: "2026-11-01",
+    estimatedCompletionOn: null,
+    lastReviewedOn: null,
+    priority: "Media",
+    status: "Ingresado",
+    requesterName: "Solicitante",
+    ...extra,
+  };
+}
+
+describe("Home › Mis tareas", () => {
+  let respuestas: Subject<ManagementContract[]>[];
+  let managements: ReturnType<typeof vi.fn>;
+
+  function crear() {
+    respuestas = [];
+    managements = vi.fn(() => {
+      const respuesta = new Subject<ManagementContract[]>();
+      respuestas.push(respuesta);
+      return respuesta.asObservable();
+    });
+    TestBed.configureTestingModule({
+      imports: [Home],
+      providers: [
+        provideRouter([]),
+        { provide: UserSessionService, useValue: { currentUser: signal(usuario).asReadonly(), updateProfile: vi.fn() } },
+        { provide: ManagementApiService, useValue: { managements } },
+        { provide: StationApiService, useValue: { stations: () => NEVER } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Home);
+    fixture.detectChanges();
+    return { fixture, componente: fixture.componentInstance };
+  }
+
+  it("pide solo las gestiones asignadas y resume las más urgentes con el total", () => {
+    const { fixture, componente } = crear();
+    expect(managements).toHaveBeenCalledWith(true);
+
+    respuestas[0].next([
+      gestion("1", { trafficLight: "al-dia" }),
+      gestion("2", { trafficLight: "atrasado", estimatedCompletionOn: "2026-11-10" }),
+      gestion("3", { trafficLight: "proximo-vencer", estimatedCompletionOn: "2026-12-01" }),
+      gestion("4", { trafficLight: "atrasado", estimatedCompletionOn: "2026-11-05" }),
+      // Otro responsable: el backend ya filtró, así que no se descarta en el cliente.
+      gestion("5", { responsibleUserId: "99", trafficLight: "al-dia" }),
+    ]);
+    fixture.detectChanges();
+
+    expect(componente.tasksTotal).toBe(5);
+    expect(componente.tasks.map(({ id }) => id)).toEqual(["4", "2", "3"]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain("5 gestiones asignadas");
+  });
+
+  it("usa los datos de presentación del backend y tolera los faltantes", () => {
+    const { componente } = crear();
+
+    respuestas[0].next([
+      gestion("10", {
+        code: "N1-MUN-003",
+        managementTypeName: "Patente comercial",
+        trafficLight: "proximo-vencer",
+        trafficLightLabel: "Vence en 3 días",
+        stationName: "EDS Centro",
+        lastReviewedOn: "2026-11-20",
+      }),
+      gestion("11"),
+    ]);
+
+    expect(componente.tasks[0]).toMatchObject({
+      code: "N1-MUN-003",
+      title: "Patente comercial",
+      trafficLabel: "Vence en 3 días",
+      severity: "warn",
+      stationName: "EDS Centro",
+      updatedAt: "20-11-2026",
+      queryParams: { detalle: "10" },
+    });
+    expect(componente.tasks[1]).toMatchObject({
+      code: "Gestión 11",
+      title: "Gestión sin tipo asignado",
+      trafficLabel: "Al día",
+      severity: "success",
+      updatedAt: "01-11-2026",
+    });
+  });
+
+  it("muestra el error del servidor y permite reintentar", () => {
+    const { componente } = crear();
+
+    respuestas[0].error(new ApiClientError("No tienes permisos para gestionar gestiones.", 403, "FORBIDDEN"));
+    expect(componente.tasksError).toBe("No tienes permisos para gestionar gestiones.");
+    expect(componente.loadingTasks).toBe(false);
+
+    componente.loadTasks();
+    expect(managements).toHaveBeenCalledTimes(2);
+    expect(componente.loadingTasks).toBe(true);
+    expect(componente.tasksError).toBe("");
   });
 });
